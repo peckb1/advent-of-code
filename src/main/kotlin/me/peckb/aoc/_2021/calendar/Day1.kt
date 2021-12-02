@@ -120,5 +120,4 @@ class Day1 @Inject constructor(private val inputGenerator: InputGenerator<Int>) 
         deeperWindow.sum() > shallowerWindow.sum()
       }
   }
-
 }
