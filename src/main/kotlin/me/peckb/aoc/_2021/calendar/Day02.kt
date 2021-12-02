@@ -8,7 +8,7 @@ import me.peckb.aoc._2021.generators.Path
 import javax.inject.Inject
 import kotlin.math.max
 
-class Day2 @Inject constructor(private val inputGenerator: InputGenerator<Path>) {
+class Day02 @Inject constructor(private val inputGenerator: InputGenerator<Path>) {
   private data class Location(var depth: Int = 0, var distance: Int = 0) {
     fun move(path: Path) {
       when (path.direction) {

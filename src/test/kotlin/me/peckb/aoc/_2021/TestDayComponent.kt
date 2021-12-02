@@ -6,6 +6,6 @@ import javax.inject.Singleton
 @Singleton
 @Component(modules = [InputModule::class])
 internal interface TestDayComponent : DayComponent {
-  fun inject(day1Test: Day1Test)
-  fun inject(day2Test: Day2Test)
+  fun inject(day01Test: Day01Test)
+  fun inject(day02Test: Day02Test)
 }
