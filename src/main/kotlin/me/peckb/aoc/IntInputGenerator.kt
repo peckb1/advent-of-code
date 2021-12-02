@@ -1,8 +1,11 @@
 package me.peckb.aoc
 
-import java.util.stream.Stream
+import java.io.File
 import javax.inject.Inject
 
 class IntInputGenerator @Inject constructor(): InputGenerator<Int> {
-  override fun getInput(): Stream<Int> = Stream.of(4, 5, 6)
+  override fun getInput(filename: String): Sequence<Int> = File(filename)
+    .bufferedReader()
+    .lineSequence()
+    .map { it.toInt() }
 }

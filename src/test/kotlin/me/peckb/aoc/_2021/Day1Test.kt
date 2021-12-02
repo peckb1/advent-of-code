@@ -16,6 +16,11 @@ internal class Day1Test {
 
   @Test
   fun testDay1PartOne() {
-    assertNotNull(day1)
+    assertEquals(1390, day1.largerMeasurements("src/test/resources/2021/day1.first.input"))
+  }
+
+  @Test
+  fun testDay1PartTwo() {
+    assertEquals(1457, day1.largerGroupedMeasurements("src/test/resources/2021/day1.second.input"))
   }
 }
