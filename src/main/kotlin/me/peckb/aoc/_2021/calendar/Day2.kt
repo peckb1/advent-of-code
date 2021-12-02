@@ -69,8 +69,7 @@ class Day2 @Inject constructor(private val inputGenerator: InputGenerator<Path>)
    * What do you get if you multiply your final horizontal position by your final depth?
    */
   fun travel(filename: String) = inputGenerator.usingInput(filename) { input ->
-    val restingPlace = Location()
-      .apply { input.forEach(this::move) }
+    val restingPlace = Location().apply { input.forEach(this::move) }
 
     restingPlace.depth * restingPlace.distance
   }
@@ -107,8 +106,7 @@ class Day2 @Inject constructor(private val inputGenerator: InputGenerator<Path>)
    * horizontal position by your final depth?
    */
   fun travelAndAim(filename: String) = inputGenerator.usingInput(filename) { input ->
-    val restingPlace = LocationAndAim()
-      .apply { input.forEach(this::move) }
+    val restingPlace = LocationAndAim().apply { input.forEach(this::move) }
 
     restingPlace.depth * restingPlace.distance
   }
