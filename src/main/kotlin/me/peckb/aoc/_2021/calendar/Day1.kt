@@ -4,6 +4,8 @@ import me.peckb.aoc.InputGenerator
 import javax.inject.Inject
 
 class Day1 @Inject constructor(private val inputGenerator: InputGenerator<Int>) {
+  private data class WindowPair(val shallowDepth: Int, val deepDepth: Int)
+
   /**
    * --- Day 1: Sonar Sweep ---
    * You're minding your own business on a ship at sea when the overboard alarm goes off! You rush to
@@ -64,9 +66,10 @@ class Day1 @Inject constructor(private val inputGenerator: InputGenerator<Int>) 
    *
    * How many measurements are larger than the previous measurement?
    */
-  fun largerMeasurements(filename: String): Int {
-    val input = inputGenerator.getInput(filename)
-    return input.windowed(2).count { it.last() > it.first() }
+  fun largerMeasurements(filename: String) = inputGenerator.usingInput(filename) {
+    it.windowed(2)
+      .map { data -> WindowPair(data.first(), data.last()) }
+      .count { windowPair -> windowPair.deepDepth > windowPair.shallowDepth }
   }
 
   /**
@@ -109,15 +112,10 @@ class Day1 @Inject constructor(private val inputGenerator: InputGenerator<Int>) 
    *
    * Consider sums of a three-measurement sliding window. How many sums are larger than the previous sum?
    */
-  fun largerGroupedMeasurements(filename: String): Int {
-    val input = inputGenerator.getInput(filename)
-    return input
-      .windowed(3)
+  fun largerGroupedMeasurements(filename: String) = inputGenerator.usingInput(filename) {
+    it.windowed(3)
       .windowed(2)
-      .count { windows ->
-        val shallowerWindow = windows.first()
-        val deeperWindow = windows.last()
-        deeperWindow.sum() > shallowerWindow.sum()
-      }
+      .map { data -> WindowPair(data.first().sum(), data.last().sum()) }
+      .count { windowPair -> windowPair.deepDepth > windowPair.shallowDepth }
   }
 }
