@@ -117,7 +117,6 @@ class Day1 @Inject constructor(private val inputGenerator: InputGenerator<Int>) 
       .count { windows ->
         val shallowerWindow = windows.first()
         val deeperWindow = windows.last()
-        println("$shallowerWindow (${shallowerWindow.sum()}) -> $deeperWindow (${deeperWindow.sum()})")
         deeperWindow.sum() > shallowerWindow.sum()
       }
   }
