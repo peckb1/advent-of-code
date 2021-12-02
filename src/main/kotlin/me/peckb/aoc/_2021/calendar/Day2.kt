@@ -24,7 +24,7 @@ class Day2 @Inject constructor(private val inputGenerator: InputGenerator<Path>)
       when (path.direction) {
         FORWARD -> {
           distance += path.distance
-          depth += (path.distance * aim)
+          depth += max(0, path.distance * aim)
         }
         DOWN -> aim += path.distance
         UP -> aim -= path.distance
