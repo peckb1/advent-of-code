@@ -21,8 +21,8 @@ as the value which passed the given day/phase combination
 
 **Favourite problem(s):**
 
-* Only one problem so far, so by default Day 1 is the favourite.
-  * Phase two being more fun with the double window
+* Day 1 (so far) is the favourite, but nothing complex yet.
+  * Phase two being more fun than phase one with the two (2) `windowed` usages
 
 **Interesting approaches:**
 
