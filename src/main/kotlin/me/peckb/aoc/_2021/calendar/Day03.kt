@@ -32,12 +32,8 @@ class Day03 @Inject constructor(private val inputGenerator: InputGenerator<BitSe
       }
     }
 
-    val gammaString = CharArray(bitCounter.size) {
-      if (bitCounter[it].setCount >= bitCounter[it].unsetCount) { '1' } else { '0' }
-    }
-    val epsilonString = CharArray(bitCounter.size) {
-      if (bitCounter[it].setCount >= bitCounter[it].unsetCount) { '0' } else { '1' }
-    }
+    val gammaString = CharArray(bitCounter.size) { if (bitCounter[it].setCount >= bitCounter[it].unsetCount) { '1' } else { '0' } }
+    val epsilonString = CharArray(bitCounter.size) { if (bitCounter[it].setCount >= bitCounter[it].unsetCount) { '0' } else { '1' } }
 
     val gamma = Integer.parseInt(String(gammaString), 2)
     val epsilon = Integer.parseInt(String(epsilonString), 2)
