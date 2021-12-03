@@ -8,4 +8,5 @@ import javax.inject.Singleton
 internal interface TestDayComponent : DayComponent {
   fun inject(day01Test: Day01Test)
   fun inject(day02Test: Day02Test)
+  fun inject(day03Test: Day03Test)
 }

@@ -5,7 +5,7 @@ import javax.inject.Inject
 
 class PathGenerator @Inject constructor() : InputGenerator<Path>() {
   override fun <Out> usingInput(filename: String, sequenceHandler: (Sequence<Path>) -> Out): Out =
-    sequenceHandler(File(filename).toLineSequence { Path.fromLine(it) })
+    sequenceHandler(File(filename).toLineSequence(Path::fromLine))
 }
 
 data class Path(val direction: Direction, val distance: Int) {
