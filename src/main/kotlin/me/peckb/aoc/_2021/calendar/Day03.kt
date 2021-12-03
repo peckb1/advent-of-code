@@ -143,34 +143,28 @@ class Day03 @Inject constructor(private val inputGenerator: InputGenerator<BitSe
    * submarine? (Be sure to represent your answer in decimal, not binary.)
    */
   fun lifeSupportRating(filename: String) = inputGenerator.usingInput(filename) { inputSequence ->
-    val (setBits, unsetBits) = inputSequence.partition { bitSet -> bitSet.first().isSet }
-    val bitSetSize = setBits.first().size
+    runBlocking {
+      val (setBits, unsetBits) = inputSequence.partition { bitSet -> bitSet.first().isSet }
+      val bitSetSize = setBits.first().size
 
-    val (oxygenBitSet, c02BitSet) = runBlocking {
-      val deferredOxygen = async(context = Default) {
+      val deferredOxygen = async(Default) {
         val decider = { setBitSet: List<BitSet>, unsetBitSet: List<BitSet> ->
           if (setBitSet.size >= unsetBitSet.size) { setBitSet } else { unsetBitSet }
         }
-        findSet(decider(setBits, unsetBits), bitSetSize, decider)
+        findSet(decider(setBits, unsetBits), bitSetSize, decider).asInt(bitSetSize)
       }
 
-      val deferredCo2 = async(context = Default) {
+      val deferredCo2 = async(Default) {
         val decider = { setBitSet: List<BitSet>, unsetBitSet: List<BitSet> ->
           if (setBitSet.size >= unsetBitSet.size) { unsetBitSet } else { setBitSet }
         }
-        findSet(decider(setBits, unsetBits), bitSetSize, decider)
+        findSet(decider(setBits, unsetBits), bitSetSize, decider).asInt(bitSetSize)
       }
 
-      awaitAll(deferredOxygen, deferredCo2)
+      val (oxygen, c02) = awaitAll(deferredOxygen, deferredCo2)
+
+      oxygen * c02
     }
-
-    val oxyGenString = CharArray(bitSetSize) { oxygenBitSet.get(it).char }
-    val c02String = CharArray(bitSetSize) { c02BitSet.get(it).char }
-
-    val oxygen = Integer.parseInt(String(oxyGenString), 2)
-    val c02 = Integer.parseInt(String(c02String), 2)
-
-    oxygen * c02
   }
 
   private fun findSet(initialBitSet: List<BitSet>, bitSetSize: Int, selector: (List<BitSet>, List<BitSet>) -> List<BitSet>): BitSet {

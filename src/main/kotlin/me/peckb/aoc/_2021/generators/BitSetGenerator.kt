@@ -17,6 +17,11 @@ data class BitSet(val bits: List<Bit>) {
 
   inline fun forEachIndexed(action: (index: Int, Bit) -> Unit) = bits.forEachIndexed(action)
 
+  fun asInt(bitSetSize: Int): Int {
+    val oxyGenString = CharArray(bitSetSize) { this.get(it).char }
+    return Integer.parseInt(String(oxyGenString), 2)
+  }
+
   override fun toString() = bits.toString()
 }
 
