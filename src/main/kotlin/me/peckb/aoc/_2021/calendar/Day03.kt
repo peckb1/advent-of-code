@@ -148,17 +148,17 @@ class Day03 @Inject constructor(private val inputGenerator: InputGenerator<BitSe
 
     val (oxygenBitSet, c02BitSet) = runBlocking {
       val deferredOxygen = async(context = Default) {
-        val mySet = if (setBits.size > unsetBits.size) { setBits } else { unsetBits }
-        findSet(mySet, bitSetSize) { setBitSet, unsetBitSet ->
+        val decider = { setBitSet: List<BitSet>, unsetBitSet: List<BitSet> ->
           if (setBitSet.size >= unsetBitSet.size) { setBitSet } else { unsetBitSet }
         }
+        findSet(decider(setBits, unsetBits), bitSetSize, decider)
       }
 
       val deferredCo2 = async(context = Default) {
-        val mySet = if (setBits.size > unsetBits.size) { unsetBits } else { setBits }
-        findSet(mySet, bitSetSize) { setBitSet, unsetBitSet ->
+        val decider = { setBitSet: List<BitSet>, unsetBitSet: List<BitSet> ->
           if (setBitSet.size >= unsetBitSet.size) { unsetBitSet } else { setBitSet }
         }
+        findSet(decider(setBits, unsetBits), bitSetSize, decider)
       }
 
       awaitAll(deferredOxygen, deferredCo2)
