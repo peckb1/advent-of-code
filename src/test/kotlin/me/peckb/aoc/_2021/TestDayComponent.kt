@@ -1,6 +1,9 @@
 package me.peckb.aoc._2021
 
 import dagger.Component
+import me.peckb.aoc._2021.calendar.day01.Day01Test
+import me.peckb.aoc._2021.calendar.day02.Day02Test
+import me.peckb.aoc._2021.calendar.day03.Day03Test
 import javax.inject.Singleton
 
 @Singleton

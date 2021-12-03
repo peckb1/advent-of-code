@@ -1,6 +1,6 @@
-package me.peckb.aoc._2021
+package me.peckb.aoc._2021.calendar.day01
 
-import me.peckb.aoc._2021.calendar.Day01
+import me.peckb.aoc._2021.DaggerTestDayComponent
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
