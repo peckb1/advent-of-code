@@ -4,19 +4,13 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import me.peckb.aoc._2021.generators.BitSet
+import me.peckb.aoc._2021.calendar.Day03.Bit
 import me.peckb.aoc._2021.generators.InputGenerator
 import javax.inject.Inject
 
-class Day03 @Inject constructor(private val inputGenerator: InputGenerator<BitSet>) {
-  data class BitCount(private var unsetBits: Int = 0, private var setBits: Int = 0) {
-    val unsetCount get() = unsetBits
-    val setCount get() = setBits
+private typealias BitSet = List<Bit>
 
-    fun incrementUnsetCount() = unsetBits++
-    fun incrementSetCount() = setBits++
-  }
-
+class Day03 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
   /**
    * --- Day 3: Binary Diagnostic ---
    * The submarine has been making some odd creaking noises, so you ask it to produce a diagnostic
@@ -65,8 +59,8 @@ class Day03 @Inject constructor(private val inputGenerator: InputGenerator<BitSe
    * then multiply them together. What is the power consumption of the submarine? (Be sure to
    * represent your answer in decimal, not binary.)
    */
-  fun powerConsumption(filename: String) = inputGenerator.usingInput(filename) { inputSequence ->
-    val inputList = inputSequence.toList()
+  fun powerConsumption(filename: String) = generatorFactory.forFile(filename).readAs(::bitSet) { input ->
+    val inputList = input.toList()
 
     val bitCounter = Array(inputList.first().size) { BitCount() }
 
@@ -142,9 +136,9 @@ class Day03 @Inject constructor(private val inputGenerator: InputGenerator<BitSe
    * CO2 scrubber rating, then multiply them together. What is the life support rating of the
    * submarine? (Be sure to represent your answer in decimal, not binary.)
    */
-  fun lifeSupportRating(filename: String) = inputGenerator.usingInput(filename) { inputSequence ->
+  fun lifeSupportRating(filename: String) = generatorFactory.forFile(filename).readAs(::bitSet) { input ->
     runBlocking {
-      val (setBits, unsetBits) = inputSequence.partition { bitSet -> bitSet.first().isSet }
+      val (setBits, unsetBits) = input.partition { bitSet -> bitSet.first().isSet }
       val bitSetSize = setBits.first().size
 
       val deferredOxygen = async(Default) {
@@ -167,15 +161,36 @@ class Day03 @Inject constructor(private val inputGenerator: InputGenerator<BitSe
     }
   }
 
+  private fun bitSet(line: String) = line.toCharArray().map(::Bit)
+
+  private data class BitCount(private var unsetBits: Int = 0, private var setBits: Int = 0) {
+    val unsetCount get() = unsetBits
+    val setCount get() = setBits
+
+    fun incrementUnsetCount() = unsetBits++
+    fun incrementSetCount() = setBits++
+  }
+
   private fun findSet(initialBitSet: List<BitSet>, bitSetSize: Int, selector: (List<BitSet>, List<BitSet>) -> List<BitSet>): BitSet {
     var bitSet = initialBitSet
 
     for(index in 1 until bitSetSize) {
       if (bitSet.size == 1) break
-      val (set, unset) = bitSet.partition { it.get(index).isSet }
+      val (set, unset) = bitSet.partition { it[index].isSet }
       bitSet = selector(set, unset)
     }
 
     return bitSet.first()
+  }
+
+  private fun BitSet.asInt(bitSetSize: Int): Int {
+    val oxyGenString = CharArray(bitSetSize) { this[it].char }
+    return Integer.parseInt(String(oxyGenString), 2)
+  }
+
+  internal data class Bit(val char: Char) {
+    val isSet = char == '1'
+
+    override fun toString() = char.toString()
   }
 }

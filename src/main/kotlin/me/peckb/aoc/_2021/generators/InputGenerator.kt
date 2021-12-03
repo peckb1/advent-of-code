@@ -2,9 +2,12 @@ package me.peckb.aoc._2021.generators
 
 import java.io.File
 
-abstract class InputGenerator<In> {
-  abstract fun <Out> usingInput(filename: String, sequenceHandler: (Sequence<In>) -> Out): Out
+class InputGenerator private constructor(private val lines: Sequence<String>) {
 
-  protected fun File.toLineSequence(converter: (String) -> In) =
-    this.bufferedReader().lineSequence().map { converter(it) }
+  fun <In, Out> readAs(lineConverter: (String) -> In, sequenceHandler: (Sequence<In>) -> Out) =
+    sequenceHandler(lines.map(lineConverter))
+
+  class InputGeneratorFactory {
+    fun forFile(fileName: String) = InputGenerator(File(fileName).bufferedReader().lineSequence())
+  }
 }
