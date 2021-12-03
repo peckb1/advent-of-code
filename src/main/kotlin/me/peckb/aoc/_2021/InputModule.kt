@@ -3,7 +3,7 @@ package me.peckb.aoc._2021
 import dagger.Binds
 import dagger.Module
 import me.peckb.aoc._2021.generators.BitSet
-import me.peckb.aoc._2021.generators.Day03Generator
+import me.peckb.aoc._2021.generators.BitSetGenerator
 import me.peckb.aoc._2021.generators.InputGenerator
 import me.peckb.aoc._2021.generators.IntGenerator
 import me.peckb.aoc._2021.generators.Path
@@ -18,5 +18,5 @@ internal abstract class InputModule {
   abstract fun pathInputGenerator(pathGenerator: PathGenerator): InputGenerator<Path>
 
   @Binds
-  abstract fun day03InputGenerator(day03Generator: Day03Generator): InputGenerator<BitSet>
+  abstract fun day03InputGenerator(bitSetGenerator: BitSetGenerator): InputGenerator<BitSet>
 }

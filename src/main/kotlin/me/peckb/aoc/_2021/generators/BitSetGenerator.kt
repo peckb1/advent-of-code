@@ -3,7 +3,7 @@ package me.peckb.aoc._2021.generators
 import java.io.File
 import javax.inject.Inject
 
-class Day03Generator @Inject constructor() : InputGenerator<BitSet>() {
+class BitSetGenerator @Inject constructor() : InputGenerator<BitSet>() {
   override fun <Out> usingInput(filename: String, sequenceHandler: (Sequence<BitSet>) -> Out): Out =
     sequenceHandler(File(filename).toLineSequence { BitSet(it.toCharArray().map(::Bit)) })
 }
