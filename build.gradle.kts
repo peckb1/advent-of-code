@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     implementation("com.google.dagger:dagger:2.40.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
 
     kapt("com.google.dagger:dagger-compiler:2.40.3")
     kaptTest("com.google.dagger:dagger-compiler:2.40.3")
