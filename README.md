@@ -21,13 +21,19 @@ as the value which passed the given day/phase combination
 
 **Favourite problem(s):**
 
-* Day 1 (so far) is the favourite, but nothing complex yet.
-  * Phase two being more fun than phase one with the two (2) `windowed` usages
+* Day 01.
+  * A nice simple intro to get us started.
+
+* Day 04.
+  * After Day 03's shennanigans, this was a happy break.
 
 **Interesting approaches:**
 
-* None yet.
+* The double window for Day01 part 02
 
 ## Takeaways
 
 * Setting up a Kotlin project with Dagger should have more examples than the multitude of Android examples out there
+
+* Coding up a better abstraction in Part one leads to a much simpler part two instead of just hacking together a solution.
+
