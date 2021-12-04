@@ -10,26 +10,25 @@ class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val WHITESPACE_REGEX = "\\s+".toRegex()
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) {
-    val data = it.toList()
+  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) { input ->
+    val data = input.toList()
     val moves = generateMoves(data.take(1).first())
     val boards = generateBoards(data.drop(2))
 
     val (winningBoard, finalNumber) = moves.firstNotNullOf { number ->
-      boards.firstOrNull { board -> board.markNumber(number).isWinner() }
-        ?.let { board -> Pair(board, number) }
+      boards.firstOrNull { it.markNumber(number).isWinner() }?.let { Pair(it, number) }
     }
 
     winningBoard.score() * finalNumber
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) {
-    val data = it.toList()
+  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) { input ->
+    val data = input.toList()
     val moves = generateMoves(data.take(1).first())
     var boards = generateBoards(data.drop(2))
 
     val (lastWinningBoard, finalNumber) = moves.firstNotNullOf { number ->
-      val (winningBoards, losingBoards) = boards.partition { board -> board.markNumber(number).isWinner() }
+      val (winningBoards, losingBoards) = boards.partition { it.markNumber(number).isWinner() }
 
       if (losingBoards.isEmpty()) {
         Pair(winningBoards.last(), number)
@@ -45,12 +44,11 @@ class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   private fun generateBoards(boardInput: List<String>) = boardInput
     .chunked(6)
-    .map {
-      Board(it.take(5).map { row -> row.toBingoPositions() })
-    }
+    .map { Board(it.mapNotNull(::toBingoPositions)) }
 
-  private fun String.toBingoPositions() = this
+  private fun toBingoPositions(line: String) = line
     .trim()
-    .split(WHITESPACE_REGEX)
-    .map { BingoPosition(it.toInt()) }
+    .takeUnless { it.isEmpty() }
+    ?.split(WHITESPACE_REGEX)
+    ?.map { BingoPosition(it.toInt()) }
 }
