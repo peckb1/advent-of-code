@@ -6,20 +6,17 @@ internal data class Board(val values: List<List<BingoPosition>>) {
     fun isMarked() = marked
   }
 
-  private val positionMap = mutableMapOf<Int, MutableList<BingoPosition>>()
+  private val positionMap = mutableMapOf<Int, BingoPosition>()
 
   init {
     values.forEach { row ->
       row.forEach { item ->
-        positionMap.computeIfAbsent(item.number) { mutableListOf() }
-        positionMap[item.number]?.add(item)
+        positionMap.computeIfAbsent(item.number) { item }
       }
     }
   }
 
-  fun markNumber(number: Int) = this.apply {
-    positionMap[number]?.forEach { it.mark() }
-  }
+  fun markNumber(number: Int) = apply { positionMap[number]?.mark() }
 
   fun isWinner(): Boolean {
     val rowBingo by lazy {
@@ -32,7 +29,7 @@ internal data class Board(val values: List<List<BingoPosition>>) {
     return rowBingo || columnBingo
   }
 
-  fun score() = positionMap.values.fold(0) { total, bingoPositions ->
-    total + bingoPositions.filter { !it.isMarked() }.sumOf { it.number }
+  fun score() = positionMap.values.fold(0) { total, bingoPosition ->
+    total + (bingoPosition.number.takeIf { !bingoPosition.isMarked() } ?: 0)
   }
 }

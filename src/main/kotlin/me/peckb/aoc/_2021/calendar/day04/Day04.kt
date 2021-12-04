@@ -8,14 +8,17 @@ import javax.inject.Inject
 class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
     val WHITESPACE_REGEX = "\\s+".toRegex()
+    const val ACTION_LINES = 1
+    const val SPACER_LINES = 1
+    const val BOARD_SIZE = 5
   }
 
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) { input ->
     val data = input.toList()
-    val moves = generateMoves(data.take(1).first())
-    val boards = generateBoards(data.drop(2))
+    val numbers = generateNumbers(data.take(ACTION_LINES))
+    val boards = generateBoards(data.drop(ACTION_LINES + SPACER_LINES))
 
-    val (winningBoard, finalNumber) = moves.firstNotNullOf { number ->
+    val (winningBoard, finalNumber) = numbers.firstNotNullOf { number ->
       boards.firstOrNull { it.markNumber(number).isWinner() }?.let { Pair(it, number) }
     }
 
@@ -24,10 +27,10 @@ class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) { input ->
     val data = input.toList()
-    val moves = generateMoves(data.take(1).first())
-    var boards = generateBoards(data.drop(2))
+    val numbers = generateNumbers(data.take(ACTION_LINES))
+    var boards = generateBoards(data.drop(ACTION_LINES + SPACER_LINES))
 
-    val (lastWinningBoard, finalNumber) = moves.firstNotNullOf { number ->
+    val (lastWinningBoard, finalNumber) = numbers.firstNotNullOf { number ->
       val (winningBoards, losingBoards) = boards.partition { it.markNumber(number).isWinner() }
 
       if (losingBoards.isEmpty()) {
@@ -40,10 +43,12 @@ class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFact
     lastWinningBoard.score() * finalNumber
   }
 
-  private fun generateMoves(moveList: String) = moveList.split(",").map { it.toInt() }
+  private fun generateNumbers(numbersList: List<String>) = numbersList.flatMap { numberLine ->
+    numberLine.split(",").map { it.toInt() }
+  }
 
   private fun generateBoards(boardInput: List<String>) = boardInput
-    .chunked(6)
+    .chunked(BOARD_SIZE + SPACER_LINES)
     .map { Board(it.mapNotNull(::toBingoPositions)) }
 
   private fun toBingoPositions(line: String) = line
