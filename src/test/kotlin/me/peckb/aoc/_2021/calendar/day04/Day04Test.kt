@@ -1,7 +1,6 @@
-package me.peckb.aoc._2021.calendar.day03
+package me.peckb.aoc._2021.calendar.day04
 
 import me.peckb.aoc._2021.DaggerTestDayComponent
-import me.peckb.aoc._2021.calendar.day04.Day04
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,11 +20,11 @@ internal class Day04Test {
 
   @Test
   fun testDay04PartOne() {
-    assertEquals(-1, day04.partOne(DAY_04))
+    assertEquals(6592, day04.partOne(DAY_04))
   }
 
   @Test
   fun testDay04PartTwo() {
-    assertEquals(-1, day04.partTwo(DAY_04))
+    assertEquals(31755, day04.partTwo(DAY_04))
   }
 }
