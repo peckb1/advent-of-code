@@ -8,8 +8,4 @@ import javax.inject.Singleton
 
 @Singleton
 @Component(modules = [InputModule::class])
-internal interface DayComponent {
-  fun day01(): Day01
-  fun day02(): Day02
-  fun day03(): Day03
-}
+internal interface DayComponent
