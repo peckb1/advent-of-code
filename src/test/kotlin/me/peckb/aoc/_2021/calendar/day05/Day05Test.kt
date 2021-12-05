@@ -21,11 +21,11 @@ internal class Day05Test {
 
   @Test
   fun testDay05PartOne() {
-    assertEquals(-1, day05.partOne(DAY_05))
+    assertEquals(5585, day05.partOne(DAY_05))
   }
 
   @Test
   fun testDay05PartTwo() {
-    assertEquals(-1, day05.partTwo(DAY_05))
+    assertEquals(17193, day05.partTwo(DAY_05))
   }
 }
