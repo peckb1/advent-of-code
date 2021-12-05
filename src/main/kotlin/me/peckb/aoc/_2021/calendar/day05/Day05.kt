@@ -5,42 +5,48 @@ import javax.inject.Inject
 import kotlin.ranges.IntProgression.Companion.fromClosedRange
 
 data class Point(val x : Int, val y: Int)
+
 typealias Line = Pair<Point, Point>
 typealias Map = Array<Array<Int>>
 
 class Day05 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
-    const val MAP_SIZE = 1000
+    private const val MAP_SIZE = 1000
+    private fun createEmptyMap() = (0 until MAP_SIZE).map { Array(MAP_SIZE) { 0 } }.toTypedArray()
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::line) { input ->
-    val area = (0 until MAP_SIZE).map { Array(MAP_SIZE) { 0 } }.toTypedArray()
+  fun nonDiagonalOverlapCount(fileName: String) = generatorFactory.forFile(fileName).readAs(::line) { input ->
+    val map = createEmptyMap()
 
     input.filter { it.isVerticalOrHorizontal() }
-      .forEach { line -> adjustAreaWithNonDiagonal(area, line) }
+      .forEach { line -> adjustAreaWithNonDiagonal(map, line) }
 
-    area.sumOf { row -> row.count { it >= 2 } }
+    map.overlap()
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::line) { input ->
-    val area = (0 until MAP_SIZE).map { Array(MAP_SIZE) { 0 } }.toTypedArray()
+  fun fullOverlapCount(fileName: String) = generatorFactory.forFile(fileName).readAs(::line) { input ->
+    val map = createEmptyMap()
 
     input.forEach { line ->
       if (line.isVerticalOrHorizontal()) {
-        adjustAreaWithNonDiagonal(area, line)
+        adjustAreaWithNonDiagonal(map, line)
       } else {
-        adjustAreaWithDiagonal(area, line)
+        adjustAreaWithDiagonal(map, line)
       }
     }
 
-    area.sumOf { row -> row.count { it >= 2 } }
+    map.overlap()
   }
 
   private fun adjustAreaWithNonDiagonal(area: Map, line: Pair<Point, Point>) {
     val sortedX = line.sortedX()
     val sortedY = line.sortedY()
 
-    sortedX.forEach { x -> sortedY.forEach { y -> area[y][x]++ } }
+    sortedX.forEach { x ->
+      sortedY.forEach { y ->
+        area[y][x]++
+      }
+    }
   }
 
   private fun adjustAreaWithDiagonal(area: Map, line: Line) {
@@ -55,8 +61,8 @@ class Day05 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
-  private fun line(line: String): Line = line.split("->").let { coords ->
-    val points = coords.flatMap { coordinateString ->
+  private fun line(line: String): Line = line.split("->").let { coordinates ->
+    val points = coordinates.flatMap { coordinateString ->
       coordinateString.trim()
         .split(",")
         .map { it.toInt() }
@@ -68,5 +74,8 @@ class Day05 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun Line.isVerticalOrHorizontal() = first.x == second.x || first.y == second.y
 
   private fun Line.sortedX() = listOf(first.x, second.x).sorted().let { it.first() .. it.last() }
+
   private fun Line.sortedY() = listOf(first.y, second.y).sorted().let { it.first() .. it.last() }
+
+  private fun Map.overlap() = sumOf { row -> row.count { it >= 2 } }
 }

@@ -1,7 +1,6 @@
 package me.peckb.aoc._2021.calendar.day05
 
 import me.peckb.aoc._2021.DaggerTestDayComponent
-import me.peckb.aoc._2021.calendar.day05.Day05
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,11 +20,11 @@ internal class Day05Test {
 
   @Test
   fun testDay05PartOne() {
-    assertEquals(5585, day05.partOne(DAY_05))
+    assertEquals(5585, day05.nonDiagonalOverlapCount(DAY_05))
   }
 
   @Test
   fun testDay05PartTwo() {
-    assertEquals(17193, day05.partTwo(DAY_05))
+    assertEquals(17193, day05.fullOverlapCount(DAY_05))
   }
 }
