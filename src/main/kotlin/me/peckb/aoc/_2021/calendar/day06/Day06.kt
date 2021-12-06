@@ -12,7 +12,7 @@ class Day06 @Inject constructor(private val generatorFactory: InputGenerator.Inp
   }
 
   /** BRUTE FORCE */
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+  fun spawnSomeFish(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val population = mutableListOf<Fish>()
     input.first().split(",").forEach { age ->
       population.add(Fish(age.toInt()))
@@ -30,7 +30,7 @@ class Day06 @Inject constructor(private val generatorFactory: InputGenerator.Inp
   }
 
   /** COUNT THE BIRTH DAYS! */
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+  fun spawnAllTheFish(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val birthDays = mutableMapOf<DayOfWeek, BirthWindow>().apply {
       DayOfWeek.values().forEach { this[it] = BirthWindow() }
     }
