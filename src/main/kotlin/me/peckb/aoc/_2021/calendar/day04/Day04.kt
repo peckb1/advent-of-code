@@ -13,7 +13,7 @@ class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFact
     const val BOARD_SIZE = 5
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) { input ->
+  fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val data = input.toList()
     val numbers = generateNumbers(data.take(ACTION_LINES))
     val boards = generateBoards(data.drop(ACTION_LINES + SPACER_LINES))
@@ -25,7 +25,7 @@ class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFact
     winningBoard.score() * finalNumber
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs({ it }) { input ->
+  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val data = input.toList()
     val numbers = generateNumbers(data.take(ACTION_LINES))
     var boards = generateBoards(data.drop(ACTION_LINES + SPACER_LINES))
