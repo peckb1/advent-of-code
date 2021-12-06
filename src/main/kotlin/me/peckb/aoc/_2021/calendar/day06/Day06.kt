@@ -31,30 +31,24 @@ class Day06 @Inject constructor(private val generatorFactory: InputGenerator.Inp
 
   /** COUNT THE BIRTH DAYS! */
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val birthDays: MutableMap<DayOfWeek, BirthWindow> = mutableMapOf(
-      MONDAY to BirthWindow(),
-      TUESDAY to BirthWindow(),
-      WEDNESDAY to BirthWindow(),
-      THURSDAY to BirthWindow(),
-      FRIDAY to BirthWindow(),
-      SATURDAY to BirthWindow(),
-      SUNDAY to BirthWindow()
-    )
+    val birthDays = mutableMapOf<DayOfWeek, BirthWindow>().apply {
+      DayOfWeek.values().forEach { this[it] = BirthWindow() }
+    }
 
-    val population = input.first().split(",").map { Fish(it.toInt()) }.apply {
+    val initialPopulation = input.first().split(",").map { Fish(it.toInt()) }.apply {
       this.map { birthDays[of(it.myAge() + 1)]?.addBirth() }
     }
 
     var today = SUNDAY
-    var total: Long = population.size.toLong()
+    var fishInTheSea: Long = initialPopulation.size.toLong()
 
     repeat(PART_TWO_OBSERVATION_PERIOD) {
       today = today.plus(1)
-      val todaysBirths = birthDays[today]!!.todaysBirths
+      val todaysBirths = birthDays[today]?.todaysBirths ?: 0
 
       if (todaysBirths > 0) {
         // a parent is giving birth today, add the children to our count
-        total += todaysBirths
+        fishInTheSea += todaysBirths
         // add today's count to next birth windows "waiting"
         // DEV NOTE: the counter needs to be "8" tomorrow, so we add "9" today
         birthDays[today.plus(9)]?.setNextWeeksBirth(todaysBirths)
@@ -64,7 +58,7 @@ class Day06 @Inject constructor(private val generatorFactory: InputGenerator.Inp
       birthDays[today]?.moveNextWeekToToday()
     }
 
-    total
+    fishInTheSea
   }
 
   data class Fish(private var daysUntilSpawn: Int = 8) {
