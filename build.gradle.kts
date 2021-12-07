@@ -31,6 +31,12 @@ tasks.test {
     testLogging {
         events("PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
     }
+    addTestListener(object : TestListener {
+        override fun beforeTest(p0: TestDescriptor?) = Unit
+        override fun beforeSuite(p0: TestDescriptor?) = Unit
+        override fun afterTest(desc: TestDescriptor, result: TestResult) = Unit
+        override fun afterSuite(desc: TestDescriptor, result: TestResult) = printResults(desc, result)
+    })
 }
 
 tasks.withType<KotlinCompile>() {
@@ -42,5 +48,27 @@ sourceSets {
         java {
             setSrcDirs(listOf("build/generated/source/kapt/test"))
         }
+    }
+}
+
+fun printResults(desc: TestDescriptor, result: TestResult) {
+    if (desc.displayName.contains("Gradle Test Executor")) {
+        val output = result.run {
+            "Test Results: $resultType (" +
+              "$testCount tests, " +
+              "$successfulTestCount successes, " +
+              "$failedTestCount failures, " +
+              "$skippedTestCount skipped" +
+              ")"
+        }
+
+        val testResultLine = "|  $output  |"
+        val repeatLength = testResultLine.length
+        val separationLine = "-".repeat(repeatLength)
+
+        println()
+        println(separationLine)
+        println(testResultLine)
+        println(separationLine)
     }
 }
