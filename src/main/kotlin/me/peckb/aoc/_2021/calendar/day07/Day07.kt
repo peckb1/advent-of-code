@@ -7,14 +7,14 @@ import kotlin.math.max
 import kotlin.math.min
 
 class Day07 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
-  fun findSimpleCrabCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    findMinCrabCost(input.first()) { (crabPosition, desiredPosition) ->
+  fun findSimpleCrabCost(fileName: String) = generatorFactory.forFile(fileName).readOne { data ->
+    findMinCrabCost(data) { (crabPosition, desiredPosition) ->
       abs(desiredPosition - crabPosition)
     }
   }
 
-  fun findComplexCrabCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    findMinCrabCost(input.first()) { (crabPosition, desiredPosition) ->
+  fun findComplexCrabCost(fileName: String) = generatorFactory.forFile(fileName).readOne { data ->
+    findMinCrabCost(data) { (crabPosition, desiredPosition) ->
       (1 .. abs(desiredPosition - crabPosition)).sum()
     }
   }

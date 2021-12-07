@@ -4,11 +4,11 @@ import java.io.File
 
 class InputGenerator private constructor(private val lines: Sequence<String>) {
 
-  fun <Out> read(sequenceHandler: (Sequence<String>) -> Out) =
-    sequenceHandler(lines)
+  fun <Out> readOne(singleLineHandler: (String) -> Out) = singleLineHandler(lines.first())
 
-  fun <In, Out> readAs(lineConverter: (String) -> In, sequenceHandler: (Sequence<In>) -> Out) =
-    sequenceHandler(lines.map(lineConverter))
+  fun <Out> read(sequenceHandler: (Sequence<String>) -> Out) = sequenceHandler(lines)
+
+  fun <In, Out> readAs(converter: (String) -> In, handler: (Sequence<In>) -> Out) = handler(lines.map(converter))
 
   class InputGeneratorFactory {
     fun forFile(fileName: String) = InputGenerator(File(fileName).bufferedReader().lineSequence())
