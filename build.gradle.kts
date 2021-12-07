@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.TestResult.ResultType.FAILURE
+import org.gradle.api.tasks.testing.TestResult.ResultType.SKIPPED
+import org.gradle.api.tasks.testing.TestResult.ResultType.SUCCESS
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 apply(plugin = "kotlin")
@@ -52,18 +55,32 @@ sourceSets {
 }
 
 fun printResults(desc: TestDescriptor, result: TestResult) {
+    val ansiReset = "\u001B[0m"
+
+    val ansiYellow = "\u001B[33m";
+    val ansiGreen = "\u001B[32m"
+    val ansiRed = "\u001B[31m"
+
     if (desc.displayName.contains("Gradle Test Executor")) {
+        val summaryColour = when (result.resultType) {
+            SUCCESS -> ansiGreen
+            SKIPPED -> ansiYellow
+            FAILURE, null -> ansiRed
+        }
+
         val output = result.run {
-            "Test Results: $resultType (" +
-              "$testCount tests, " +
-              "$successfulTestCount successes, " +
-              "$failedTestCount failures, " +
-              "$skippedTestCount skipped" +
+            "Test Results: $summaryColour$resultType$ansiReset (" +
+              "$ansiGreen$successfulTestCount successes$ansiReset, " +
+              "$ansiRed$failedTestCount failures$ansiReset, " +
+              "$ansiYellow$skippedTestCount skipped$ansiReset" +
               ")"
         }
 
         val testResultLine = "|  $output  |"
-        val repeatLength = testResultLine.length
+        val repeatLength = testResultLine.length -
+          (ansiYellow.length + ansiGreen.length + ansiRed.length) -
+          (3 * ansiReset.length) -
+          (summaryColour.length + ansiReset.length)
         val separationLine = "-".repeat(repeatLength)
 
         println()
