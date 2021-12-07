@@ -20,11 +20,11 @@ internal class Day07Test {
 
   @Test
   fun testDay05PartOne() {
-    assertEquals(355150, day07.partOne(DAY_07))
+    assertEquals(355150, day07.findSimpleCrabCost(DAY_07))
   }
 
   @Test
   fun testDay05PartTwo() {
-    assertEquals(98368490, day07.partTwo(DAY_07))
+    assertEquals(98368490, day07.findComplexCrabCost(DAY_07))
   }
 }
