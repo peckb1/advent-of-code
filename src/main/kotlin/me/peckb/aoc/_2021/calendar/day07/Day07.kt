@@ -3,9 +3,7 @@ package me.peckb.aoc._2021.calendar.day07
 import me.peckb.aoc._2021.generators.InputGenerator
 import javax.inject.Inject
 import kotlin.Int.Companion.MAX_VALUE
-import kotlin.Int.Companion.MIN_VALUE
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.min
 
 class Day07 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {

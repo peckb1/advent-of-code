@@ -26,6 +26,9 @@ as the value which passed the given day/phase combination
 
 * Day 04.
   * After Day 03's shennanigans, this was a happy break.
+    
+* Day 08.
+  * A nice little bit of maths.
 
 **Interesting approaches:**
 
