@@ -2,9 +2,7 @@ package me.peckb.aoc._2021.calendar.day07
 
 import me.peckb.aoc._2021.generators.InputGenerator
 import javax.inject.Inject
-import kotlin.Int.Companion.MAX_VALUE
 import kotlin.math.abs
-import kotlin.math.min
 
 class Day07 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
   fun findSimpleCrabCost(fileName: String) = generatorFactory.forFile(fileName).readOne { data ->
@@ -20,9 +18,8 @@ class Day07 @Inject constructor(private val generatorFactory: InputGenerator.Inp
     val minPosition = horizontalPositions.minOf { it }
     val maxPosition = horizontalPositions.maxOf { it }
 
-    return (minPosition .. maxPosition).fold(MAX_VALUE) { min, desiredPosition ->
-      val posCost = horizontalPositions.sumOf { movementCost(abs(desiredPosition - it)) }
-      min(min, posCost)
+    return (minPosition .. maxPosition).minOf { desiredPosition ->
+      horizontalPositions.sumOf { movementCost(abs(desiredPosition - it)) }
     }
   }
 
