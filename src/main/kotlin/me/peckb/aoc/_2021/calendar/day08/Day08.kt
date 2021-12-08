@@ -4,19 +4,10 @@ import me.peckb.aoc._2021.generators.InputGenerator
 import javax.inject.Inject
 
 class Day08 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day08) { input ->
-    input.sumOf { (_, outputValue) ->
-      outputValue.count {
-        when (it.length) {
-          2, 3, 4, 7 -> true
-          else -> false
-        }
-      }
-    }
-  }
+  companion object {
+    private const val ALL_LETTERS = "abcdefg"
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day08) { input ->
-    val realSignals: Map<String, String> = mapOf(
+    private val SIGNAL_CODE_TO_NUMBER = mapOf(
       "abcefg" to "0",
       "cf" to "1",
       "acdeg" to "2",
@@ -29,101 +20,47 @@ class Day08 @Inject constructor(private val generatorFactory: InputGenerator.Inp
       "abcdfg" to "9",
     )
 
+    private val NUMBER_TO_SIGNAL_CODE = SIGNAL_CODE_TO_NUMBER.entries.associate { (k, v) -> v to k }
+  }
+
+  fun findUniqueNumbers(fileName: String) = generatorFactory.forFile(fileName).readAs(::measurement) { input ->
+    val wantedValues = listOf(2, 3, 4, 7)
+    input.sumOf { (_, outputValue) ->
+      outputValue.count { wantedValues.contains(it.length) }
+    }
+  }
+
+  fun sumAllOutputs(fileName: String) = generatorFactory.forFile(fileName).readAs(::measurement) { input ->
     val ouputResult = input.map { (patterns, outputValues) ->
-      val wireMatches: Map<Char, MutableList<Char>> = mapOf(
-        'a' to mutableListOf('a', 'b', 'c', 'd', 'e', 'f', 'g'),
-        'b' to mutableListOf('a', 'b', 'c', 'd', 'e', 'f', 'g'),
-        'c' to mutableListOf('a', 'b', 'c', 'd', 'e', 'f', 'g'),
-        'd' to mutableListOf('a', 'b', 'c', 'd', 'e', 'f', 'g'),
-        'e' to mutableListOf('a', 'b', 'c', 'd', 'e', 'f', 'g'),
-        'f' to mutableListOf('a', 'b', 'c', 'd', 'e', 'f', 'g'),
-        'g' to mutableListOf('a', 'b', 'c', 'd', 'e', 'f', 'g'),
-      )
+      val wirePossibilities = ALL_LETTERS.associateWith { ALL_LETTERS.toMutableList() }
 
-      val twoThreeFives = mutableListOf<String>()
-
+      fun String.hasEveryPossibilityFor(possibility: Char) = wirePossibilities[possibility]?.all { this.contains(it) } == true
 
       (patterns + outputValues).sortedBy { it.length }.forEach { encoding ->
         when(encoding.length) {
-          // #1
-          2 -> {
-            wireMatches['c']?.removeAll { !encoding.contains(it) }
-            wireMatches['f']?.removeAll { !encoding.contains(it) }
-
-            wireMatches['a']?.removeAll { encoding.contains(it) }
-            wireMatches['b']?.removeAll { encoding.contains(it) }
-            wireMatches['d']?.removeAll { encoding.contains(it) }
-            wireMatches['e']?.removeAll { encoding.contains(it) }
-            wireMatches['g']?.removeAll { encoding.contains(it) }
-          }
-          // # 7
-          3 -> {
-            wireMatches['a']?.removeAll { !encoding.contains(it) }
-            wireMatches['c']?.removeAll { !encoding.contains(it) }
-            wireMatches['f']?.removeAll { !encoding.contains(it) }
-
-            wireMatches['b']?.removeAll { encoding.contains(it) }
-            wireMatches['d']?.removeAll { encoding.contains(it) }
-            wireMatches['e']?.removeAll { encoding.contains(it) }
-            wireMatches['g']?.removeAll { encoding.contains(it) }
-          }
-          // #4
-          4 -> {
-            wireMatches['b']?.removeAll { !encoding.contains(it) }
-            wireMatches['c']?.removeAll { !encoding.contains(it) }
-            wireMatches['d']?.removeAll { !encoding.contains(it) }
-            wireMatches['f']?.removeAll { !encoding.contains(it) }
-
-            wireMatches['a']?.removeAll { encoding.contains(it) }
-            wireMatches['e']?.removeAll { encoding.contains(it) }
-            wireMatches['g']?.removeAll { encoding.contains(it) }
-          }
-          // #2, #3, or #5
-          5 -> {
-            if ((wireMatches['c']?.all { encoding.contains(it) }) == true && (wireMatches['f']?.all { encoding.contains(it) }) == true) {
-              // we have a #3
-              wireMatches['a']?.removeAll { !encoding.contains(it) }
-              wireMatches['c']?.removeAll { !encoding.contains(it) }
-              wireMatches['d']?.removeAll { !encoding.contains(it) }
-              wireMatches['f']?.removeAll { !encoding.contains(it) }
-              wireMatches['g']?.removeAll { !encoding.contains(it) }
-
-              wireMatches['b']?.removeAll { encoding.contains(it) }
-              wireMatches['e']?.removeAll { encoding.contains(it) }
-            }
+          2 -> removeValuesFor(wirePossibilities ,"1", encoding)
+          3 -> removeValuesFor(wirePossibilities ,"7", encoding)
+          4 -> removeValuesFor(wirePossibilities ,"4", encoding)
+          5 -> if (encoding.hasEveryPossibilityFor('c') && encoding.hasEveryPossibilityFor('f')) {
+            // The "c" and "f" encodings fully matching can only happen in a #3
+            // as in a #2 you would have no 'f' and in a #5 you would have no 'c'
+            removeValuesFor(wirePossibilities, "3", encoding)
           }
           // #0, #6, or #9
-          6 -> {
-            if (!((wireMatches['c']?.all { encoding.contains(it) }) == true && (wireMatches['f']?.all { encoding.contains(it) }) == true)) {
-              // we have a #6
-              wireMatches['a']?.removeAll { !encoding.contains(it) }
-              wireMatches['b']?.removeAll { !encoding.contains(it) }
-              wireMatches['d']?.removeAll { !encoding.contains(it) }
-              wireMatches['e']?.removeAll { !encoding.contains(it) }
-              wireMatches['f']?.removeAll { !encoding.contains(it) }
-              wireMatches['g']?.removeAll { !encoding.contains(it) }
-
-              wireMatches['c']?.removeAll { encoding.contains(it) }
-            }
+          6 -> if (!(encoding.hasEveryPossibilityFor('c') && encoding.hasEveryPossibilityFor('f'))) {
+            // The 'c' and 'f' encodings NOT fully matching can only happen in a #6
+            removeValuesFor(wirePossibilities, "6", encoding)
           }
           // #8
-          7 -> {
-            // every light is on, not really much help ...
-          }
+          7 -> { /* every light is on, not really much help ... */ }
         }
       }
 
-      val mappings = wireMatches
-        .mapValues { (_, v) -> v.first() }
-        .entries.associate{(k,v)-> v to k}
+      val mappings = wirePossibilities.entries.associate{(k,v)-> v.first() to k}
 
-      val numbers = outputValues.map { outputValue ->
+      val numbers = outputValues.mapNotNull { outputValue ->
         val sortedSignal = outputValue.toCharArray().map { mappings[it]!! }.sorted().joinToString("")
-        val x = realSignals[sortedSignal]
-        if (x == null) {
-          print("a")
-        }
-        x!!
+        SIGNAL_CODE_TO_NUMBER[sortedSignal]
       }
 
       numbers.joinToString("").toInt()
@@ -132,12 +69,26 @@ class Day08 @Inject constructor(private val generatorFactory: InputGenerator.Inp
     ouputResult.sum()
   }
 
-  private fun day08(line: String): Measurement {
-    val (patterns, output) = line.split("|").map { it.trim() }.map { it.split(" ") }
-    return Measurement(patterns, output)
+  private fun removeValuesFor(wirePossibilities: Map<Char, MutableList<Char>>, number: String, encoding: String) {
+    // we start by ensuring only values in our encoding show up for a given number
+    // for example if we were looking for the number "2" we would have two signal characters
+    // and for 'c' and 'f' we remove any value as a possibility that isn't inside our encoding
+    NUMBER_TO_SIGNAL_CODE[number]?.forEach { signalCharacter ->
+      wirePossibilities[signalCharacter]?.removeAll { !encoding.contains(it) }
+    }
+
+    // we also do the inverse, by clearing our encodings from anything that our number doesn't fill
+    // so if we have the number "2" again, we remove these two encoded values from a possibility
+    // to have encoded 'a', 'b', 'd', 'e', 'g'
+    NUMBER_TO_SIGNAL_CODE[number]
+      ?.let { signal -> signal.fold(ALL_LETTERS) { letters, letterToRemove -> letters.filterNot { it == letterToRemove } } }
+      ?.forEach { signalCharacter -> wirePossibilities[signalCharacter]?.removeAll { encoding.contains(it) } }
   }
 
-  // private data class SignalPattern(val pattern: String)
+  private fun measurement(line: String): Measurement {
+    val (patterns, output) = line.split("|").map { it.trim().split(" ") }
+    return Measurement(patterns, output)
+  }
 
   private data class Measurement(val patterns: List<String>, val outputValue: List<String>)
 }
