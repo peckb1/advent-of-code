@@ -6,21 +6,19 @@ import javax.inject.Inject
 class Day08 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
   companion object {
     private const val ALL_LETTERS = "abcdefg"
-
-    private val SIGNAL_CODE_TO_NUMBER = mapOf(
-      "abcefg" to "0",
-      "cf" to "1",
-      "acdeg" to "2",
-      "acdfg" to "3",
-      "bcdf" to "4",
-      "abdfg" to "5",
-      "abdefg" to "6",
-      "acf" to "7",
-      "abcdefg" to "8",
-      "abcdfg" to "9",
+    private val NUMBER_TO_SIGNAL_CODE = mapOf(
+      '0' to "abcefg",
+      '1' to "cf",
+      '2' to "acdeg",
+      '3' to "acdfg",
+      '4' to "bcdf",
+      '5' to "abdfg",
+      '6' to "abdefg",
+      '7' to "acf",
+      '8' to "abcdefg",
+      '9' to "abcdfg"
     )
-
-    private val NUMBER_TO_SIGNAL_CODE = SIGNAL_CODE_TO_NUMBER.entries.associate { (k, v) -> v to k }
+    private val SIGNAL_CODE_TO_NUMBER = NUMBER_TO_SIGNAL_CODE.entries.associate { (k, v) -> v to k }
   }
 
   fun findUniqueNumbers(fileName: String) = generatorFactory.forFile(fileName).readAs(::measurement) { input ->
@@ -31,45 +29,40 @@ class Day08 @Inject constructor(private val generatorFactory: InputGenerator.Inp
   }
 
   fun sumAllOutputs(fileName: String) = generatorFactory.forFile(fileName).readAs(::measurement) { input ->
-    val ouputResult = input.map { (patterns, outputValues) ->
+    val outputResult = input.map { (patterns, outputValues) ->
       val wirePossibilities = ALL_LETTERS.associateWith { ALL_LETTERS.toMutableList() }
-
       fun String.hasEveryPossibilityFor(possibility: Char) = wirePossibilities[possibility]?.all { this.contains(it) } == true
 
-      (patterns + outputValues).sortedBy { it.length }.forEach { encoding ->
+      patterns.sortedBy { it.length }.forEach { encoding ->
         when(encoding.length) {
-          2 -> wirePossibilities.removeValuesFor("1", encoding)
-          3 -> wirePossibilities.removeValuesFor("7", encoding)
-          4 -> wirePossibilities.removeValuesFor("4", encoding)
+          2 -> wirePossibilities.removeValuesFor('1', encoding)
+          3 -> wirePossibilities.removeValuesFor('7', encoding)
+          4 -> wirePossibilities.removeValuesFor('4', encoding)
           5 -> if (encoding.hasEveryPossibilityFor('c') && encoding.hasEveryPossibilityFor('f')) {
             // The "c" and "f" encodings fully matching can only happen in a #3
             // as in a #2 you would have no 'f' and in a #5 you would have no 'c'
-            wirePossibilities.removeValuesFor("3", encoding)
+            wirePossibilities.removeValuesFor('3', encoding)
           }
-          // #0, #6, or #9
           6 -> if (!(encoding.hasEveryPossibilityFor('c') && encoding.hasEveryPossibilityFor('f'))) {
             // The 'c' and 'f' encodings NOT fully matching can only happen in a #6
-            wirePossibilities.removeValuesFor("6", encoding)
+            wirePossibilities.removeValuesFor('6', encoding)
           }
-          // #8
-          7 -> { /* every light is on, not really much help ... */ }
         }
       }
 
       val mappings = wirePossibilities.entries.associate { (k, v) -> v.first() to k }
+      fun Map<Char, Char>.decode(outputValue: String) = outputValue.toCharArray().map { get(it)!! }.sorted().joinToString("")
 
-      val numbers = outputValues.map { outputValue ->
-        val sortedSignal = outputValue.toCharArray().map { mappings[it]!! }.sorted().joinToString("")
-        SIGNAL_CODE_TO_NUMBER[sortedSignal]!!
-      }
-
-      numbers.joinToString("").toInt()
+      outputValues
+        .map { mappings.decode(it) }
+        .map { SIGNAL_CODE_TO_NUMBER[it]!! }
+        .joinToString("").toInt()
     }
 
-    ouputResult.sum()
+    outputResult.sum()
   }
 
-  private fun Map<Char, MutableList<Char>>.removeValuesFor(number: String, encoding: String) {
+  private fun Map<Char, MutableList<Char>>.removeValuesFor(number: Char, encoding: String) {
     // we start by ensuring only values in our encoding show up for a given number
     // for example if we were looking for the number "2" we would have two signal characters
     // and for 'c' and 'f' we remove any value as a possibility that isn't inside our encoding
@@ -90,5 +83,5 @@ class Day08 @Inject constructor(private val generatorFactory: InputGenerator.Inp
     return Measurement(patterns, output)
   }
 
-  private data class Measurement(val patterns: List<String>, val outputValue: List<String>)
+  private data class Measurement(val patterns: List<String>, val outputValues: List<String>)
 }
