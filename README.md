@@ -27,16 +27,20 @@ as the value which passed the given day/phase combination
 * Day 04.
   * After Day 03's shennanigans, this was a happy break.
     
-* Day 08.
+* Day 07.
   * A nice little bit of maths.
+    
+* **Day 08**
+  * Having to figure out the encoding, was just fun!
 
 **Interesting approaches:**
 
 * The double window for Day01 part 02
+* The guarantee for Day08 part 02 that you can find one of [2, 3, 5] and [0, 6, 9] and the other unknowns can be ignored
+    
 
 ## Takeaways
 
 * Setting up a Kotlin project with Dagger should have more examples than the multitude of Android examples out there
 
-* Coding up a better abstraction in Part one leads to a much simpler part two instead of just hacking together a solution.
-
+* Coding up a better abstraction in Part one *often* leads to a much simpler part two instead of just hacking together a solution.

@@ -1,6 +1,7 @@
 import org.gradle.api.tasks.testing.TestResult.ResultType.FAILURE
 import org.gradle.api.tasks.testing.TestResult.ResultType.SKIPPED
 import org.gradle.api.tasks.testing.TestResult.ResultType.SUCCESS
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 apply(plugin = "kotlin")
@@ -33,6 +34,7 @@ tasks.test {
     useJUnitPlatform()
     testLogging {
         events("PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
+        exceptionFormat = FULL
     }
     addTestListener(object : TestListener {
         override fun beforeTest(p0: TestDescriptor?) = Unit
