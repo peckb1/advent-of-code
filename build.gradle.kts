@@ -63,20 +63,20 @@ fun printResults(desc: TestDescriptor, result: TestResult) {
 
     if (desc.displayName.contains("Gradle Test Executor")) {
         val summaryColour = when (result.resultType) {
-            SUCCESS -> ansiGreen
+            SUCCESS -> if (result.skippedTestCount == 0L) ansiGreen else ansiYellow
             SKIPPED -> ansiYellow
             FAILURE, null -> ansiRed
         }
 
         val output = result.run {
-            "Test Results: $summaryColour$resultType$ansiReset (" +
+            "Tests: $summaryColour$resultType$ansiReset (" +
               "$ansiGreen$successfulTestCount successes$ansiReset, " +
               "$ansiRed$failedTestCount failures$ansiReset, " +
               "$ansiYellow$skippedTestCount skipped$ansiReset" +
               ")"
         }
 
-        val testResultLine = "|  $output  |"
+        val testResultLine = "| $output |"
         val repeatLength = testResultLine.length -
           (ansiYellow.length + ansiGreen.length + ansiRed.length) -
           (3 * ansiReset.length) -
