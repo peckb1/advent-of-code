@@ -31,7 +31,7 @@ as the value which passed the given day/phase combination
   * A nice little bit of maths.
     
 * **Day 08**
-  * Having to figure out the encoding, was just fun!
+  * **Having to figure out the encoding, was just fun!**
 
 **Interesting approaches:**
 
@@ -42,5 +42,5 @@ as the value which passed the given day/phase combination
 ## Takeaways
 
 * Setting up a Kotlin project with Dagger should have more examples than the multitude of Android examples out there
-
+  * And subsequent nice looking test outout for the command line.
 * Coding up a better abstraction in Part one *often* leads to a much simpler part two instead of just hacking together a solution.

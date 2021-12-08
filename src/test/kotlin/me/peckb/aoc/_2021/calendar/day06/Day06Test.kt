@@ -19,12 +19,12 @@ internal class Day06Test {
   @Inject internal lateinit var day06: Day06
 
   @Test
-  fun testDay05PartOne() {
+  fun testDay06PartOne() {
     assertEquals(359344, day06.spawnSomeFish(DAY_06))
   }
 
   @Test
-  fun testDay05PartTwo() {
+  fun testDay06PartTwo() {
     assertEquals(1629570219571, day06.spawnAllTheFish(DAY_06))
   }
 }
