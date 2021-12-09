@@ -20,11 +20,11 @@ internal class Day09Test {
 
   @Test
   fun testDay09PartOne() {
-    assertEquals(-1, day09.partOne(DAY_09))
+    assertEquals(504, day09.findLowPointSum(DAY_09))
   }
 
   @Test
   fun testDay09PartTwo() {
-    assertEquals(-1, day09.partTwo(DAY_09))
+    assertEquals(1558722, day09.findLargestBasinProduct(DAY_09))
   }
 }

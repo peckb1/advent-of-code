@@ -2,62 +2,29 @@ package me.peckb.aoc._2021.calendar.day09
 
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
+import kotlin.Int.Companion.MAX_VALUE
+
+typealias Topography = List<List<Int>>
 
 class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  companion object {
-
+  fun findLowPointSum(fileName: String) = generatorFactory.forFile(fileName).readAs(::day09) { input ->
+    input.toList().findLowPoints().sumOf { it.height + 1 }
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day09) { input ->
-    val floor = input.toList()
-
-    val minValues = mutableListOf<Int>()
-
-    repeat(floor[0].size) { x ->
-      repeat(floor.size) { y ->
-        val me = floor[y][x]
-        val up = find(floor, y - 1, x)
-        val down = find(floor, y + 1, x)
-        val left = find(floor, y, x - 1)
-        val right = find(floor, y, x + 1)
-
-        if (me < up && me < down && me < left && me < right) {
-          minValues.add(me)
-        }
-      }
-    }
-
-    minValues.sumOf { it + 1 }
-  }
-
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day09) { input ->
+  fun findLargestBasinProduct(fileName: String) = generatorFactory.forFile(fileName).readAs(::day09) { input ->
     val floor = input.toList()
     // [y,x] pairs
-    val minLocations = mutableListOf<Pair<Int, Int>>()
+    val minLocations = floor.findLowPoints()
 
-    repeat(floor[0].size) { x ->
-      repeat(floor.size) { y ->
-        val me = floor[y][x]
-        val up = find(floor, y - 1, x)
-        val down = find(floor, y + 1, x)
-        val left = find(floor, y, x - 1)
-        val right = find(floor, y, x + 1)
-
-        if (me < up && me < down && me < left && me < right) {
-          minLocations.add(y to x)
-        }
-      }
-    }
-
-    val basins = minLocations.map { (y, x) ->
+    val basins = minLocations.map { (value, y, x) ->
       val spacesInBasin = mutableSetOf<Pair<Int, Int>>(
         y to x
       )
       val spacesToExplore = mutableSetOf<Pair<Int, Pair<Int, Int>>>(
-        floor[y][x] to (y - 1 to x),
-        floor[y][x] to (y + 1 to x),
-        floor[y][x] to (y to x - 1),
-        floor[y][x] to (y to x + 1)
+        value to (y - 1 to x),
+        value to (y + 1 to x),
+        value to (y to x - 1),
+        value to (y to x + 1)
       )
       while(spacesToExplore.isNotEmpty()) {
         val spaceToExplore = spacesToExplore.first().also {
@@ -66,7 +33,7 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         val originalValue = spaceToExplore.first
         val (myY, myX) = spaceToExplore.second
-        val valueOfMe = find(floor, myY, myX)
+        val valueOfMe = floor.findHeight(myY, myX)
 
         if (valueOfMe in (originalValue + 1)..8) {
           spacesInBasin.add(myY to myX)
@@ -95,11 +62,32 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   private fun day09(line: String) = line.map(Character::getNumericValue)
 
-private fun find(floor: List<List<Int>>, y: Int, x: Int): Int =
-  try {
-    floor[y][x]
-  } catch(e: IndexOutOfBoundsException) {
-    Int.MAX_VALUE
+  private fun Topography.findLowPoints(): List<Location> {
+    val minLocations = mutableListOf<Location>()
+
+    repeat(this[0].size) { x ->
+      repeat(this.size) { y ->
+        val me = this[y][x]
+
+        val up = findHeight(y - 1, x)
+        val down = findHeight(y + 1, x)
+        val left = findHeight(y, x - 1)
+        val right = findHeight(y, x + 1)
+
+        if (me < up && me < down && me < left && me < right) {
+          minLocations.add(Location(me, y, x))
+        }
+      }
+    }
+
+    return minLocations
   }
 
+  private fun Topography.findHeight(y: Int, x: Int) = try {
+    this[y][x]
+  } catch(e: IndexOutOfBoundsException) {
+    MAX_VALUE
+  }
+
+  private data class Location(val height: Int, val y: Int, val x: Int)
 }
