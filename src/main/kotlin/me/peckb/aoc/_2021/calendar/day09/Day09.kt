@@ -52,14 +52,11 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
     repeat(this[0].size) { x ->
       repeat(this.size) { y ->
         val me = this[y][x]
+        val myLocation = Location(me, y, x)
 
-        val up = findHeight(y - 1, x)
-        val down = findHeight(y + 1, x)
-        val left = findHeight(y, x - 1)
-        val right = findHeight(y, x + 1)
-
-        if (me < up && me < down && me < left && me < right) {
-          minLocations.add(Location(me, y, x))
+        val neighbors = myLocation.generateExploringNeighbors().map { findHeight(it.y, it.x) }
+        if (neighbors.all { me < it }) {
+          minLocations.add(myLocation)
         }
       }
     }
@@ -67,11 +64,12 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return minLocations
   }
 
-  private fun Topography.findHeight(y: Int, x: Int) = try {
-    this[y][x]
-  } catch(e: IndexOutOfBoundsException) {
-    MAX_VALUE
-  }
+  private fun Topography.findHeight(y: Int, x: Int) =
+    if (y in (0 until size) && x in (0 until this[y].size)) {
+      this[y][x]
+    } else {
+      MAX_VALUE
+    }
 
   private data class Location(val height: Int, val y: Int, val x: Int) {
     fun generateExploringNeighbors() = setOf(
