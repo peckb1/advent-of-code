@@ -7,11 +7,11 @@ import kotlin.Int.Companion.MAX_VALUE
 typealias Topography = List<List<Int>>
 
 class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  fun findLowPointSum(fileName: String) = generatorFactory.forFile(fileName).readAs(::day09) { input ->
+  fun findLowPointSum(fileName: String) = generatorFactory.forFile(fileName).readAs(::heights) { input ->
     input.toList().findLowPoints().sumOf { it.height + 1 }
   }
 
-  fun findLargestBasinProduct(fileName: String) = generatorFactory.forFile(fileName).readAs(::day09) { input ->
+  fun findLargestBasinProduct(fileName: String) = generatorFactory.forFile(fileName).readAs(::heights) { input ->
     val floor = input.toList()
     val minLocations = floor.findLowPoints()
 
@@ -44,7 +44,7 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
       .reduce(Int::times)
   }
 
-  private fun day09(line: String) = line.map(Character::getNumericValue)
+  private fun heights(line: String) = line.map(Character::getNumericValue)
 
   private fun Topography.findLowPoints(): List<Location> {
     val minLocations = mutableListOf<Location>()
