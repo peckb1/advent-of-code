@@ -1,11 +1,11 @@
 package me.peckb.aoc._2021.calendar.day06
 
-import me.peckb.aoc._2021.generators.InputGenerator
+import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import java.time.DayOfWeek
 import java.time.DayOfWeek.*
 import javax.inject.Inject
 
-class Day06 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
+class Day06 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
     const val PART_ONE_OBSERVATION_PERIOD = 80
     const val PART_TWO_OBSERVATION_PERIOD = 256

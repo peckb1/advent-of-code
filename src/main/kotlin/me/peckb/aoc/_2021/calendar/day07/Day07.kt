@@ -1,10 +1,10 @@
 package me.peckb.aoc._2021.calendar.day07
 
-import me.peckb.aoc._2021.generators.InputGenerator
+import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 import kotlin.math.abs
 
-class Day07 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
+class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun findSimpleCrabCost(fileName: String) = generatorFactory.forFile(fileName).readOne { data ->
     findMinCrabCost(data) { it }
   }

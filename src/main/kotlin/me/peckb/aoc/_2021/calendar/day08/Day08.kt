@@ -1,9 +1,9 @@
 package me.peckb.aoc._2021.calendar.day08
 
-import me.peckb.aoc._2021.generators.InputGenerator
+import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
-class Day08 @Inject constructor(private val generatorFactory: InputGenerator.InputGeneratorFactory) {
+class Day08 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
     private const val ALL_LETTERS = "abcdefg"
     private val NUMBER_TO_SIGNAL_CODE = mapOf(
@@ -31,7 +31,9 @@ class Day08 @Inject constructor(private val generatorFactory: InputGenerator.Inp
   fun sumAllOutputs(fileName: String) = generatorFactory.forFile(fileName).readAs(::measurement) { input ->
     val outputResult = input.map { (patterns, outputValues) ->
       val wirePossibilities = ALL_LETTERS.associateWith { ALL_LETTERS.toMutableList() }
-      fun String.hasEveryPossibilityFor(possibility: Char) = wirePossibilities[possibility]?.all { this.contains(it) } == true
+
+      fun String.hasEveryPossibilityFor(possibility: Char) =
+        wirePossibilities[possibility]?.all { this.contains(it) } == true
 
       patterns.sortedBy { it.length }.forEach { encoding ->
         when(encoding.length) {
@@ -51,7 +53,6 @@ class Day08 @Inject constructor(private val generatorFactory: InputGenerator.Inp
       }
 
       val mappings = wirePossibilities.entries.associate { (k, v) -> v.first() to k }
-      fun Map<Char, Char>.decode(outputValue: String) = outputValue.toCharArray().map { get(it)!! }.sorted().joinToString("")
 
       outputValues
         .map { mappings.decode(it) }
@@ -77,6 +78,12 @@ class Day08 @Inject constructor(private val generatorFactory: InputGenerator.Inp
       ?.let { signal -> signal.fold(ALL_LETTERS) { letters, letterToRemove -> letters.filterNot { it == letterToRemove } } }
       ?.forEach { signalCharacter -> this[signalCharacter]?.removeAll { encoding.contains(it) } }
   }
+
+  private fun Map<Char, Char>.decode(outputValue: String) = outputValue
+    .toCharArray()
+    .map { this[it]!! }
+    .sorted()
+    .joinToString("")
 
   private fun measurement(line: String): Measurement {
     val (patterns, output) = line.split("|").map { it.trim().split(" ") }
