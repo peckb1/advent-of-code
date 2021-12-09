@@ -13,51 +13,35 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   fun findLargestBasinProduct(fileName: String) = generatorFactory.forFile(fileName).readAs(::day09) { input ->
     val floor = input.toList()
-    // [y,x] pairs
     val minLocations = floor.findLowPoints()
 
     val basins = minLocations.map { (value, y, x) ->
-      val spacesInBasin = mutableSetOf<Pair<Int, Int>>(
-        y to x
-      )
-      val spacesToExplore = mutableSetOf<Pair<Int, Pair<Int, Int>>>(
-        value to (y - 1 to x),
-        value to (y + 1 to x),
-        value to (y to x - 1),
-        value to (y to x + 1)
-      )
+      val initialLocation = Location(value, y, x)
+
+      val spacesInBasin = mutableSetOf(initialLocation)
+      val spacesToExplore = mutableSetOf<Location>().apply {
+        addAll(initialLocation.generateExploringNeighbors())
+      }
+
       while(spacesToExplore.isNotEmpty()) {
-        val spaceToExplore = spacesToExplore.first().also {
-          spacesToExplore.remove(it)
-        }
+        val spaceToExplore = spacesToExplore.first().also { spacesToExplore.remove(it) }
+        val valueOfMe = floor.findHeight(spaceToExplore.y, spaceToExplore.x)
 
-        val originalValue = spaceToExplore.first
-        val (myY, myX) = spaceToExplore.second
-        val valueOfMe = floor.findHeight(myY, myX)
+        if (valueOfMe in (spaceToExplore.height + 1)..8) {
+          val exploredLocation = Location(valueOfMe, spaceToExplore.y, spaceToExplore.x)
 
-        if (valueOfMe in (originalValue + 1)..8) {
-          spacesInBasin.add(myY to myX)
-          spacesToExplore.addAll(
-            listOf(
-              valueOfMe to (myY - 1 to myX),
-              valueOfMe to (myY + 1 to myX),
-              valueOfMe to (myY to myX - 1),
-              valueOfMe to (myY to myX + 1)
-            )
-          )
+          spacesInBasin.add(exploredLocation)
+          spacesToExplore.addAll(exploredLocation.generateExploringNeighbors())
         }
       }
 
       spacesInBasin
     }
 
-    basins
-      .sortedByDescending { it.size }
+    basins.sortedByDescending { it.size }
       .take(3)
       .map { it.size }
-      .fold(1) { acc, i ->
-        i * acc
-      }
+      .reduce(Int::times)
   }
 
   private fun day09(line: String) = line.map(Character::getNumericValue)
@@ -89,5 +73,12 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
     MAX_VALUE
   }
 
-  private data class Location(val height: Int, val y: Int, val x: Int)
+  private data class Location(val height: Int, val y: Int, val x: Int) {
+    fun generateExploringNeighbors() = setOf(
+      Location(height, y - 1, x),
+      Location(height, y + 1, x),
+      Location(height, y, x - 1),
+      Location(height, y, x + 1)
+    )
+  }
 }
