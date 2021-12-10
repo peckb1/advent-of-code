@@ -9,12 +9,7 @@ import javax.inject.Inject
 
 class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
-    private val PAIRINGS = mapOf(
-      '<' to '>',
-      '(' to ')',
-      '[' to ']',
-      '{' to '}'
-    )
+    private val PAIRINGS = mapOf('<' to '>', '(' to ')', '[' to ']', '{' to '}')
 
     private val CORRUPTED_COSTS = mapOf(
       ')' to 3,
