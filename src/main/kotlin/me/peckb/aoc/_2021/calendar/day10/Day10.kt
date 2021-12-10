@@ -1,5 +1,9 @@
 package me.peckb.aoc._2021.calendar.day10
 
+import arrow.core.Either
+import arrow.core.Either.Left
+import arrow.core.Either.Right
+import arrow.core.right
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import java.util.ArrayDeque
 import javax.inject.Inject
@@ -30,23 +34,7 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val badCharacters = input.mapNotNull { line ->
-      val stack = ArrayDeque<Char>()
-      var corruptedSymbol: Char? = null
-
-      line.asSequence().forEach { symbol ->
-        when (symbol) {
-          '<', '[', '{', '(' -> stack.push(symbol)
-          '>', ']', '}', ')' -> stack.pop().let { PAIRINGS[it] }.let { popped ->
-            if (symbol != popped) {
-              corruptedSymbol = symbol
-              return@forEach
-            }
-          }
-          else -> throw Exception("Unexpected Input $symbol")
-        }
-      }
-
-      corruptedSymbol
+      findCorruptedData(line).fold({ it }, { null })
     }
 
     badCharacters.sumOf { CORRUPTED_COSTS.getValue(it) }
@@ -56,28 +44,7 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val data = mutableMapOf<String, ArrayDeque<Char>>()
 
     val incompleteLines = input.forEach { line ->
-      val stack = ArrayDeque<Char>()
-      val corruptedCharacter = line.mapNotNull { symbol ->
-        when (symbol) {
-          '<', '[', '{', '(' -> {
-            stack.push(symbol)
-            null
-          }
-          '>', ']', '}', ')' -> {
-            val popped = stack.pop()
-            if(symbol == PAIRINGS[popped]) {
-              null
-            } else {
-              symbol
-            }
-          }
-          else -> throw Exception("Unexpected Input $symbol")
-        }
-      }.firstOrNull()
-
-      if(corruptedCharacter == null) {
-        data[line] = stack
-      }
+      findCorruptedData(line).tap { data.putIfAbsent(line, it) }
     }
 
     val allCosts = data.values.map { remainingData ->
@@ -89,5 +56,19 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
     allCosts[allCosts.size / 2]
   }
 
-  private fun day10(line: String) = 4
+  private fun findCorruptedData(line: String): Either<Char, ArrayDeque<Char>> {
+    val stack = ArrayDeque<Char>()
+
+    line.asSequence().forEach { symbol ->
+      when (symbol) {
+        '<', '[', '{', '(' -> stack.push(symbol)
+        '>', ']', '}', ')' -> stack.pop()
+          .let { PAIRINGS[it] }
+          .let { if (symbol != it) return Left(symbol) }
+        else -> throw Exception("Unexpected Input $symbol")
+      }
+    }
+
+    return Right(stack)
+  }
 }
