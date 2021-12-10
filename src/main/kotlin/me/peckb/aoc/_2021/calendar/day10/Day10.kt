@@ -3,7 +3,6 @@ package me.peckb.aoc._2021.calendar.day10
 import arrow.core.Either
 import arrow.core.Either.Left
 import arrow.core.Either.Right
-import arrow.core.right
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import java.util.ArrayDeque
 import javax.inject.Inject
@@ -32,34 +31,30 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
     ).withDefault { 0 }
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+  fun findCorruptedCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val badCharacters = input.mapNotNull { line ->
-      findCorruptedData(line).fold({ it }, { null })
+      findIncompleteData(line).fold({ it }, { null })
     }
 
     badCharacters.sumOf { CORRUPTED_COSTS.getValue(it) }
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val data = mutableMapOf<String, ArrayDeque<Char>>()
+  fun findIncompleteCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+    val incompleteStacks = input.mapNotNull { findIncompleteData(it).orNull() }
 
-    val incompleteLines = input.forEach { line ->
-      findCorruptedData(line).tap { data.putIfAbsent(line, it) }
-    }
-
-    val allCosts = data.values.map { remainingData ->
-      remainingData.fold(0L) { acc, char ->
-        (acc * 5 + INCOMPLETE_COSTS[PAIRINGS[char]]!!)
+    val sortedCosts = incompleteStacks.map { remainingData ->
+      remainingData.fold(0L) { cost, symbol ->
+        (cost * 5 + (INCOMPLETE_COSTS[PAIRINGS[symbol]] ?: 0))
       }
-    }.sorted()
+    }.sorted().toList()
 
-    allCosts[allCosts.size / 2]
+    sortedCosts[sortedCosts.size / 2]
   }
 
-  private fun findCorruptedData(line: String): Either<Char, ArrayDeque<Char>> {
+  private fun findIncompleteData(line: String): Either<Char, ArrayDeque<Char>> {
     val stack = ArrayDeque<Char>()
 
-    line.asSequence().forEach { symbol ->
+    line.forEach { symbol ->
       when (symbol) {
         '<', '[', '{', '(' -> stack.push(symbol)
         '>', ']', '}', ')' -> stack.pop()
