@@ -6,51 +6,50 @@ import javax.inject.Inject
 
 class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
-    val inverse = mapOf(
-      '>' to '<',
-      ')' to '(',
-      ']' to '[',
-      '}' to '{',
+    private val PAIRINGS = mapOf(
+      '<' to '>',
+      '(' to ')',
+      '[' to ']',
+      '{' to '}'
     )
-    val otherInverse = inverse.entries.associate { (k, v) -> v to k }
-    val costs = mapOf(
+
+    private val CORRUPTED_COSTS = mapOf(
       ')' to 3,
       ']' to 57,
       '}' to 1197,
       '>' to 25137
-    )
+    ).withDefault { 0 }
 
-    val partTwoCosts = mapOf(
+    private val INCOMPLETE_COSTS = mapOf(
       ')' to 1,
       ']' to 2,
       '}' to 3,
       '>' to 4
-    )
+    ).withDefault { 0 }
   }
 
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val badCharacters = input.mapNotNull { line ->
       val stack = ArrayDeque<Char>()
-      line.mapNotNull { symbol ->
+      var corruptedSymbol: Char? = null
+
+      line.asSequence().forEach { symbol ->
         when (symbol) {
-          '<', '[', '{', '(' -> {
-            stack.push(symbol)
-            null
-          }
-          '>', ']', '}', ')' -> {
-            val popped = stack.pop()
-            if(!popped.equals(inverse[symbol]!!)) {
-              symbol
-            } else {
-              null
+          '<', '[', '{', '(' -> stack.push(symbol)
+          '>', ']', '}', ')' -> stack.pop().let { PAIRINGS[it] }.let { popped ->
+            if (symbol != popped) {
+              corruptedSymbol = symbol
+              return@forEach
             }
           }
           else -> throw Exception("Unexpected Input $symbol")
         }
-      }.firstOrNull()
-    }.toList()
+      }
 
-    badCharacters.sumOf { costs[it]!! }
+      corruptedSymbol
+    }
+
+    badCharacters.sumOf { CORRUPTED_COSTS.getValue(it) }
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
@@ -66,10 +65,10 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
           }
           '>', ']', '}', ')' -> {
             val popped = stack.pop()
-            if(!popped.equals(inverse[symbol]!!)) {
-              symbol
-            } else {
+            if(symbol == PAIRINGS[popped]) {
               null
+            } else {
+              symbol
             }
           }
           else -> throw Exception("Unexpected Input $symbol")
@@ -83,7 +82,7 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     val allCosts = data.values.map { remainingData ->
       remainingData.fold(0L) { acc, char ->
-        (acc * 5 + partTwoCosts[otherInverse[char]]!!)
+        (acc * 5 + INCOMPLETE_COSTS[PAIRINGS[char]]!!)
       }
     }.sorted()
 
