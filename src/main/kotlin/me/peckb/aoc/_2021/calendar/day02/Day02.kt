@@ -35,7 +35,10 @@ class Day02 @Inject constructor(private val generatorFactory: InputGenerator.Inp
     }
   }
 
-  private data class Location(var depth: Int = 0, var distance: Int = 0) {
+  private class Location {
+    var distance: Int = 0; private set
+    var depth: Int = 0; private set
+
     fun move(path: Path) {
       when (path.direction) {
         FORWARD -> distance += path.distance
@@ -45,7 +48,11 @@ class Day02 @Inject constructor(private val generatorFactory: InputGenerator.Inp
     }
   }
 
-  private data class LocationAndAim(var depth: Int = 0, var distance: Int = 0, var aim: Int = 0) {
+  private class LocationAndAim {
+    var distance: Int = 0; private set
+    var depth: Int = 0; private set
+    private var aim: Int = 0
+
     fun move(path: Path) {
       when (path.direction) {
         FORWARD -> {

@@ -70,7 +70,10 @@ class Day06 @Inject constructor(private val generatorFactory: InputGeneratorFact
     fun myAge() = daysUntilSpawn
   }
 
-  data class BirthWindow(var todaysBirths: Long = 0, private var nextWeeksBirths: Long = 0) {
+  class BirthWindow {
+    var todaysBirths: Long = 0; private set
+    private var nextWeeksBirths: Long = 0
+
     fun addBirth() {
       todaysBirths++
     }

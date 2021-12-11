@@ -89,7 +89,5 @@ class Day03 @Inject constructor(private val generatorFactory: InputGenerator.Inp
 
   internal data class Bit(val char: Char) {
     val isSet = char == '1'
-
-    override fun toString() = char.toString()
   }
 }
