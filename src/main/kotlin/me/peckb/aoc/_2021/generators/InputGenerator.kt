@@ -2,7 +2,6 @@ package me.peckb.aoc._2021.generators
 
 import java.io.BufferedReader
 import java.io.File
-import javax.inject.Singleton
 
 class InputGenerator private constructor(private val lines: Sequence<String>) {
 
@@ -12,7 +11,6 @@ class InputGenerator private constructor(private val lines: Sequence<String>) {
 
   fun <In, Out> readAs(converter: (String) -> In, handler: (Sequence<In>) -> Out) = handler(lines.map(converter))
 
-  @Singleton
   class InputGeneratorFactory {
     fun forFile(fileName: String): InputGenerator {
       val file = File(fileName)
