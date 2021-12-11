@@ -1,4 +1,4 @@
-name: Build
+name: Build and Test
 
 on:
     push:
@@ -26,4 +26,13 @@ jobs:
               uses: EnricoMi/publish-unit-test-result-action@v1
               if: always()
               with:
-                files: test-results/**/*.xml
+                files: build/test-results/**/*.xml
+
+            - name: Add coverage to PR
+              id: jacoco
+              uses: madrapps/jacoco-report@v1.2
+              with:
+                paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
+                token: ${{ secrets.GITHUB_TOKEN }}
+                min-coverage-overall: 40
+                min-coverage-changed-files: 60
