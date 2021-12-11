@@ -6,43 +6,25 @@ import javax.inject.Inject
 class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
     const val STEPS = 100
+    const val NEVER_STOP_SEPPING = Int.MAX_VALUE
   }
 
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val area = input.map { octopusRow ->
-      octopusRow.map { Octopus(Character.getNumericValue(it)) }
-    }.toList()
+    val area = input.map { it.map { Octopus(Character.getNumericValue(it)) } }.toList()
 
-    var flashes = 0
-
-    (1 .. STEPS).forEach { step ->
-      val flashesForStep = advance(area, step)
-      flashes += flashesForStep
-    }
-
-    flashes
+    (1..STEPS).sumOf { advance(area, it) }
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val area = input.map { it.map { Octopus(Character.getNumericValue(it)) } }.toList()
 
-    var allFlashStep = 0
-    var step = 0
-    while(allFlashStep == 0) {
-      step++
-      val flashesForStep = advance(area, step)
-      if (flashesForStep == 100) {
-        allFlashStep = step
-      }
-    }
-
-    allFlashStep
+    (1..NEVER_STOP_SEPPING).first { advance(area, it) == 100 }
   }
 
   private fun advance(area: List<List<Octopus>>, step: Int): Int {
     var flashes = 0
     repeat(area.size) { y ->
-      repeat(area[y].size) { x->
+      repeat(area[y].size) { x ->
         val didFlash = area[y][x].gatherEnergy(step)
         if (didFlash) {
           flashes += 1 + flashNeighbors(area, y, x, step)
@@ -55,8 +37,8 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun flashNeighbors(area: List<List<Octopus>>, y: Int, x: Int, step: Int): Int {
     var flashes = 0
 
-    (y - 1 .. y + 1).forEach { yNeighbor ->
-      (x - 1 .. x + 1).forEach { xNeighbor ->
+    (y - 1..y + 1).forEach { yNeighbor ->
+      (x - 1..x + 1).forEach { xNeighbor ->
         if (x != xNeighbor || y != yNeighbor) {
           try {
             val newFlash = area[yNeighbor][xNeighbor].gatherEnergy(step)
@@ -64,7 +46,8 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
               flashes++
               flashes += flashNeighbors(area, yNeighbor, xNeighbor, step)
             }
-          } catch (e: IndexOutOfBoundsException) { /* ... */ }
+          } catch (e: IndexOutOfBoundsException) { /* ... */
+          }
         }
       }
     }
