@@ -53,7 +53,7 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   private fun octopusRow(line: String) = line.map { Octopus(Character.getNumericValue(it)) }
 
-  data class Octopus(var energy: Int, var lastFlashStep: Int = 0) {
+  data class Octopus(private var energy: Int, private var lastFlashStep: Int = 0) {
     fun gatherEnergy(stepNumber: Int): Boolean {
       if (lastFlashStep != stepNumber) {
         energy++
