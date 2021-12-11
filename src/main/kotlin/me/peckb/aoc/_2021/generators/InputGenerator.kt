@@ -1,18 +1,24 @@
 package me.peckb.aoc._2021.generators
 
+import java.io.BufferedReader
 import java.io.File
+import javax.inject.Singleton
 
-class InputGenerator private constructor(private val file: File) {
-  fun <Out> readOne(singleLineHandler: (String) -> Out) =
-    file.useLines { singleLineHandler(it.first()) }
+class InputGenerator private constructor(private val lines: Sequence<String>) {
 
-  fun <Out> read(sequenceHandler: (Sequence<String>) -> Out) =
-    file.useLines { sequenceHandler(it) }
+  fun <Out> readOne(singleLineHandler: (String) -> Out) = singleLineHandler(lines.first())
 
-  fun <In, Out> readAs(converter: (String) -> In, handler: (Sequence<In>) -> Out) =
-    file.useLines { handler(it.map(converter)) }
+  fun <Out> read(sequenceHandler: (Sequence<String>) -> Out) = sequenceHandler(lines)
 
+  fun <In, Out> readAs(converter: (String) -> In, handler: (Sequence<In>) -> Out) = handler(lines.map(converter))
+
+  @Singleton
   class InputGeneratorFactory {
-    fun forFile(fileName: String) = InputGenerator(File(fileName))
+    fun forFile(fileName: String): InputGenerator {
+      val file = File(fileName)
+      val bufferedReader = BufferedReader(file.reader())
+
+      return InputGenerator(bufferedReader.lineSequence())
+    }
   }
 }
