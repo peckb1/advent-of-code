@@ -4,6 +4,10 @@ import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
+  companion object {
+    const val STEPS = 100
+  }
+
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val area = input.map { octopusRow ->
       octopusRow.map { Octopus(Character.getNumericValue(it)) }
@@ -11,16 +15,9 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     var flashes = 0
 
-    (1 .. 100).forEach { step ->
-      repeat(10) { y ->
-        repeat(10) { x->
-          val didFlash = area[y][x].gatherEnergy(step)
-          if (didFlash) {
-            flashes++
-            flashes += flashNeighbors(area, y, x, step)
-          }
-        }
-      }
+    (1 .. STEPS).forEach { step ->
+      val flashesForStep = advance(area, step)
+      flashes += flashesForStep
     }
 
     flashes
@@ -33,22 +30,26 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var step = 0
     while(allFlashStep == 0) {
       step++
-      var stepFlashes = 0
-      repeat(10) { y ->
-        repeat(10) { x->
-          val didFlash = area[y][x].gatherEnergy(step)
-          if (didFlash) {
-            stepFlashes++
-            stepFlashes += flashNeighbors(area, y, x, step)
-          }
-        }
-      }
-      if (stepFlashes == 100) {
+      val flashesForStep = advance(area, step)
+      if (flashesForStep == 100) {
         allFlashStep = step
       }
     }
 
     allFlashStep
+  }
+
+  private fun advance(area: List<List<Octopus>>, step: Int): Int {
+    var flashes = 0
+    repeat(area.size) { y ->
+      repeat(area[y].size) { x->
+        val didFlash = area[y][x].gatherEnergy(step)
+        if (didFlash) {
+          flashes += 1 + flashNeighbors(area, y, x, step)
+        }
+      }
+    }
+    return flashes
   }
 
   private fun flashNeighbors(area: List<List<Octopus>>, y: Int, x: Int, step: Int): Int {
