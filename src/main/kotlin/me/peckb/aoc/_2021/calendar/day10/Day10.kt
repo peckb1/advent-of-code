@@ -27,21 +27,19 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   fun findCorruptedCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val badCharacters = input.mapNotNull { line ->
-      findIncompleteData(line).fold({ it }, { null })
-    }
-
-    badCharacters.sumOf { CORRUPTED_COSTS.getValue(it) }
+    input
+      .mapNotNull { findIncompleteData(it).swap().orNull() }
+      .sumOf { CORRUPTED_COSTS.getValue(it) }
   }
 
   fun findIncompleteCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val incompleteStacks = input.mapNotNull { findIncompleteData(it).orNull() }
-
-    val sortedCosts = incompleteStacks.map { remainingData ->
-      remainingData.fold(0L) { cost, symbol ->
-        (cost * 5 + (INCOMPLETE_COSTS[PAIRINGS[symbol]] ?: 0))
+    val sortedCosts = input
+      .mapNotNull { findIncompleteData(it).orNull() }
+      .map {
+        it.fold(0L) { cost, symbol -> (cost * 5 + (INCOMPLETE_COSTS[PAIRINGS[symbol]] ?: 0)) }
       }
-    }.sorted().toList()
+      .sorted()
+      .toList()
 
     sortedCosts[sortedCosts.size / 2]
   }
@@ -54,7 +52,7 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
         '<', '[', '{', '(' -> stack.push(symbol)
         '>', ']', '}', ')' -> stack.pop()
           .let { PAIRINGS[it] }
-          .let { if (symbol != it) return Left(symbol) }
+          .let { if (symbol != it) return@findIncompleteData Left(symbol) }
         else -> throw Exception("Unexpected Input $symbol")
       }
     }
