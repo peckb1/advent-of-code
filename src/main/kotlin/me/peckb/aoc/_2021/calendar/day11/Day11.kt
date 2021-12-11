@@ -1,7 +1,10 @@
 package me.peckb.aoc._2021.calendar.day11
 
+import me.peckb.aoc._2021.calendar.day11.Day11.Octopus
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
+
+typealias Octopi = List<List<Octopus>>
 
 class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
@@ -9,37 +12,38 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
     const val NEVER_STOP_STEPPING = Int.MAX_VALUE
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val area = input.map { it.map { Octopus(Character.getNumericValue(it)) } }.toList()
+  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::octopusRow) { input ->
+    val octopi = input.toList()
 
-    (1..STEPS).sumOf { advance(area, it) }
+    (1..STEPS).sumOf { octopi.countFlashers(it) }
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val area = input.map { it.map { Octopus(Character.getNumericValue(it)) } }.toList()
+  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::octopusRow) { input ->
+    val octopi = input.toList()
+    val allOctopi = octopi.size * octopi.size
 
-    (1..NEVER_STOP_STEPPING).first { advance(area, it) == 100 }
+    (1..NEVER_STOP_STEPPING).first { octopi.countFlashers(it) == allOctopi }
   }
 
-  private fun advance(area: List<List<Octopus>>, step: Int): Int {
+  private fun Octopi.countFlashers(step: Int): Int {
     var flashes = 0
-    repeat(area.size) { y ->
-      repeat(area[y].size) { x ->
-        if (area[y][x].gatherEnergy(step)) {
-          flashes += 1 + flashNeighbors(area, y, x, step)
+    repeat(this.size) { y ->
+      repeat(this[y].size) { x ->
+        if (this[y][x].gatherEnergy(step)) {
+          flashes += 1 + flashNeighbors(y, x, step)
         }
       }
     }
     return flashes
   }
 
-  private fun flashNeighbors(area: List<List<Octopus>>, y: Int, x: Int, step: Int): Int {
+  private fun Octopi.flashNeighbors(y: Int, x: Int, step: Int): Int {
     var flashes = 0
     (y - 1..y + 1).forEach { yNeighbor ->
       (x - 1..x + 1).forEach { xNeighbor ->
-        if ((yNeighbor in area.indices) && (xNeighbor in (0 until area[yNeighbor].size))) {
-          if (area[yNeighbor][xNeighbor].gatherEnergy(step)) {
-            flashes += 1 + flashNeighbors(area, yNeighbor, xNeighbor, step)
+        if ((yNeighbor in this.indices) && (xNeighbor in (0 until this[yNeighbor].size))) {
+          if (this[yNeighbor][xNeighbor].gatherEnergy(step)) {
+            flashes += 1 + flashNeighbors(yNeighbor, xNeighbor, step)
           }
         }
       }
@@ -47,7 +51,9 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return flashes
   }
 
-  private data class Octopus(var energy: Int, var lastFlashStep: Int = -1) {
+  private fun octopusRow(line: String) = line.map { Octopus(Character.getNumericValue(it)) }
+
+  data class Octopus(var energy: Int, var lastFlashStep: Int = 0) {
     fun gatherEnergy(stepNumber: Int): Boolean {
       if (lastFlashStep != stepNumber) {
         energy++
@@ -58,10 +64,6 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
       }
       return false
-    }
-
-    override fun toString(): String {
-      return "$energy"
     }
   }
 }
