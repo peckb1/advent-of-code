@@ -10,6 +10,7 @@ apply(plugin = "kotlin-kapt")
 plugins {
     kotlin("jvm") version "1.5.10"
     kotlin("kapt") version "1.6.0"
+    jacoco
 }
 
 group = "me.peckb"
@@ -43,10 +44,18 @@ tasks.test {
         override fun afterTest(desc: TestDescriptor, result: TestResult) = Unit
         override fun afterSuite(desc: TestDescriptor, result: TestResult) = printResults(desc, result)
     })
+    finalizedBy(tasks.jacocoTestReport)
+}
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
 }
 
-tasks.withType<KotlinCompile>() {
+tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
+}
+
+jacoco {
+    toolVersion = "0.8.7"
 }
 
 sourceSets {
@@ -60,7 +69,7 @@ sourceSets {
 fun printResults(desc: TestDescriptor, result: TestResult) {
     val ansiReset = "\u001B[0m"
 
-    val ansiYellow = "\u001B[33m";
+    val ansiYellow = "\u001B[33m"
     val ansiGreen = "\u001B[32m"
     val ansiRed = "\u001B[31m"
 
