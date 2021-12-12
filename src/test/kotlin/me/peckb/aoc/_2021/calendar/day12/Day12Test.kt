@@ -20,11 +20,11 @@ internal class Day12Test {
 
   @Test
   fun testDay12PartOne() {
-    assertEquals(4754, day12.partOne(DAY_12))
+    assertEquals(4754, day12.findPathsSingleSmallCave(DAY_12))
   }
 
   @Test
   fun testDay12PartTwo() {
-    assertEquals(143562, day12.partTwo(DAY_12))
+    assertEquals(143562, day12.findPathsOneDoubleSmallCave(DAY_12))
   }
 }

@@ -13,14 +13,14 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     const val END_NODE = "end"
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
+  fun findPathsSingleSmallCave(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
     tunnels.makeNewPaths(listOf(source)).size
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
+  fun findPathsOneDoubleSmallCave(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
