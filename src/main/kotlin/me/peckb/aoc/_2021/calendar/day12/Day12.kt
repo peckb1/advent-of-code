@@ -24,18 +24,20 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    val branchingNodes = tunnels.makeNewPaths(listOf(source)) bypass@{ route->
+    val branchingNodes = tunnels.makeNewPaths(listOf(source)) bypass@{ route ->
       val counts = mutableMapOf<Node, Int>()
 
       route.forEach { node ->
-        if (node.id.first().isLowerCase() ) {
-          counts.compute(node) { _, count ->
-            count?.let { it + 1 } ?: 1
+        if (node.isLowerCase) {
+          if (counts[node] == null) {
+            counts[node] = 1
+          } else {
+            return@bypass false
           }
         }
       }
 
-      return@bypass counts.values.count { it > 1 } == 0
+      return@bypass true
     }
 
     branchingNodes.size
@@ -45,9 +47,9 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val paths = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
 
     fun addData(source: Node, destination: Node) {
-      if (source.id != END_NODE) {
+      if (!source.isEnd) {
         paths[source] = paths.getValue(source).apply {
-          if (destination.id != START_NODE) {
+          if (!destination.isStart) {
             add(destination)
           }
         }
@@ -69,10 +71,10 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val neighbors = this[lastStep]
 
     neighbors?.forEach { neighbor ->
-      if (neighbor.id.first().isUpperCase() || !currentPath.contains(neighbor) || secondaryBypass?.invoke(currentPath) == true) {
+      if (neighbor.isUpperCase || !currentPath.contains(neighbor) || secondaryBypass?.invoke(currentPath) == true) {
         val newPath = currentPath.plus(neighbor)
 
-        if (neighbor.id == END_NODE) {
+        if (neighbor.isEnd) {
           paths.add(newPath)
         } else {
           paths.addAll(makeNewPaths(newPath, secondaryBypass))
@@ -83,12 +85,17 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun day12(line: String) : Path {
+  private fun day12(line: String): Path {
     val (n1, n2) = line.split("-").map(::Node)
     return Path(n1, n2)
   }
 
   data class Path(val node1: Node, val node2: Node)
 
-  data class Node(val id: String)
+  data class Node(private val id: String) {
+    val isUpperCase = id.first().isUpperCase()
+    val isLowerCase = id.first().isLowerCase()
+    val isStart = id == START_NODE
+    val isEnd = id == END_NODE
+  }
 }
