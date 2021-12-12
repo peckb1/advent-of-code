@@ -2,10 +2,11 @@ package me.peckb.aoc._2021.calendar.day12
 
 import me.peckb.aoc._2021.calendar.day12.Day12.Node
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import java.util.ArrayDeque
 import javax.inject.Inject
 
 typealias Tunnels = Map<Node, List<Node>>
-typealias Route = List<Node>
+typealias Route = ArrayDeque<Node>
 
 class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
@@ -17,14 +18,14 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    tunnels.countPaths(listOf(source))
+    tunnels.countPaths(ArrayDeque<Node>().also { it.push(source) })
   }
 
   fun findPathsOneDoubleSmallCave(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    tunnels.countPaths(listOf(source)) bypass@{ route ->
+    tunnels.countPaths(ArrayDeque<Node>().also { it.push(source) }) bypass@{ route ->
       val counts = mutableMapOf<Node, Int>()
 
       route.forEach { node ->
@@ -61,18 +62,20 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun Tunnels.countPaths(currentPath: List<Node>, secondaryBypass: ((Route) -> Boolean)? = null): Int {
+  private fun Tunnels.countPaths(currentPath: ArrayDeque<Node>, secondaryBypass: ((Route) -> Boolean)? = null): Int {
     var paths = 0
 
-    val lastStep = currentPath.last()
+    val lastStep = currentPath.peek()
     val neighbors = this[lastStep] ?: emptyList()
 
     neighbors.forEach { neighbor ->
       if (neighbor.isUpperCase || !currentPath.contains(neighbor) || secondaryBypass?.invoke(currentPath) == true) {
-        paths += if (neighbor.isEnd) {
-          1
+        if (neighbor.isEnd) {
+          paths += 1
         } else {
-          countPaths(currentPath.plus(neighbor), secondaryBypass)
+          currentPath.push(neighbor)
+          paths += countPaths(currentPath, secondaryBypass)
+          currentPath.pop()
         }
       }
     }
