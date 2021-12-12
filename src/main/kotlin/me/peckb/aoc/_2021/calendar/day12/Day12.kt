@@ -1,56 +1,43 @@
 package me.peckb.aoc._2021.calendar.day12
 
+import me.peckb.aoc._2021.calendar.day12.Day12.Node
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
+typealias Tunnels = Map<Node, List<Node>>
+typealias Route = List<Node>
+
 class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day12) { input ->
-    val map: Map<Node, List<Node>> = createMap(input)
+    val tunnels = createMap(input)
 
     val source = Node("start")
-    val currentPath = mutableListOf(source)
-    val branchingNodes = makeNewPathsOne(map, currentPath).filter { it.last().id == "end" }
-
+    val branchingNodes = tunnels.makeNewPaths(listOf(source)) { route, neighbor ->
+      neighbor.id.first().isUpperCase() || !route.contains(neighbor)
+    }.filter { it.last().id == "end" }
 
     branchingNodes.size
-  }
-
-  private fun makeNewPathsOne(map: Map<Node, List<Node>>, currentPath: MutableList<Node>): LinkedHashSet<MutableList<Node>> {
-    val paths = linkedSetOf<MutableList<Node>>()
-
-    val lastStep = currentPath.last()
-    if(lastStep.id == "end") {
-      return paths
-    }
-
-    val neighbors = map[lastStep]!!
-    neighbors.forEach { neighbor ->
-      if (neighbor.id.first().isUpperCase() || !currentPath.contains(neighbor)) {
-        val newPath = mutableListOf<Node>().apply {
-          addAll(currentPath)
-          add(neighbor)
-        }
-        paths.add(newPath)
-        val someMorePaths = makeNewPathsOne(map, newPath)
-        paths.addAll(someMorePaths)
-      }
-    }
-
-    return paths
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day12) { input ->
-    val map: Map<Node, List<Node>> = createMap(input)
+    val tunnels = createMap(input)
 
     val source = Node("start")
-    val currentPath = mutableListOf(source)
-    val branchingNodes = makeNewPathsTwo(map, currentPath).filter { it.last().id == "end" }
+    val branchingNodes = tunnels.makeNewPaths(listOf(source)) { route, neighbor ->
+      val thisLowerCaseAllowed =
+        route
+          .filterNot { it.id == "start" || it.id == "end" || it.id.first().isUpperCase() }
+          .groupBy { it.id }
+          .values
+          .count { it.size > 1 } == 0
 
+      neighbor.id.first().isUpperCase() || thisLowerCaseAllowed || !route.contains(neighbor)
+    }.filter { it.last().id == "end" }
 
     branchingNodes.size
   }
 
-  private fun createMap(input: Sequence<Path>): Map<Node, List<Node>> {
+  private fun createMap(input: Sequence<Path>): Tunnels {
     val paths: MutableMap<Node, MutableList<Node>> = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
 
     fun addData(source: Node, destination: Node) {
@@ -71,7 +58,7 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun makeNewPathsTwo(map: Map<Node, List<Node>>, currentPath: MutableList<Node>): LinkedHashSet<MutableList<Node>> {
+  private fun Tunnels.makeNewPaths(currentPath: List<Node>, allowedToExplore: (Route, Node) -> Boolean): LinkedHashSet<MutableList<Node>> {
     val paths = linkedSetOf<MutableList<Node>>()
 
     val lastStep = currentPath.last()
@@ -79,22 +66,15 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
       return paths
     }
 
-    val neighbors = map[lastStep]!!
+    val neighbors = this[lastStep]!!
     neighbors.forEach { neighbor ->
-      val thisLowerCaseAllowed =
-          currentPath
-            .filterNot { it.id == "start" || it.id == "end" || it.id.first().isUpperCase() }
-            .groupBy { it.id }
-            .values
-            .count { it.size > 1 } == 0
-
-      if (neighbor.id.first().isUpperCase() || thisLowerCaseAllowed || !currentPath.contains(neighbor)) {
+      if (allowedToExplore(currentPath, neighbor)) {
         val newPath = mutableListOf<Node>().apply {
           addAll(currentPath)
           add(neighbor)
         }
         paths.add(newPath)
-        val someMorePaths = makeNewPathsTwo(map, newPath).filter { it.last().id == "end" }
+        val someMorePaths = makeNewPaths(newPath, allowedToExplore).filter { it.last().id == "end" }
         paths.addAll(someMorePaths)
       }
     }
