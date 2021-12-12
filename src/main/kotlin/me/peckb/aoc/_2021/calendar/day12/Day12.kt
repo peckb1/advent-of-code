@@ -68,9 +68,9 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val paths = mutableListOf<List<Node>>()
 
     val lastStep = currentPath.last()
-    val neighbors = this[lastStep]
+    val neighbors = this[lastStep] ?: emptyList()
 
-    neighbors?.forEach { neighbor ->
+    neighbors.forEach { neighbor ->
       if (neighbor.isUpperCase || !currentPath.contains(neighbor) || secondaryBypass?.invoke(currentPath) == true) {
         val newPath = currentPath.plus(neighbor)
 
