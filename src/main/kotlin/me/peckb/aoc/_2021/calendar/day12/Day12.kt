@@ -2,11 +2,10 @@ package me.peckb.aoc._2021.calendar.day12
 
 import me.peckb.aoc._2021.calendar.day12.Day12.Node
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
-import java.util.ArrayDeque
 import javax.inject.Inject
 
 typealias Tunnels = Map<Node, List<Node>>
-typealias Route = ArrayDeque<Node>
+typealias Route = MutableMap<Node, Int>
 
 class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
@@ -18,27 +17,15 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    tunnels.countPaths(ArrayDeque<Node>().also { it.push(source) })
+    tunnels.countPaths(source, mutableMapOf(source to 1))
   }
 
   fun findPathsOneDoubleSmallCave(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    tunnels.countPaths(ArrayDeque<Node>().also { it.push(source) }) bypass@{ route ->
-      val counts = mutableMapOf<Node, Int>()
-
-      route.forEach { node ->
-        if (node.isLowerCase) {
-          if (counts[node] == null) {
-            counts[node] = 1
-          } else {
-            return@bypass false
-          }
-        }
-      }
-
-      return@bypass true
+    tunnels.countPaths(source, mutableMapOf(source to 1)) { route ->
+      !route.entries.any { (node, count) -> node.isLowerCase && count > 1 }
     }
   }
 
@@ -62,20 +49,23 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun Tunnels.countPaths(currentPath: ArrayDeque<Node>, secondaryBypass: ((Route) -> Boolean)? = null): Int {
+  private fun Tunnels.countPaths(newNeighbor: Node, visitCounts: MutableMap<Node, Int>, secondaryBypass: ((Route) -> Boolean)? = null): Int {
     var paths = 0
 
-    val lastStep = currentPath.peek()
-    val neighbors = this[lastStep] ?: emptyList()
+    val neighbors = this[newNeighbor] ?: emptyList()
 
     neighbors.forEach { neighbor ->
-      if (neighbor.isUpperCase || !currentPath.contains(neighbor) || secondaryBypass?.invoke(currentPath) == true) {
+      if (neighbor.isUpperCase || !visitCounts.contains(neighbor) || secondaryBypass?.invoke(visitCounts) == true) {
         if (neighbor.isEnd) {
           paths += 1
         } else {
-          currentPath.push(neighbor)
-          paths += countPaths(currentPath, secondaryBypass)
-          currentPath.pop()
+          val count = visitCounts.compute(neighbor) { _, c-> (c ?: 0) + 1 }!!
+          paths += countPaths(neighbor, visitCounts, secondaryBypass)
+          if (count == 1) {
+            visitCounts.remove(neighbor)
+          } else {
+            visitCounts[neighbor] = count - 1
+          }
         }
       }
     }
