@@ -17,33 +17,26 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    val branchingNodes = tunnels.makeNewPaths(listOf(source)) { route, neighbor ->
-      neighbor.id.first().isUpperCase() || !route.contains(neighbor)
-    }
-
-    branchingNodes.size
+    tunnels.makeNewPaths(listOf(source)).size
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day12) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    val branchingNodes = tunnels.makeNewPaths(listOf(source)) { route, neighbor ->
-      val thisLowerCaseAllowed =
-        route
-          .filterNot { it.id == START_NODE || it.id == END_NODE || it.id.first().isUpperCase() }
-          .groupBy { it.id }
-          .values
-          .count { it.size > 1 } == 0
-
-      neighbor.id.first().isUpperCase() || thisLowerCaseAllowed || !route.contains(neighbor)
+    val branchingNodes = tunnels.makeNewPaths(listOf(source)) { route->
+      route
+        .filterNot { it.id.first().isUpperCase() }
+        .groupBy { it.id }
+        .values
+        .count { it.size > 1 } == 0
     }
 
     branchingNodes.size
   }
 
   private fun createMap(input: Sequence<Path>): Tunnels {
-    val paths: MutableMap<Node, MutableList<Node>> = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
+    val paths = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
 
     fun addData(source: Node, destination: Node) {
       if (source.id != END_NODE) {
@@ -63,18 +56,20 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun Tunnels.makeNewPaths(currentPath: List<Node>, allowedToExplore: (Route, Node) -> Boolean): LinkedHashSet<List<Node>> {
-    val paths = linkedSetOf<List<Node>>()
+  private fun Tunnels.makeNewPaths(currentPath: List<Node>, secondaryBypass: ((Route) -> Boolean)? = null): List<List<Node>> {
+    val paths = mutableListOf<List<Node>>()
 
     val lastStep = currentPath.last()
-    val neighbors = this[lastStep]!!
-    neighbors.forEach { neighbor ->
-      if (allowedToExplore(currentPath, neighbor)) {
+    val neighbors = this[lastStep]
+
+    neighbors?.forEach { neighbor ->
+      if (neighbor.id.first().isUpperCase() || !currentPath.contains(neighbor) || secondaryBypass?.invoke(currentPath) == true) {
         val newPath = currentPath.plus(neighbor)
 
-        if (neighbor.id == END_NODE) paths.add(newPath)
-        if (neighbor.id != END_NODE) {
-          paths.addAll(makeNewPaths(newPath, allowedToExplore))
+        if (neighbor.id == END_NODE) {
+          paths.add(newPath)
+        } else {
+          paths.addAll(makeNewPaths(newPath, secondaryBypass))
         }
       }
     }
