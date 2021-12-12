@@ -13,14 +13,14 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     const val END_NODE = "end"
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day12) { input ->
+  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
     tunnels.makeNewPaths(listOf(source)).size
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day12) { input ->
+  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
@@ -43,7 +43,7 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     branchingNodes.size
   }
 
-  private fun createMap(input: Sequence<Path>): Tunnels {
+  private fun createMap(input: Sequence<Tunnel>): Tunnels {
     val paths = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
 
     fun addData(source: Node, destination: Node) {
@@ -85,12 +85,12 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun day12(line: String): Path {
+  private fun tunnel(line: String): Tunnel {
     val (n1, n2) = line.split("-").map(::Node)
-    return Path(n1, n2)
+    return Tunnel(n1, n2)
   }
 
-  data class Path(val node1: Node, val node2: Node)
+  data class Tunnel(val node1: Node, val node2: Node)
 
   data class Node(private val id: String) {
     val isUpperCase = id.first().isUpperCase()
