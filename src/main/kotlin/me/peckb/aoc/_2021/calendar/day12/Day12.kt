@@ -3,7 +3,6 @@ package me.peckb.aoc._2021.calendar.day12
 import me.peckb.aoc._2021.calendar.day12.Day12.Node
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
-import kotlin.system.measureNanoTime
 
 typealias Tunnels = Map<Node, List<Node>>
 typealias Route = List<Node>
