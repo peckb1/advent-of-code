@@ -4,33 +4,18 @@ import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  companion object {
-
-  }
-
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day12) { input ->
-    val paths: MutableMap<Node, MutableList<Node>> = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
-
-    input.forEach {
-      paths[it.node1] = paths.getValue(it.node1).apply { add(it.node2) }
-      if(it.node2.id != "end") {
-        paths[it.node2] = paths.getValue(it.node2).apply {
-          if (it.node1.id != "start") {
-            add(it.node1)
-          }
-        }
-      }
-    }
+    val map: Map<Node, List<Node>> = createMap(input)
 
     val source = Node("start")
     val currentPath = mutableListOf(source)
-    val branchingNodes = makeNewPathsOne(paths, currentPath).filter { it.last().id == "end" }
+    val branchingNodes = makeNewPathsOne(map, currentPath).filter { it.last().id == "end" }
 
 
     branchingNodes.size
   }
 
-  private fun makeNewPathsOne(map: MutableMap<Node, MutableList<Node>>, currentPath: MutableList<Node>): LinkedHashSet<MutableList<Node>> {
+  private fun makeNewPathsOne(map: Map<Node, List<Node>>, currentPath: MutableList<Node>): LinkedHashSet<MutableList<Node>> {
     val paths = linkedSetOf<MutableList<Node>>()
 
     val lastStep = currentPath.last()
@@ -55,34 +40,38 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day12) { input ->
-    val paths: MutableMap<Node, MutableList<Node>> = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
-
-    input.forEach {
-      if (it.node1.id != "end") {
-        paths[it.node1] = paths.getValue(it.node1).apply {
-          if (it.node2.id != "start") {
-            add(it.node2)
-          }
-        }
-      }
-      if(it.node2.id != "end") {
-        paths[it.node2] = paths.getValue(it.node2).apply {
-          if (it.node1.id != "start") {
-            add(it.node1)
-          }
-        }
-      }
-    }
+    val map: Map<Node, List<Node>> = createMap(input)
 
     val source = Node("start")
     val currentPath = mutableListOf(source)
-    val branchingNodes = makeNewPathsTwo(paths, currentPath).filter { it.last().id == "end" }
+    val branchingNodes = makeNewPathsTwo(map, currentPath).filter { it.last().id == "end" }
 
 
     branchingNodes.size
   }
 
-  private fun makeNewPathsTwo(map: MutableMap<Node, MutableList<Node>>, currentPath: MutableList<Node>): LinkedHashSet<MutableList<Node>> {
+  private fun createMap(input: Sequence<Path>): Map<Node, List<Node>> {
+    val paths: MutableMap<Node, MutableList<Node>> = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
+
+    fun addData(source: Node, destination: Node) {
+      if (source.id != "end") {
+        paths[source] = paths.getValue(source).apply {
+          if (destination.id != "start") {
+            add(destination)
+          }
+        }
+      }
+    }
+
+    input.forEach {
+      addData(it.node1, it.node2)
+      addData(it.node2, it.node1)
+    }
+
+    return paths
+  }
+
+  private fun makeNewPathsTwo(map: Map<Node, List<Node>>, currentPath: MutableList<Node>): LinkedHashSet<MutableList<Node>> {
     val paths = linkedSetOf<MutableList<Node>>()
 
     val lastStep = currentPath.last()
