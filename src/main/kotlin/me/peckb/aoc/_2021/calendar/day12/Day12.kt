@@ -63,26 +63,19 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun Tunnels.makeNewPaths(currentPath: List<Node>, allowedToExplore: (Route, Node) -> Boolean): LinkedHashSet<MutableList<Node>> {
-    val paths = linkedSetOf<MutableList<Node>>()
+  private fun Tunnels.makeNewPaths(currentPath: List<Node>, allowedToExplore: (Route, Node) -> Boolean): LinkedHashSet<List<Node>> {
+    val paths = linkedSetOf<List<Node>>()
 
     val lastStep = currentPath.last()
-    if(lastStep.id == END_NODE) {
-      return paths
-    }
-
     val neighbors = this[lastStep]!!
     neighbors.forEach { neighbor ->
       if (allowedToExplore(currentPath, neighbor)) {
-        val newPath = mutableListOf<Node>().apply {
-          addAll(currentPath)
-          add(neighbor)
-        }
-        if (neighbor.id == END_NODE) paths.add(newPath)
+        val newPath = currentPath.plus(neighbor)
 
-        paths.addAll(
-          makeNewPaths(newPath, allowedToExplore)
-        )
+        if (neighbor.id == END_NODE) paths.add(newPath)
+        if (neighbor.id != END_NODE) {
+          paths.addAll(makeNewPaths(newPath, allowedToExplore))
+        }
       }
     }
 
