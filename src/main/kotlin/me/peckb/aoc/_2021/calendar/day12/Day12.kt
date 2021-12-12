@@ -24,12 +24,18 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    val branchingNodes = tunnels.makeNewPaths(listOf(source)) { route->
-      route
-        .filterNot { it.id.first().isUpperCase() }
-        .groupBy { it.id }
-        .values
-        .count { it.size > 1 } == 0
+    val branchingNodes = tunnels.makeNewPaths(listOf(source)) bypass@{ route->
+      val counts = mutableMapOf<Node, Int>()
+
+      route.forEach { node ->
+        if (node.id.first().isLowerCase() ) {
+          counts.compute(node) { _, count ->
+            count?.let { it + 1 } ?: 1
+          }
+        }
+      }
+
+      return@bypass counts.values.count { it > 1 } == 0
     }
 
     branchingNodes.size
