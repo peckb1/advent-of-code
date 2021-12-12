@@ -33,8 +33,8 @@ as the value which passed the given day/phase combination
 * **Day 08**
   * **Having to figure out the encoding, was just fun!**
     
-* **Day 12**
-  * **This problem turned into an optimization problem after finding the solution. Starting at 2-3s search times for part two, into 200-300ms search times.**
+* Day 12
+  * This problem turned into an optimization problem after finding the solution. Starting at 2-3s search times for part two, into 200-300ms search times.
 
 **Interesting approaches:**
 
