@@ -3,6 +3,7 @@ package me.peckb.aoc._2021.calendar.day12
 import me.peckb.aoc._2021.calendar.day12.Day12.Node
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
+import kotlin.system.measureNanoTime
 
 typealias Tunnels = Map<Node, List<Node>>
 typealias Route = List<Node>
@@ -42,14 +43,13 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun createMap(input: Sequence<Tunnel>): Tunnels {
-    val paths = mutableMapOf<Node, MutableList<Node>>().withDefault { mutableListOf() }
+    val paths = mutableMapOf<Node, MutableList<Node>>()
 
     fun addData(source: Node, destination: Node) {
       if (!source.isEnd) {
-        paths[source] = paths.getValue(source).apply {
-          if (!destination.isStart) {
-            add(destination)
-          }
+        paths.compute(source) { _, list ->
+          list?.also { if (!destination.isStart) it.add(destination) }
+            ?: mutableListOf(destination)
         }
       }
     }
