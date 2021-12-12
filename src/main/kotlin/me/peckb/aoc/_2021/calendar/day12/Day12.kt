@@ -17,14 +17,14 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    tunnels.makeNewPaths(listOf(source)).size
+    tunnels.countPaths(listOf(source))
   }
 
   fun findPathsOneDoubleSmallCave(fileName: String) = generatorFactory.forFile(fileName).readAs(::tunnel) { input ->
     val tunnels = createMap(input)
     val source = Node(START_NODE)
 
-    val branchingNodes = tunnels.makeNewPaths(listOf(source)) bypass@{ route ->
+    tunnels.countPaths(listOf(source)) bypass@{ route ->
       val counts = mutableMapOf<Node, Int>()
 
       route.forEach { node ->
@@ -39,8 +39,6 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
       return@bypass true
     }
-
-    branchingNodes.size
   }
 
   private fun createMap(input: Sequence<Tunnel>): Tunnels {
@@ -64,20 +62,18 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun Tunnels.makeNewPaths(currentPath: List<Node>, secondaryBypass: ((Route) -> Boolean)? = null): List<List<Node>> {
-    val paths = mutableListOf<List<Node>>()
+  private fun Tunnels.countPaths(currentPath: List<Node>, secondaryBypass: ((Route) -> Boolean)? = null): Int {
+    var paths = 0
 
     val lastStep = currentPath.last()
     val neighbors = this[lastStep] ?: emptyList()
 
     neighbors.forEach { neighbor ->
       if (neighbor.isUpperCase || !currentPath.contains(neighbor) || secondaryBypass?.invoke(currentPath) == true) {
-        val newPath = currentPath.plus(neighbor)
-
-        if (neighbor.isEnd) {
-          paths.add(newPath)
+        paths += if (neighbor.isEnd) {
+          1
         } else {
-          paths.addAll(makeNewPaths(newPath, secondaryBypass))
+          countPaths(currentPath.plus(neighbor), secondaryBypass)
         }
       }
     }
@@ -85,10 +81,10 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return paths
   }
 
-  private fun tunnel(line: String): Tunnel {
-    val (n1, n2) = line.split("-").map(::Node)
-    return Tunnel(n1, n2)
-  }
+  private fun tunnel(line: String) = line
+    .split("-")
+    .map(::Node)
+    .let { (n1, n2) -> Tunnel(n1, n2) }
 
   data class Tunnel(val node1: Node, val node2: Node)
 
