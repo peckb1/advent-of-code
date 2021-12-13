@@ -129,6 +129,23 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       paper[y][x] = '#'
     }
 
+    val (mX, mY) = foldPaper(paper, foldInstructions)
+    val codes = Array(mY + 1) { Array(mX + 1) { ' ' } }
+
+    (0 until mY).forEach { y ->
+      (0 until mX).forEach { x ->
+        codes[y][x] = paper[y][x]
+      }
+      println()
+    }
+
+    codes.joinToString("\n") { it.joinToString("") }
+  }
+
+  private fun foldPaper(paper: Array<Array<Char>>, foldInstructions: List<String>): Pair<Int, Int> {
+    var maxX = paper[0].size - 1
+    var maxY = paper.size - 1
+
     foldInstructions.forEach {
       val (direction, foldIndex) = it.split("fold along ").last().split("=")
       if (direction == "y") {
@@ -158,10 +175,6 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
             val destinationY = rowIndex
             val destinationX = foldIndex.toInt() - (columnIndex - foldIndex.toInt())
 
-            if (sourceX == -1 || sourceX == -1 || destinationY == -1 || destinationX == -1) {
-              val x = 3
-            }
-
             paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == '#' || paper[sourceY][sourceX] == '#') {
               '#'
             } else {
@@ -174,16 +187,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val codes = Array(maxY + 1) { Array(maxX + 1) { ' ' } }
-
-    (0 until maxY).forEach { y ->
-      (0 until maxX).forEach { x ->
-        codes[y][x] = paper[y][x]
-      }
-      println()
-    }
-
-    codes.joinToString("\n") { it.joinToString("") }
+    return maxX to maxY
   }
 
   private fun day13(line: String) = line

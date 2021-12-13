@@ -35,6 +35,8 @@ internal class Day13Test {
     """.trimIndent().lines()
     val actual = day13.partTwo(DAY_13).lines()
 
-    expected.indices.forEach { assertEquals(expected[it], actual[it]) }
+    expected.indices.forEach {
+      assertEquals(expected[it], actual[it])
+    }
   }
 }
