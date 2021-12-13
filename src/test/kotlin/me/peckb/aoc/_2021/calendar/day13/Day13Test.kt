@@ -25,6 +25,16 @@ internal class Day13Test {
 
   @Test
   fun testDay13PartTwo() {
-    assertEquals(-1, day13.partTwo(DAY_13))
+    val expected = """
+      #### #### #    ####   ##  ##  ###  ####  
+      #    #    #    #       # #  # #  # #     
+      ###  ###  #    ###     # #    #  # ###   
+      #    #    #    #       # # ## ###  #     
+      #    #    #    #    #  # #  # # #  #     
+      #### #    #### #     ##   ### #  # #     
+    """.trimIndent().lines()
+    val actual = day13.partTwo(DAY_13).lines()
+
+    expected.indices.forEach { assertEquals(expected[it], actual[it]) }
   }
 }

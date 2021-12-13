@@ -1,16 +1,11 @@
 package me.peckb.aoc._2021.calendar.day13
 
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
-import java.util.Arrays
 import javax.inject.Inject
 import kotlin.Int.Companion.MIN_VALUE
 import kotlin.math.max
 
 class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  companion object {
-
-  }
-
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day13) { input ->
     val dotLines = mutableListOf<String>()
     val foldInstructions = mutableListOf<String>()
@@ -40,7 +35,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val paper = Array<Array<Char>>(maxY + 1) { Array<Char>(maxX + 1) { ' ' } }
+    val paper = Array(maxY + 1) { Array(maxX + 1) { ' ' } }
 
     dots.forEach { (x, y) ->
       paper[y][x] = '#'
@@ -128,7 +123,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val paper = Array<Array<Char>>(maxY + 1) { Array<Char>(maxX + 1) { ' ' } }
+    val paper = Array(maxY + 1) { Array(maxX + 1) { ' ' } }
 
     dots.forEach { (x, y) ->
       paper[y][x] = '#'
@@ -179,17 +174,19 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
+    val codes = Array(maxY + 1) { Array(maxX + 1) { ' ' } }
+
     (0 until maxY).forEach { y ->
       (0 until maxX).forEach { x ->
-        print(paper[y][x])
+        codes[y][x] = paper[y][x]
       }
       println()
     }
 
-    -1
+    codes.joinToString("\n") { it.joinToString("") }
   }
 
- private fun day13(line: String) = line
+  private fun day13(line: String) = line
 
   data class Dot(val x: Int, val y: Int)
 }
