@@ -67,40 +67,33 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var maxX = paper[0].size
     var maxY = paper.size
 
-    foldInstructions.forEach {
-      val (direction, foldIndex) = it.split("=")
-      if (direction == "y") {
-        ((foldIndex.toInt() + 1) until maxY).forEach { paperIndex ->
-          paper[paperIndex].forEachIndexed { columIndex, _ ->
-            val source = paper[paperIndex][columIndex]
+    fun fold(sourceX: Int, sourceY: Int, destinationX: Int, destinationY: Int) {
+      val source = paper[sourceY][sourceX]
 
-            val destinationY = foldIndex.toInt() - (paperIndex - foldIndex.toInt())
-            val destinationX = columIndex
-
-            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == ACTIVE || source == ACTIVE) {
-              ACTIVE
-            } else {
-              INACTIVE
-            }
-          }
-        }
-        maxY = foldIndex.toInt()
+      paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == ACTIVE || source == ACTIVE) {
+        ACTIVE
       } else {
-        ((foldIndex.toInt() + 1) until maxX).forEach { columnIndex ->
-          (paper.indices).forEach { rowIndex ->
-            val source = paper[rowIndex][columnIndex]
+        INACTIVE
+      }
+    }
 
-            val destinationY = rowIndex
-            val destinationX = foldIndex.toInt() - (columnIndex - foldIndex.toInt())
-
-            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == ACTIVE || source == ACTIVE) {
-              ACTIVE
-            } else {
-              INACTIVE
-            }
+    foldInstructions.forEach {
+      val (direction, foldIndexString) = it.split("=")
+      val foldIndex = foldIndexString.toInt()
+      if (direction == "y") {
+        ((foldIndex + 1) until maxY).forEach { y ->
+          paper[y].forEachIndexed { x, _ ->
+            fold(x, y, x, 2 * foldIndex - y)
           }
         }
-        maxX = foldIndex.toInt()
+        maxY = foldIndex
+      } else {
+        ((foldIndex + 1) until maxX).forEach { x ->
+          (paper.indices).forEach { y ->
+            fold(x, y, 2 * foldIndex - x, y)
+          }
+        }
+        maxX = foldIndex
       }
     }
 
@@ -112,11 +105,11 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var maxY = MIN_VALUE
 
     val dots = dotLines.map {
-      it.split(",").let { (x, y) ->
-        maxX = max(maxX, x.toInt())
-        maxY = max(maxY, y.toInt())
+      it.split(",").map{ it.toInt() }.let { (x, y) ->
+        maxX = max(maxX, x)
+        maxY = max(maxY, y)
 
-        Dot(x.toInt(), y.toInt())
+        Dot(x, y)
       }
     }
 
