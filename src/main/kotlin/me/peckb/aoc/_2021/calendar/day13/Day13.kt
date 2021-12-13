@@ -7,11 +7,25 @@ import kotlin.math.max
 
 class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day13) { input ->
+    val (dotLines, foldInstructions) = parseInput(input)
+    val (dots, maxX, maxY) = generateDots(dotLines)
+
+    val paper = Array(maxY + 1) { Array(maxX + 1) { ' ' } }.apply {
+      dots.forEach { (x, y) -> this[y][x] = '#' }
+    }
+
+    val (updatedX, updatedY) = foldPaper(paper, foldInstructions.take(1))
+
+    (0 until updatedY).sumOf { y ->
+      (0 until updatedX).count { x ->
+        paper[y][x] == '#'
+      }
+    }
+  }
+
+  private fun parseInput(input: Sequence<String>): Pair<List<String>, List<String>> {
     val dotLines = mutableListOf<String>()
     val foldInstructions = mutableListOf<String>()
-
-    var maxX = MIN_VALUE
-    var maxY = MIN_VALUE
 
     var doingDots = true
     input.forEach {
@@ -26,31 +40,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val dots = dotLines.map {
-      it.split(",").let { (x, y) ->
-        maxX = max(maxX, x.toInt())
-        maxY = max(maxY, y.toInt())
-
-        Dot(x.toInt(), y.toInt())
-      }
-    }
-
-    val paper = Array(maxY + 1) { Array(maxX + 1) { ' ' } }
-
-    dots.forEach { (x, y) ->
-      paper[y][x] = '#'
-    }
-
-    foldPaper(paper, foldInstructions.take(1))
-
-    var count = 0
-    (0 until paper.size).forEach { y ->
-      (0 until paper[y].size).forEach { x ->
-        if (paper[y][x] == '#') count++
-      }
-    }
-
-    count
+    return dotLines to foldInstructions
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day13) { input ->
@@ -102,8 +92,8 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun foldPaper(paper: Array<Array<Char>>, foldInstructions: List<String>): Pair<Int, Int> {
-    var maxX = paper[0].size// - 1
-    var maxY = paper.size// - 1
+    var maxX = paper[0].size
+    var maxY = paper.size
 
     foldInstructions.forEach {
       val (direction, foldIndex) = it.split("fold along ").last().split("=")
@@ -152,4 +142,21 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun day13(line: String) = line
 
   data class Dot(val x: Int, val y: Int)
+
+  private fun generateDots(dotLines: List<String>): Triple<List<Dot>, Int, Int>{
+    var maxX = MIN_VALUE
+    var maxY = MIN_VALUE
+
+    val dots = dotLines.map {
+      it.split(",").let { (x, y) ->
+        maxX = max(maxX, x.toInt())
+        maxY = max(maxY, y.toInt())
+
+        Dot(x.toInt(), y.toInt())
+      }
+    }
+
+    return Triple(dots, maxX, maxY)
+  }
+
 }
