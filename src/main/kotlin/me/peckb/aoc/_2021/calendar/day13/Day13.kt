@@ -9,9 +9,10 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
   companion object {
     const val ACTIVE = '#'
     const val INACTIVE = ' '
+    const val FOLD_PREFIX = "fold along "
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+  fun oneFoldCount(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val (dotLines, foldInstructions) = parseInput(input)
     val (dots, maxX, maxY) = generateDots(dotLines)
     val paper = generatePaper(dots, maxX, maxY)
@@ -25,7 +26,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+  fun everyFoldCode(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val (dotLines, foldInstructions) = parseInput(input)
     val (dots, maxX, maxY) = generateDots(dotLines)
     val paper = generatePaper(dots, maxX, maxY)
@@ -51,16 +52,11 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val dotLines = mutableListOf<String>()
     val foldInstructions = mutableListOf<String>()
 
-    var doingDots = true
     input.forEach {
-      if (it.isEmpty()) {
-        doingDots = false
-      } else {
-        if (doingDots) {
-          dotLines.add(it)
-        } else {
-          foldInstructions.add(it)
-        }
+      if (it.startsWith(FOLD_PREFIX)) {
+        foldInstructions.add(it.split(FOLD_PREFIX).last())
+      } else if (it.isNotEmpty()) {
+        dotLines.add(it)
       }
     }
 
@@ -72,40 +68,36 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var maxY = paper.size
 
     foldInstructions.forEach {
-      val (direction, foldIndex) = it.split("fold along ").last().split("=")
+      val (direction, foldIndex) = it.split("=")
       if (direction == "y") {
         ((foldIndex.toInt() + 1) until maxY).forEach { paperIndex ->
-          paper[paperIndex].forEachIndexed { columIndex, rowValue ->
-            val sourceY = paperIndex
-            val sourceX = columIndex
+          paper[paperIndex].forEachIndexed { columIndex, _ ->
+            val source = paper[paperIndex][columIndex]
 
             val destinationY = foldIndex.toInt() - (paperIndex - foldIndex.toInt())
             val destinationX = columIndex
 
-            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == ACTIVE || rowValue == ACTIVE) {
+            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == ACTIVE || source == ACTIVE) {
               ACTIVE
             } else {
               INACTIVE
             }
-            paper[sourceY][sourceX] = INACTIVE
           }
         }
         maxY = foldIndex.toInt()
       } else {
         ((foldIndex.toInt() + 1) until maxX).forEach { columnIndex ->
           (paper.indices).forEach { rowIndex ->
-            val sourceY = rowIndex
-            val sourceX = columnIndex
+            val source = paper[rowIndex][columnIndex]
 
             val destinationY = rowIndex
             val destinationX = foldIndex.toInt() - (columnIndex - foldIndex.toInt())
 
-            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == ACTIVE || paper[sourceY][sourceX] == ACTIVE) {
+            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == ACTIVE || source == ACTIVE) {
               ACTIVE
             } else {
               INACTIVE
             }
-            paper[sourceY][sourceX] = INACTIVE
           }
         }
         maxX = foldIndex.toInt()

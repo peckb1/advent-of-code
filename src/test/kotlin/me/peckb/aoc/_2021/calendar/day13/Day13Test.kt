@@ -20,7 +20,7 @@ internal class Day13Test {
 
   @Test
   fun testDay13PartOne() {
-    assertEquals(631, day13.partOne(DAY_13))
+    assertEquals(631, day13.oneFoldCount(DAY_13))
   }
 
   @Test
@@ -33,7 +33,7 @@ internal class Day13Test {
       #    #    #    #    #  # #  # # #  #     
       #### #    #### #     ##   ### #  # #     
     """.trimIndent().lines()
-    val actual = day13.partTwo(DAY_13).lines()
+    val actual = day13.everyFoldCode(DAY_13).lines()
 
     expected.indices.forEach {
       assertEquals(expected[it], actual[it])
