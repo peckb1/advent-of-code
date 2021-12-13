@@ -41,48 +41,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       paper[y][x] = '#'
     }
 
-    foldInstructions.first().let {
-      val (direction, foldIndex) = it.split("fold along ").last().split("=")
-      if (direction == "y") {
-        maxY = foldIndex.toInt()
-        ((foldIndex.toInt() + 1) until paper.size).forEach { paperIndex ->
-          paper[paperIndex].forEachIndexed { columIndex, rowValue ->
-            val sourceY = paperIndex
-            val sourceX = columIndex
-
-            val destinationY = foldIndex.toInt() - (paperIndex - foldIndex.toInt())
-            val destinationX = columIndex
-
-            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == '#' || rowValue == '#') {
-              '#'
-            } else {
-              ' '
-            }
-            paper[sourceY][sourceX] = ' '
-          }
-        }
-      } else {
-        maxX = foldIndex.toInt()
-        ((foldIndex.toInt() + 1) until paper[0].size).forEach { columnIndex ->
-          (paper.indices).forEach { rowIndex ->
-            val sourceY = rowIndex
-            val sourceX = columnIndex
-
-            val destinationY = rowIndex
-            val destinationX = foldIndex.toInt() - (columnIndex - foldIndex.toInt())
-
-            paper[destinationY][destinationX] = if (paper[destinationY][destinationX] == '#' || paper[sourceY][sourceX] == '#') {
-              '#'
-            } else {
-              ' '
-            }
-            paper[sourceY][sourceX] = ' '
-          }
-        }
-      }
-    }
-
-    val maxSpaces = maxX * maxY
+    foldPaper(paper, foldInstructions.take(1))
 
     var count = 0
     (0 until paper.size).forEach { y ->
@@ -143,8 +102,8 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun foldPaper(paper: Array<Array<Char>>, foldInstructions: List<String>): Pair<Int, Int> {
-    var maxX = paper[0].size - 1
-    var maxY = paper.size - 1
+    var maxX = paper[0].size// - 1
+    var maxY = paper.size// - 1
 
     foldInstructions.forEach {
       val (direction, foldIndex) = it.split("fold along ").last().split("=")
