@@ -82,14 +82,14 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val foldIndex = foldIndexString.toInt()
       if (direction == "y") {
         ((foldIndex + 1) until maxY).forEach { y ->
-          paper[y].forEachIndexed { x, _ ->
+          repeat(maxX) { x->
             fold(x, y, x, 2 * foldIndex - y)
           }
         }
         maxY = foldIndex
       } else {
         ((foldIndex + 1) until maxX).forEach { x ->
-          (paper.indices).forEach { y ->
+          repeat(maxY) { y ->
             fold(x, y, 2 * foldIndex - x, y)
           }
         }
