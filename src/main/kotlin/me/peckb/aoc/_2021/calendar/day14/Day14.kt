@@ -3,7 +3,7 @@ package me.peckb.aoc._2021.calendar.day14
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
-typealias Action = Pair<String, Long>
+typealias Action<T> = Pair<String, T>
 
 class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
@@ -19,8 +19,8 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val instructions: List<Instruction> = createInstructions(data.drop(2))
     val counts: MutableMap<Char, Long> = createInitialCounts(data.first())
 
-    val addActions = mutableListOf<Action>()
-    val removeActions = mutableListOf<Action>()
+    val addActions = mutableListOf<Action<Long>>()
+    val removeActions = mutableListOf<Action<Long>>()
 
     repeat(iterations) {
       instructions.forEach { instruction ->
@@ -40,26 +40,15 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
       }
 
-      addActions.forEach { (pattern, count) ->
-        characterPairs.compute(pattern) { _, maybeCount -> (maybeCount ?: 0) + count }
-      }
-      removeActions.forEach { (pattern, count) ->
-        characterPairs.compute(pattern) { _, maybeCount -> (maybeCount ?: 0) - count }
-      }
-
-      addActions.clear()
-      removeActions.clear()
+      addActions.mutatePairs(characterPairs, ::add).also { addActions.clear() }
+      removeActions.mutatePairs(characterPairs, ::minus).also { removeActions.clear() }
     }
 
     return counts
   }
 
   /**
-   * {
-   *   PP=2, PF=2, FC=1, CH=1, HP=1, FN=1,
-   *   NC=1, CK=1, KO=2, OK=1, OS=1, SB=1,
-   *   BV=1, VC=1, CF=1, FP=1
-   * }
+   * { PP=2, PF=2, FC=1, CH=1, HP=1, FN=1, NC=1, CK=1, KO=2, OK=1, OS=1, SB=1, BV=1, VC=1, CF=1, FP=1 }
    */
   private fun createInitialPairCounts(data: String) = data
     .windowed(2)
@@ -79,12 +68,16 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
   /**
-   * {
-   *   P=5, F=3, C=3, H=1, N=1, K=2, O=2, S=1, B=1, V=1
-   * }
+   * { P=5, F=3, C=3, H=1, N=1, K=2, O=2, S=1, B=1, V=1 }
    */
   private fun createInitialCounts(data: String) = mutableMapOf<Char, Long>().apply {
-    data.forEach { compute(it) { _, v -> (v ?: 0) + 1 } } }
+    data.forEach { compute(it) { _, v -> add(v, 1) } }
+  }
+
+  private fun <T> List<Action<T>>.mutatePairs(pairs: MutableMap<String, T>, maths: (T?, T) -> T) =
+    forEach { (pattern, count) ->
+      pairs.compute(pattern) { _, existingCount -> maths(existingCount, count) }
+    }
 
   private fun countHighMinusLow(counts: Map<Char, Long>): Long {
     val sortedPairs = counts.entries.sortedByDescending { it.value }
@@ -92,4 +85,8 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   data class Instruction(val pattern: String, val insertion: String)
+
+  private fun add(n: Long?, m: Long) = (n ?: 0) + m
+
+  private fun minus(n: Long?, m: Long) = (n ?: 0) - m
 }
