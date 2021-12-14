@@ -3,6 +3,8 @@ package me.peckb.aoc._2021.calendar.day14
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
+typealias Action = Pair<String, Long>
+
 class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     countHighMinusLow(findCounts(input.toList(), 10))
@@ -18,8 +20,8 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val counts: MutableMap<Char, Long> = createInitialCounts(data.first())
 
     repeat(iterations) {
-      val addActions = mutableListOf<Pair<String, Long>>()
-      val removeActions = mutableListOf<Pair<String, Long>>()
+      val addActions = mutableListOf<Action>()
+      val removeActions = mutableListOf<Action>()
 
       instructions.forEach { instruction ->
         // i.e. `AB` -> `C`
