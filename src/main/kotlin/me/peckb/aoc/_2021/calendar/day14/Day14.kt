@@ -4,77 +4,30 @@ import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  companion object {
-
+  fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+    countHighMinusLow(findCounts(input.toList(), 10))
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day14) { input ->
-    val data = input.toList()
+  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
+    countHighMinusLow(findCounts(input.toList(), 40))
+  }
 
-    val initialSequence = ArrayList<Char>().apply {
-      data.first().forEach { add(it) }
-    }
+  private fun findCounts(data: List<String>, iterations: Int): Map<Char, Long> {
+    // { PP=2, PF=2, FC=1, CH=1, HP=1, FN=1, NC=1, CK=1, KO=2, OK=1, OS=1, SB=1, BV=1, VC=1, CF=1, FP=1 }
+    val characterPairs: MutableMap<String, Long> = data.first()
+      .windowed(2)
+      .groupBy { it }
+      .mapValues { (_, pairing) -> pairing.size.toLong() }
+      .toMutableMap()
 
-    val instructions = data.drop(2).map {
+    // [VC->N, SC->H, ..., CH->K, NH->P]
+    val instructions: List<Instruction> = data.drop(2).map {
       val (pattern, insertion) = it.split(" -> ")
-      val (before, after) = pattern.toCharArray()
-      Instruction(before, after, insertion.first())
-    }.groupBy {
-      it.beforeChar
-    }.mapValues { (_, v) ->
-      v.groupBy {
-        it.afterChar
-      }
+      Instruction(pattern, insertion)
     }
 
-    repeat(10) {
-      val actions = mutableListOf<Pair<Int, Char>>()
-      actions.clear()
-      (0 until initialSequence.size - 1).forEach { index ->
-        val b = initialSequence[index]
-        val a = initialSequence[index + 1]
-
-        instructions.get(b)?.get(a)?.first()?.also {
-          actions.add(index + 1 to it.insertion)
-        }
-      }
-      actions.forEachIndexed { i, t ->
-        val (index, a) = t
-        initialSequence.add(index + i, a)
-      }
-    }
-
-    val xx = initialSequence.groupingBy {
-      it
-    }.eachCount()
-
-    val sorted = xx.entries.sortedByDescending { it.value }
-
-    sorted.first().value - sorted.last().value
-  }
-
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::day14) { input ->
-    val data = input.toList()
-
-    val initialSequence = data.first().windowed(2).map {
-      val (before, after) = it.toCharArray()
-      (before to after)
-    }.groupBy {
-      it.first
-    }.mapValues { (_, v) ->
-      v.groupBy { it.second }.mapValues {
-        it.value.size.toLong()
-      }.toMutableMap()
-    }.toMutableMap()
-
-    val instructions = data.drop(2)
-      .map {
-        val (pattern, insertion) = it.split(" -> ")
-        val (before, after) = pattern.toCharArray()
-        Instruction(before, after, insertion.first())
-      }
-
-    val counts = mutableMapOf<Char, Long>().apply {
+    // { P=5, F=3, C=3, H=1, N=1, K=2, O=2, S=1, B=1, V=1 }
+    val counts: MutableMap<Char, Long> = mutableMapOf<Char, Long>().apply {
       data.first().forEach {
         this.compute(it) { _, v ->
           (v ?: 0) + 1
@@ -82,52 +35,44 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
+    repeat(iterations) {
+      val addActions = mutableListOf<Pair<String, Long>>()
+      val removeActions = mutableListOf<Pair<String, Long>>()
 
-    repeat(40) {
-      val addActions = mutableListOf<Triple<Char, Char, Long>>()
-      val removeActions = mutableListOf<Triple<Char, Char, Long>>()
       instructions.forEach { instruction ->
-        val (b, a, insert) = instruction
-        val count = initialSequence.get(b)?.get(a)
-        count?.also { c ->
-          // if (c > 0) {
-            addActions.add(Triple(b, insert, c))
-            addActions.add(Triple(insert, a, c))
-            removeActions.add(Triple(b, a, c))
-            counts.compute(insert) { _, v ->
-              (v ?: 0) + c
-            }
-          // }
+        // i.e. `AB` -> `C`
+        val (pattern, insert) = instruction
+
+        characterPairs[pattern]?.also { c ->
+          // for a given pattern count `AB` -> x it means we have x `AB` pairs
+          // so we need to add x `AC` pair counts
+          addActions.add("${pattern.first()}$insert" to c)
+          // we also need to add x `CB` pair counts
+          addActions.add("$insert${pattern.last()}" to c)
+          // but, we just split those pairs, so we need to remove x `AB` pairs
+          removeActions.add(pattern to c)
+          // also keep track of any new letters we just added
+          counts.compute(insert.first()) { _, existingCount -> (existingCount ?: 0) + c }
         }
       }
-      addActions.forEach { (b, a, c) ->
-        initialSequence.compute(b) { _, v1 ->
-          (v1 ?: mutableMapOf()).also { map ->
-            map.compute(a) { _, count  ->
-              (count ?: 0) + c
-            }
-          }
-        }
+      addActions.forEach { (pattern, count) ->
+        characterPairs.compute(pattern) { _, maybeCount -> (maybeCount ?: 0) + count }
       }
-      removeActions.forEach { (b, a, c) ->
-        initialSequence.compute(b) { _, v1 ->
-          (v1 ?: mutableMapOf()).also { map ->
-            map.compute(a) { _, count  ->
-              (count ?: 0) - c
-            }
-          }
-        }
+      removeActions.forEach { (pattern, count) ->
+        characterPairs.compute(pattern) { _, maybeCount -> (maybeCount ?: 0) - count }
       }
+
       addActions.clear()
       removeActions.clear()
     }
 
-    val sorted = counts.entries.sortedByDescending { it.value }
-
-    sorted.first().value - sorted.last().value
+    return counts
   }
 
-  fun day14(line: String) = line
+  private fun countHighMinusLow(counts: Map<Char, Long>): Long {
+    val sortedPairs = counts.entries.sortedByDescending { it.value }
+    return sortedPairs.first().value - sortedPairs.last().value
+  }
 
-  data class Instruction(val beforeChar: Char, val afterChar: Char, val insertion: Char)
+  data class Instruction(val pattern: String, val insertion: String)
 }
