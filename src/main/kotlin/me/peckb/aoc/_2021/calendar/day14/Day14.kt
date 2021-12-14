@@ -19,10 +19,10 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val instructions: List<Instruction> = createInstructions(data.drop(2))
     val counts: MutableMap<Char, Long> = createInitialCounts(data.first())
 
-    repeat(iterations) {
-      val addActions = mutableListOf<Action>()
-      val removeActions = mutableListOf<Action>()
+    val addActions = mutableListOf<Action>()
+    val removeActions = mutableListOf<Action>()
 
+    repeat(iterations) {
       instructions.forEach { instruction ->
         // i.e. `AB` -> `C`
         val (pattern, insert) = instruction
