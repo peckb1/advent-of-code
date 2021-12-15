@@ -68,9 +68,9 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     val distances = mutableMapOf(source to 0L).withDefault { MAX_VALUE.toLong() }
     val previous = mutableMapOf<Vertex, Vertex>()
-    val queue = PriorityQueue(compareBy<Vertex> { distances.getValue(it) })
-
-    graph.forEach { row -> row.forEach { queue.add(it) } }
+    val queue = PriorityQueue(compareBy<Vertex> { distances.getValue(it) }).apply {
+      add(source)
+    }
 
     while (queue.isNotEmpty()) {
       val u = queue.remove()
