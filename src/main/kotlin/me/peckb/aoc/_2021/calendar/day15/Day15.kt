@@ -3,7 +3,7 @@ package me.peckb.aoc._2021.calendar.day15
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import java.util.PriorityQueue
 import javax.inject.Inject
-import kotlin.Int.Companion.MAX_VALUE
+import kotlin.Float.Companion.POSITIVE_INFINITY
 
 class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun smallPath(fileName: String) = generatorFactory.forFile(fileName).read { input ->
@@ -66,25 +66,25 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val maxX = graph[maxY].size - 1
     val destination = graph[maxY][maxX]
 
-    val distances = mutableMapOf(source to 0L).withDefault { MAX_VALUE.toLong() }
+    val distances = mutableMapOf(source to 0f).withDefault { POSITIVE_INFINITY }
     val previous = mutableMapOf<Vertex, Vertex>()
     val queue = PriorityQueue(compareBy<Vertex> { distances.getValue(it) }).apply {
       add(source)
     }
 
     while (queue.isNotEmpty()) {
-      val u = queue.remove()
-      u.neighbors.forEach { v ->
-        val alt = distances.getValue(u) + v.risk
-        if (alt < distances.getValue(v)) {
-          distances[v] = alt
-          previous[v] = u
-          queue.add(v)
+      val closestNode = queue.remove()
+      closestNode.neighbors.forEach { neighbor ->
+        val alt = distances.getValue(closestNode) + neighbor.risk
+        if (alt < distances.getValue(neighbor)) {
+          distances[neighbor] = alt
+          previous[neighbor] = closestNode
+          queue.add(neighbor)
         }
       }
     }
 
-    return distances[destination]
+    return distances[destination]?.toLong()
   }
 
   class Vertex(val risk: Long, val neighbors: MutableList<Vertex> = mutableListOf()) {
