@@ -18,20 +18,20 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   fun largePath(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val growthSIze = 5
+    val growthSize = 5
 
     val data = input.toList()
-    val maxX = data.size * growthSIze
-    val maxY = data[data.size - 1].length * growthSIze
+    val maxY = data.size * growthSize
+    val maxX = data[data.size - 1].length * growthSize
     val defaultVertex = Vertex(-1)
     val graph = MutableList(maxY) { MutableList(maxX) { defaultVertex } }
 
-    (0 until growthSIze).forEach { yLoop ->
-      (0 until growthSIze).forEach { xLoop ->
+    (0 until growthSize).forEach { yLoop ->
+      (0 until growthSize).forEach { xLoop ->
         data.forEachIndexed { y, row ->
           row.forEachIndexed { x, riskChar ->
-            val realY = yLoop * data[y].length + y
-            val realX = xLoop * row.length + x
+            val realY = (yLoop * data.size) + y
+            val realX = (xLoop * row.length) + x
             var r = Character.getNumericValue(riskChar) + yLoop + xLoop
             while (r > 9) { r -= 9 }
 
