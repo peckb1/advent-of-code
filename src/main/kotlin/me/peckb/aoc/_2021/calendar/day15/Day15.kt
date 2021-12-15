@@ -3,29 +3,17 @@ package me.peckb.aoc._2021.calendar.day15
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import java.util.PriorityQueue
 import javax.inject.Inject
+import kotlin.Int.Companion.MAX_VALUE
 
 class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::day15) { input ->
     val graph = input.mapIndexed { y, row ->
       row.map(Character::getNumericValue).mapIndexed { x, risk ->
-        Vertex(y, x, risk.toLong())
+        Vertex(risk.toLong())
       }
     }.toList()
 
-    graph.forEachIndexed { y, vertexRow ->
-      vertexRow.forEachIndexed { x, vertex ->
-        try {
-          val left = graph[y][x + 1]
-          left.addNeighbor(vertex)
-          vertex.addNeighbor(left)
-        } catch(e: IndexOutOfBoundsException) { }
-        try {
-          val down = graph[y+1][x]
-          down.addNeighbor(vertex)
-          vertex.addNeighbor(down)
-        } catch(e: IndexOutOfBoundsException) { }
-      }
-    }
+    setupEdges(graph)
 
     dijkstra(graph)
   }
@@ -35,9 +23,9 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val maxX = data.size * 5
     val maxY = data[data.size - 1].length * 5
 
-    val mutatingGraph = Array<Array<Vertex?>>(maxY) {
-      Array(maxX) { null }
-    }
+    val defaultVertex = Vertex(-1)
+
+    val graph = MutableList(maxY) { MutableList(maxX) { defaultVertex } }
 
     (0 until 5).forEach { yLoop ->
       (0 until 5).forEach { xLoop ->
@@ -48,14 +36,17 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
             var r = Character.getNumericValue(riskChar) + yLoop + xLoop
             while(r > 9) { r -= 9 }
 
-            mutatingGraph[realY][realX] = Vertex(realY, realX, r.toLong())
+            graph[realY][realX] = Vertex(r.toLong())
           }
         }
       }
     }
 
-    val graph = mutatingGraph.map { row -> row.mapNotNull { it } }
+    setupEdges(graph)
+    dijkstra(graph)
+  }
 
+  private fun setupEdges(graph: List<List<Vertex>>) {
     graph.forEachIndexed { y, vertexRow ->
       vertexRow.forEachIndexed { x, vertex ->
         try {
@@ -70,8 +61,6 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         } catch(e: IndexOutOfBoundsException) { }
       }
     }
-
-    dijkstra(graph)
   }
 
   private fun dijkstra(graph: List<List<Vertex>>): Long? {
@@ -81,7 +70,7 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val destination = graph[maxY][maxX]
 
     val nodes = graph.flatten()
-    val distances = mutableMapOf(source to 0L).withDefault { Int.MAX_VALUE.toLong() }
+    val distances = mutableMapOf(source to 0L).withDefault { MAX_VALUE.toLong() }
     val previous = mutableMapOf<Vertex, Vertex>()
     val queue = PriorityQueue(nodes.size, compareBy<Vertex> { distances.getValue(it) })
 
@@ -94,7 +83,7 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         if (alt < distances.getValue(v)) {
           distances[v] = alt
           previous[v] = u
-          queue.add(Vertex(v.y, v.x, alt, v.neighbors))
+          queue.add(v)
         }
       }
     }
@@ -104,31 +93,9 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   private fun day15(line: String) = line
 
-  class Vertex(val y: Int, val x: Int, val risk: Long, val neighbors: MutableList<Vertex> = mutableListOf()) {
+  class Vertex(val risk: Long, val neighbors: MutableList<Vertex> = mutableListOf()) {
     fun addNeighbor(vertex: Vertex) {
       neighbors.add(vertex)
-    }
-
-    override fun toString(): String {
-      return "($y, $x):$risk"
-    }
-
-    override fun equals(other: Any?): Boolean {
-      if (this === other) return true
-      if (javaClass != other?.javaClass) return false
-
-      other as Vertex
-
-      if (y != other.y) return false
-      if (x != other.x) return false
-
-      return true
-    }
-
-    override fun hashCode(): Int {
-      var result = y
-      result = 31 * result + x
-      return result
     }
   }
 }
