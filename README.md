@@ -49,4 +49,9 @@ as the value which passed the given day/phase combination
 
 * Setting up a Kotlin project with Dagger should have more examples than the multitude of Android examples out there
   * And subsequent nice looking test outout for the command line.
+    
+
 * Coding up a better abstraction in Part one *often* leads to a much simpler part two instead of just hacking together a solution.
+  
+
+* Don't try to recreate Dikjstra, or A* from scratch. If you know you need to find a path, just check the pseudocode in Wikipedia
