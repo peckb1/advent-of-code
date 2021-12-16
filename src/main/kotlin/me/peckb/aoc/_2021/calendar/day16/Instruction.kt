@@ -1,10 +1,10 @@
 package me.peckb.aoc._2021.calendar.day16
 
-sealed class Instruction(val version: Int, val packetType: Int) {
+sealed class Instruction(protected val version: Int, protected val packetType: Int) {
   abstract fun versionSum(): Int
   abstract fun value(): Long
 
-  class Operator(version: Int, packet: Int, val data: List<Instruction>) : Instruction(version, packet) {
+  class Operator(version: Int, packet: Int, private val data: List<Instruction>) : Instruction(version, packet) {
     override fun versionSum() = version + data.sumOf { it.versionSum() }
 
     override fun value(): Long {
@@ -21,7 +21,7 @@ sealed class Instruction(val version: Int, val packetType: Int) {
     }
   }
 
-  class Literal(version: Int, packet: Int, val data: Long) : Instruction(version, packet) {
+  class Literal(version: Int, packet: Int, private val data: Long) : Instruction(version, packet) {
     override fun versionSum() = version
 
     override fun value() = data
