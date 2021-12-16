@@ -16,63 +16,90 @@ class Day16 @Inject constructor(private val generatorFactory: InputGeneratorFact
     )
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
+  fun versionSum(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
     val data = input.map { CONVERSIONS[it]!! }.joinToString("")
-    val (_, instructions) = createInstructions(data, 0)
+    val (_, instructions) = data.createInstructions()
     instructions.sumOf { it.versionSum() }
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
+  fun evaluateInstructions(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
     val data = input.map { CONVERSIONS[it]!! }.joinToString("")
-    val (_, instructions) = createInstructions(data, 0)
+    val (_, instructions) = data.createInstructions( )
     instructions.first().value()
   }
 
-  private fun createInstructions(data: String, startIndex: Int): Pair<Int, List<Instruction>> {
+  private fun String.createInstructions(startIndex: Int = 0): Pair<Int, List<Instruction>> {
     var nextIndex = startIndex
-    val version = data.substring(nextIndex, nextIndex + 3).toInt(2).also { nextIndex += 3 }
-    val packetType = data.substring(nextIndex, nextIndex + 3).toInt(2).also { nextIndex += 3 }
+    val version = substring(nextIndex, nextIndex + 3).toInt(2).also { nextIndex += 3 }
+    val packetType = substring(nextIndex, nextIndex + 3).toInt(2).also { nextIndex += 3 }
 
     val instructions = mutableListOf<Instruction>()
 
     if (packetType == 4) {
-      var done = false
-      val bitStringBuilder = StringBuilder()
-      while(!done) {
-        data.substring(nextIndex, nextIndex + 5).also {
-          nextIndex += 5
-          done = it.first() == '0'
-          bitStringBuilder.append(it.drop(1))
-        }
+      handleLiteral(version, packetType, nextIndex).also { (index, instruction) ->
+        nextIndex = index
+        instructions.add(instruction)
       }
-      instructions.add(Literal(version, packetType, bitStringBuilder.toString().toLong(2)))
     } else {
-      val lengthId = Character.getNumericValue(data[nextIndex]).also { nextIndex++ }
+      val lengthId = Character.getNumericValue(this[nextIndex]).also { nextIndex++ }
 
       if (lengthId == 0) {
-        val sizeOfSubPackets = data.substring(nextIndex, nextIndex + 15).toInt(2).also { nextIndex += 15 }
-        val finalIndex = nextIndex + sizeOfSubPackets
-        val children = mutableListOf<Instruction>()
-        while (nextIndex != finalIndex) {
-          createInstructions(data, nextIndex).also { (index, instructions) ->
-            nextIndex = index
-            children.addAll(instructions)
-          }
+        handleSizeBasedSubPackets(version, packetType, nextIndex).also { (index, instruction) ->
+          nextIndex = index
+          instructions.add(instruction)
         }
-        instructions.add(Operator(version, packetType, children))
       } else {
-        val numberOfSubPackets = data.substring(nextIndex, nextIndex + 11).toInt(2).also { nextIndex += 11 }
-        val children = mutableListOf<Instruction>()
-        repeat(numberOfSubPackets) {
-          createInstructions(data, nextIndex).also { (index, instructions) ->
-            nextIndex = index
-            children.addAll(instructions)
-          }
+        handleCountBasedSubPackets(version, packetType, nextIndex).also { (index, instruction) ->
+          nextIndex = index
+          instructions.add(instruction)
         }
-        instructions.add(Operator(version, packetType, children))
       }
     }
 
     return nextIndex to instructions
   }
+
+  private fun String.handleLiteral(version: Int, packetType: Int, index: Int): Pair<Int, Instruction> {
+    var nextIndex = index
+    var done = false
+    val bitStringBuilder = StringBuilder()
+
+    while(!done) {
+      substring(nextIndex, nextIndex + 5).also {
+        done = it.first() == '0'
+        bitStringBuilder.append(it.drop(1))
+        nextIndex += 5
+      }
+    }
+
+    return nextIndex to Literal(version, packetType, bitStringBuilder.toString().toLong(2))
+  }
+
+  private fun String.handleSizeBasedSubPackets(version: Int, packetType: Int, index: Int): Pair<Int, Instruction> {
+    var nextIndex = index
+    val sizeOfSubPackets = substring(nextIndex, nextIndex + 15).toInt(2).also { nextIndex += 15 }
+    val finalIndex = nextIndex + sizeOfSubPackets
+    val children = mutableListOf<Instruction>()
+    while (nextIndex != finalIndex) {
+      createInstructions(nextIndex).also { (index, instructions) ->
+        nextIndex = index
+        children.addAll(instructions)
+      }
+    }
+    return nextIndex to Operator(version, packetType, children)
+  }
+
+  private fun String.handleCountBasedSubPackets(version: Int, packetType: Int, index: Int): Pair<Int, Instruction> {
+    var nextIndex = index
+    val numberOfSubPackets = substring(nextIndex, nextIndex + 11).toInt(2).also { nextIndex += 11 }
+    val children = mutableListOf<Instruction>()
+    repeat(numberOfSubPackets) {
+      createInstructions(nextIndex).also { (index, instructions) ->
+        nextIndex = index
+        children.addAll(instructions)
+      }
+    }
+    return nextIndex to Operator(version, packetType, children)
+  }
 }
+
