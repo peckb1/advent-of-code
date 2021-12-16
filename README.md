@@ -42,8 +42,12 @@ as the value which passed the given day/phase combination
 **Interesting approaches:**
 
 * The double window for Day01 part 02
+  
+
 * The guarantee for Day08 part 02 that you can find one of [2, 3, 5] and [0, 6, 9] and the other unknowns can be ignored
-* The 
+  
+
+* Keeping track of the sinle index as I parsed through the bit string for Day16 
     
 
 ## Takeaways
