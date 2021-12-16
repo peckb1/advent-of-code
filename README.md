@@ -47,7 +47,7 @@ as the value which passed the given day/phase combination
 * The guarantee for Day08 part 02 that you can find one of [2, 3, 5] and [0, 6, 9] and the other unknowns can be ignored
   
 
-* Keeping track of the sinle index as I parsed through the bit string for Day16 
+* Keeping track of the single index as I parsed through the bit string for Day16 
     
 
 ## Takeaways
