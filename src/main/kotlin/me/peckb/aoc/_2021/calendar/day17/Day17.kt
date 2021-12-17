@@ -20,7 +20,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val area = fetchArea(input)
 
     val lowestMultiJumpX = (0..area.xMin).first { triangleNumber(it) in area.xRange }
-    val highestMultiJumpX = area.xMax / 2
+    val highestMultiJumpX = (area.xMax / 2) + 1
 
     val singleJumpValues = area.xRange
     val multiJumpValues = (lowestMultiJumpX..highestMultiJumpX)
