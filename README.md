@@ -37,7 +37,10 @@ as the value which passed the given day/phase combination
   * This problem turned into an optimization problem after finding the solution. Starting at 2-3s search times for part two, into 200-300ms search times.
     
 * **Day 13**
-  * **The paper folding to get messages was nice!**
+  * **The paper folding to get messages was cool!**
+    
+* **Day 17**
+  * **I miss maths sometimes, and spending the time to get the mathmatical solution for part 1 was quite nice.** 
 
 **Interesting approaches:**
 
@@ -48,7 +51,10 @@ as the value which passed the given day/phase combination
   
 
 * Keeping track of the single index as I parsed through the bit string for Day16 
-  * This ended up turning into a re-learning of AtomicInteger, and "invisible" mutability of parameters 
+  * This ended up turning into a re-learning of AtomicInteger, and "invisible" mutability of parameters
+    
+
+* Aside from the maths solution for Day 17 part1, finding the set of valid X and Y coordinates for part two was clever. 
     
 
 ## Takeaways
