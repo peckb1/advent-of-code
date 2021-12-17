@@ -4,6 +4,7 @@ import me.peckb.aoc._2021.calendar.day16.Instruction.Literal
 import me.peckb.aoc._2021.calendar.day16.Instruction.Operator
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import java.lang.StringBuilder
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 class Day16 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
@@ -18,88 +19,62 @@ class Day16 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   fun versionSum(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
     val data = input.map { CONVERSIONS[it]!! }.joinToString("")
-    val instructions = mutableListOf<Instruction>()
-    data.createInstructions { instructions.addAll(it) }
-    instructions.sumOf { it.versionSum() }
+     data.createInstructions().versionSum()
   }
 
   fun evaluateInstructions(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
     val data = input.map { CONVERSIONS[it]!! }.joinToString("")
-    val instructions = mutableListOf<Instruction>()
-    data.createInstructions { instructions.addAll(it) }
-    instructions.first().value()
+    data.createInstructions().value()
   }
 
-  private fun String.createInstructions(startIndex: Int = 0, handler: (List<Instruction>) -> Unit): Int {
-    var nextIndex = startIndex
-    val version = substring(nextIndex, nextIndex + 3).toInt(2).also { nextIndex += 3 }
-    val packetType = substring(nextIndex, nextIndex + 3).toInt(2).also { nextIndex += 3 }
+  private fun String.createInstructions(index: AtomicInteger = AtomicInteger(0)): Instruction {
+    val version = substring(index.get(), index.addAndGet(3)).toInt(2)
+    val packetType = substring(index.get(), index.addAndGet(3)).toInt(2)
 
-    val instructions = mutableListOf<Instruction>()
-
-    nextIndex = if (packetType == 4) {
-      handleLiteral(version, packetType, nextIndex) { instructions.add(it) }
+    return if (packetType == 4) {
+      handleLiteral(version, packetType, index)
     } else {
-      val lengthId = Character.getNumericValue(this[nextIndex]).also { nextIndex++ }
+      val lengthId = Character.getNumericValue(this[index.getAndIncrement()])
       if (lengthId == 0) {
-        handleSizeBasedSubPackets(version, packetType, nextIndex) { instructions.add(it) }
+        handleSizeBasedSubPackets(version, packetType, index)
       } else {
-        handleCountBasedSubPackets(version, packetType, nextIndex) { instructions.add(it) }
+        handleCountBasedSubPackets(version, packetType, index)
       }
     }
-
-    handler(instructions)
-
-    return nextIndex
   }
 
-  private fun String.handleLiteral(version: Int, packetType: Int, index: Int, handler: (Instruction) -> Unit): Int {
-    var nextIndex = index
+  private fun String.handleLiteral(version: Int, packetType: Int, index: AtomicInteger): Instruction {
     var done = false
     val bitStringBuilder = StringBuilder()
 
     while(!done) {
-      substring(nextIndex, nextIndex + 5).also {
+      substring(index.get(), index.addAndGet(5)).also {
         done = it.first() == '0'
         bitStringBuilder.append(it.drop(1))
-        nextIndex += 5
       }
     }
 
-    handler(Literal(version, packetType, bitStringBuilder.toString().toLong(2)))
-
-    return nextIndex
+    return Literal(version, packetType, bitStringBuilder.toString().toLong(2))
   }
 
-  private fun String.handleSizeBasedSubPackets(version: Int, packetType: Int, index: Int, handler: (Instruction) -> Unit): Int {
-    var nextIndex = index
-    val sizeOfSubPackets = substring(nextIndex, nextIndex + 15).toInt(2).also { nextIndex += 15 }
-    val finalIndex = nextIndex + sizeOfSubPackets
+  private fun String.handleSizeBasedSubPackets(version: Int, packetType: Int, index: AtomicInteger): Instruction {
+    val sizeOfSubPackets = substring(index.get(), index.addAndGet(15)).toInt(2)
+    val finalIndex = index.get() + sizeOfSubPackets
     val children = mutableListOf<Instruction>()
-    while (nextIndex != finalIndex) {
-      nextIndex = createInstructions(nextIndex) { children.addAll(it) }
+    while (index.get() != finalIndex) {
+      children.add(createInstructions(index))
     }
 
-    handler(Operator(version, packetType, children))
-
-    return nextIndex
+    return Operator(version, packetType, children)
   }
 
-  private fun String.handleCountBasedSubPackets(
-    version: Int,
-    packetType: Int,
-    index: Int,
-    handler: (Instruction) -> Unit
-  ): Int {
-    var nextIndex = index
-    val numberOfSubPackets = substring(nextIndex, nextIndex + 11).toInt(2).also { nextIndex += 11 }
+  private fun String.handleCountBasedSubPackets(version: Int, packetType: Int, index: AtomicInteger): Instruction {
+    val numberOfSubPackets = substring(index.get(), index.addAndGet(11)).toInt(2)
     val children = mutableListOf<Instruction>()
     repeat(numberOfSubPackets) {
-      nextIndex = createInstructions(nextIndex) { children.addAll(it) }
+      children.add(createInstructions(index))
     }
 
-    handler(Operator(version, packetType, children))
-
-    return nextIndex
+    return Operator(version, packetType, children)
   }
 }

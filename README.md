@@ -48,6 +48,7 @@ as the value which passed the given day/phase combination
   
 
 * Keeping track of the single index as I parsed through the bit string for Day16 
+  * This ended up turning into a re-learning of AtomicInteger, and "invisible" mutability of parameters 
     
 
 ## Takeaways
