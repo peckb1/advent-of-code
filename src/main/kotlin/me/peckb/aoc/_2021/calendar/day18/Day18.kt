@@ -14,7 +14,7 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun findMagnitude(fileName: String) =
     generatorFactory.forFile(fileName).readAs(::snailFishPair) { input ->
       input.reduce { acc, next ->
-        acc.add(next).apply { while (this.explode() || this.split()) { } }
+        acc.add(next).apply { while (this.explode() || this.split()); }
       }.magnitude()
     }
 
@@ -30,7 +30,7 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
           val secondString = data[b]
 
           fun getMagnitude(a: String, b: String) = snailFishPair(a).add(snailFishPair(b))
-            .apply { while (this.explode() || this.split()) {} }
+            .apply { while (this.explode() || this.split()); }
             .magnitude()
 
           largestMagnitude = max(largestMagnitude, getMagnitude(firstString, secondString))
