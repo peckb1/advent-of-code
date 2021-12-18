@@ -9,7 +9,7 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
   private val needsRightSplit get() = right.leftOr(0) > 9
 
   fun explode(): Boolean {
-    return if (needsExploding && left.isLeft() && right.isLeft()) {
+    return if (needsExploding && left.isLiteral() && right.isLiteral()) {
       parent?.addLeft(this, left.leftOr(0))
       parent?.addRight(this, right.leftOr(0))
       parent?.setZero(this)
