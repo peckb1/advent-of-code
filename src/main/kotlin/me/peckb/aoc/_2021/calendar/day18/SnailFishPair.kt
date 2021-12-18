@@ -1,7 +1,7 @@
 package me.peckb.aoc._2021.calendar.day18
 
-import arrow.core.Either
 import kotlin.math.ceil
+import kotlin.math.floor
 
 data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var right: FishPair, var depth: Int) {
   private val needsExploding get() = depth >= 4
@@ -20,12 +20,12 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
   }
 
   fun split(): Boolean {
-    fun split(pair: Either<Int, SnailFishPair>): Either<Int, SnailFishPair> {
-      val int = pair.leftOr(0)
-      val left = Either.Left(int / 2)
-      val right = Either.Left(ceil(int.toDouble() / 2.0).toInt())
+    fun split(pair: FishPair): FishPair {
+      val half = pair.leftOr(0).toDouble() / 2.0
+      val left = floor(half).toInt().toEither()
+      val right = ceil(half).toInt().toEither()
 
-      return Either.Right(SnailFishPair(this, left, right, depth + 1))
+      return SnailFishPair(this, left, right, depth + 1).toEither()
     }
 
     when {
@@ -62,20 +62,20 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
 
   private fun setZero(child: SnailFishPair) {
     if (child === left.orNull()) {
-      left = Either.Left(0)
+      left = 0.toEither()
     } else {
-      right = Either.Left(0)
+      right = 0.toEither()
     }
   }
 
   fun add(other: SnailFishPair) = SnailFishPair(
     parent = null,
-    left = Either.Right(this),
-    right = Either.Right(other),
+    left = this.toEither(),
+    right = other.toEither(),
     depth = 0
-  ).also { me ->
-    me.left.becomeChildOf(me)
-    me.right.becomeChildOf(me)
+  ).also { newParent ->
+    newParent.left.becomeChildOf(newParent)
+    newParent.right.becomeChildOf(newParent)
   }
 
   fun magnitude(): Int {
@@ -85,18 +85,9 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
     return (3 * leftMagnitude) + (2 * rightMagnitude)
   }
 
-  private fun incrementDepth() {
+  fun incrementDepth() {
     depth++
     left.map { it.incrementDepth() }
     right.map { it.incrementDepth() }
   }
-
-  private fun <T> Either<T, T>.get(): T = this.fold({ it }, { it })
-
-  private fun Either<Int, SnailFishPair>.becomeChildOf(parent: SnailFishPair) = this.map {
-    it.parent = parent
-    it.incrementDepth()
-  }
-  
-  private fun <A, B> Either<A, B>.leftOr(default: A): A = this.fold({ it }, { default })
 }

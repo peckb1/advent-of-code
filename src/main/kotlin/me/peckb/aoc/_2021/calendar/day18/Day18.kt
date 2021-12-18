@@ -46,19 +46,19 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun getPair(line: String, index: AtomicInteger, depth: Int): FishPair {
-    lateinit var left: FishPair
-    lateinit var right: FishPair
+    lateinit var newLeft: FishPair
+    lateinit var newRight: FishPair
 
     var indexInt = index.getAndIncrement()
     while (indexInt < line.length) {
       when (val nextChar = line[indexInt]) {
-        '[' -> left = getPair(line, index, depth + 1)
-        ',' -> right = getPair(line, index, depth + 1)
-        ']' -> return Either.Right(SnailFishPair(null, left, right, depth).also { me ->
-          me.left.map { it.parent = me }
-          me.right.map { it.parent = me }
-        })
-        else -> return Either.Left(Character.getNumericValue(nextChar))
+        '[' -> newLeft = getPair(line, index, depth + 1)
+        ',' -> newRight = getPair(line, index, depth + 1)
+        ']' -> return SnailFishPair(null, newLeft, newRight, depth).apply {
+          left.map { it.parent = this }
+          right.map { it.parent = this }
+        }.toEither()
+        else -> return Character.getNumericValue(nextChar).toEither()
       }
       indexInt = index.getAndIncrement()
     }
