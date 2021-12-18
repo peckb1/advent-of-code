@@ -25,6 +25,6 @@ internal class Day17Test {
 
   @Test
   fun testDay17PartTwo() {
-    assertEquals(2223, day17.partTwo(DAY_17))
+    assertEquals(2223, day17.totalNumberOfLaunchVelocities(DAY_17))
   }
 }

@@ -16,7 +16,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     triangleNumber(yMin)
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
+  fun totalNumberOfLaunchVelocities(fileName: String) = generatorFactory.forFile(fileName).readOne { input ->
     val area = fetchArea(input)
 
     val lowestMultiJumpX = (0..area.xMin).first { triangleNumber(it) in area.xRange }
