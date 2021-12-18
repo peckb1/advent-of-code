@@ -29,7 +29,7 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
       println(added)
 
-      -1
+      added.magnitude()
     }
 
   fun partTwo(fileName: String) =
@@ -122,36 +122,6 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    // fun reduce(): Boolean {
-      //   if (left.isLeft() && right.isLeft()) {
-      //     // we can explode, because both of our values are ints
-      //     parent?.addLeft(this, left.swap().orNull()!!)
-      //     parent?.addRight(this, right.swap().orNull()!!)
-      //     parent?.setZero(this)
-      //     return true
-      //   }
-      // } else if (needsLeftSplit) {
-      //   val leftInt = left.swap().orNull()!!
-      //   val leftLeft = Either.Left(leftInt / 2)
-      //   val leftRight = Either.Left(round(leftInt.toDouble() / 2.0).toInt())
-      //
-      //   left = Either.Right(SnailFishPair(this, leftLeft, leftRight, depth + 1).also { it.parent = this })
-      //   left.map{ it.reduce() }
-      //   return true
-      // } else if (needsRightSplit) {
-      //   val rightInt = right.swap().orNull()!!
-      //   val rightLeft = Either.Left(rightInt / 2)
-      //   val rightRight = Either.Left(ceil(rightInt.toDouble() / 2.0).toInt())
-      //
-      //   right = Either.Right(SnailFishPair(this, rightLeft, rightRight, depth + 1).also { it.parent = this })
-      //   right.map{ it.reduce() }
-      //   return true
-      // } else {
-      //   return (left.map { it.reduce() }.orNull() ?: false) || (right.map { it.reduce() }.orNull() ?: false)
-      // }
-      // return false
-    // }
-
     fun addLeft(pair: SnailFishPair, n: Int): SnailFishPair {
       if (pair === right.orNull()) {
         // our right child told us to add to its left
@@ -230,6 +200,20 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
 
       return xx
+    }
+
+    fun magnitude(): Int {
+      // The magnitude of a pair is 3 times the magnitude of its left element plus 2 times the magnitude of its right element.
+      val leftMagnitude = left.bimap(
+        { it },
+        { it.magnitude()}
+      ).fold({it},{it})
+      val rightMagnitude = right.bimap(
+        { it },
+        { it.magnitude() }
+      ).fold({it},{it})
+
+      return (3 * leftMagnitude) + (2 * rightMagnitude)
     }
 
     private fun incrementDepth() {
