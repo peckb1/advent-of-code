@@ -89,55 +89,42 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     fun split(): Boolean {
-      return if (needsLeftSplit) {
-        val leftInt = left.swap().orNull()!!
-        val leftLeft = Either.Left(leftInt / 2)
-        val leftRight = Either.Left(ceil(leftInt.toDouble() / 2.0).toInt())
+      fun split(pair: Either<Int, SnailFishPair>): Either<Int, SnailFishPair> {
+        val int = pair.swap().orNull()!!
+        val left = Either.Left(int / 2)
+        val right = Either.Left(ceil(int.toDouble() / 2.0).toInt())
 
-        left = Either.Right(SnailFishPair(this, leftLeft, leftRight, depth + 1)
-          .also { it.parent = this })
-        true
-      } else if (left.map { it.split() }.orNull() == true) {
-        true
-      } else if (needsRightSplit) {
-        val rightInt = right.swap().orNull()!!
-        val rightLeft = Either.Left(rightInt / 2)
-        val rightRight = Either.Left(ceil(rightInt.toDouble() / 2.0).toInt())
+        return Either.Right(SnailFishPair(this, left, right, depth + 1))
+      }
 
-        right = Either.Right(SnailFishPair(this, rightLeft, rightRight, depth + 1)
-          .also { it.parent = this })
-        true
-      } else {
-        (right.map { it.split() }.orNull() ?: false)
+      return when {
+        needsLeftSplit                           -> { left = split(left); true; }
+        left.map { it.split() }.orNull() == true -> true
+        needsRightSplit                          -> { right = split(right); true; }
+        else                                     -> (right.map { it.split() }.orNull() ?: false)
       }
     }
 
-    private fun addLeft(pair: SnailFishPair, n: Int): SnailFishPair {
-      if (pair === right.orNull()) {
+    private fun addLeft(pair: SnailFishPair, n: Int): SnailFishPair = this.also { _ ->
+      when {
         // our right child told us to add to its left
-        left = left.bimap({ it + n }, { it.addRight(this, n) })
-      } else if (pair === left.orNull()) {
+        pair === right.orNull() -> left = left.bimap({ it + n }, { it.addRight(this, n) })
         // our left child told us to add to its left
-        parent?.addLeft(this, n)
-      } else {
+        pair === left.orNull()  -> parent?.addLeft(this, n)
         // our parent told us to add to the left
-        left = left.bimap({ it + n }, { it.addLeft(this, n) })
+        else                    -> left = left.bimap({ it + n }, { it.addLeft(this, n) })
       }
-      return this
     }
 
-    private fun addRight(pair: SnailFishPair, n: Int): SnailFishPair {
-      if (pair === left.orNull()) {
+    private fun addRight(pair: SnailFishPair, n: Int): SnailFishPair = this.also { _ ->
+      when {
         // our left child just told us to add to its right
-        right = right.bimap({ it + n }, { it.addLeft(this, n) })
-      } else if (pair === right.orNull()) {
+        pair === left.orNull()  -> right = right.bimap({ it + n }, { it.addLeft(this, n) })
         // our right child told us to add to its right
-        parent?.addRight(this, n)
-      } else {
+        pair === right.orNull() -> parent?.addRight(this, n)
         // our parent told us to add to the right
-        right = right.bimap({ it + n }, { it.addRight(this, n) })
+        else                    -> right = right.bimap({ it + n }, { it.addRight(this, n) })
       }
-      return this
     }
 
     private fun setZero(child: SnailFishPair) {
