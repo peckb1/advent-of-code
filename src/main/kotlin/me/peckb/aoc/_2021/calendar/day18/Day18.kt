@@ -5,6 +5,7 @@ import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import kotlin.math.ceil
+import kotlin.math.max
 
 class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
 
@@ -33,8 +34,29 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
   fun partTwo(fileName: String) =
-    generatorFactory.forFile(fileName).readAs(::snailFishPair) { input ->
-      -1
+    generatorFactory.forFile(fileName).read { input ->
+      val data = input.toList()
+
+      var largestMagnitude = Int.MIN_VALUE
+
+      repeat(data.size) { a ->
+        ((a + 1) until data.size).forEach{ b ->
+          println("($a, $b) Comparing ${data[a]} and ${data[b]}}")
+
+          val firstString = data[a]
+          val secondString = data[b]
+
+          val aPlusB = snailFishPair(firstString).add(snailFishPair(secondString))
+          while(aPlusB.explode() || aPlusB.split()) { /* */ }
+          largestMagnitude = max(largestMagnitude, aPlusB.magnitude())
+
+          val bPlusA = snailFishPair(secondString).add(snailFishPair(firstString))
+          while(bPlusA.explode() || bPlusA.split()) { /* */ }
+          largestMagnitude = max(largestMagnitude, bPlusA.magnitude())
+        }
+      }
+
+      largestMagnitude
     }
 
   private fun snailFishPair(line: String): SnailFishPair {
