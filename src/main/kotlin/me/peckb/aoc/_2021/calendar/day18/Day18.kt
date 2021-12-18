@@ -150,12 +150,12 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     fun add(other: SnailFishPair) = SnailFishPair(
       parent = null,
-      left = Either.Right(this.also { it.incrementDepth() }),
-      right = Either.Right(other.also { it.incrementDepth() }),
+      left = Either.Right(this),
+      right = Either.Right(other),
       depth = 0
     ).also { me ->
-      me.left.map { it.parent = me }
-      me.right.map { it.parent = me }
+      me.left.becomeChildOf(me)
+      me.right.becomeChildOf(me)
     }
 
     fun magnitude(): Int {
@@ -172,5 +172,11 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     private fun <T> Either<T, T>.get(): T = this.fold({ it }, { it })
+
+    private fun Either<Int, SnailFishPair>.becomeChildOf(parent: SnailFishPair) = this.map {
+      it.parent = parent
+      it.incrementDepth()
+    }
   }
 }
+
