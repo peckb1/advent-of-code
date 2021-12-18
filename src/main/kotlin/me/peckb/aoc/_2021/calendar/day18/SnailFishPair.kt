@@ -3,15 +3,15 @@ package me.peckb.aoc._2021.calendar.day18
 import arrow.core.Either
 import kotlin.math.ceil
 
-data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var right: FishPair, var depth: Int ) {
+data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var right: FishPair, var depth: Int) {
   private val needsExploding get() = depth >= 4
-  private val needsLeftSplit get() = left.swap().orNull() ?: 0 > 9
-  private val needsRightSplit get() = right.swap().orNull() ?: 0 > 9
+  private val needsLeftSplit get() = left.leftOr(0) > 9
+  private val needsRightSplit get() = right.leftOr(0) > 9
 
   fun explode(): Boolean {
     return if (needsExploding && left.isLeft() && right.isLeft()) {
-      parent?.addLeft(this, left.swap().orNull()!!)
-      parent?.addRight(this, right.swap().orNull()!!)
+      parent?.addLeft(this, left.leftOr(0))
+      parent?.addRight(this, right.leftOr(0))
       parent?.setZero(this)
       true
     } else {
@@ -21,19 +21,21 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
 
   fun split(): Boolean {
     fun split(pair: Either<Int, SnailFishPair>): Either<Int, SnailFishPair> {
-      val int = pair.swap().orNull()!!
+      val int = pair.leftOr(0)
       val left = Either.Left(int / 2)
       val right = Either.Left(ceil(int.toDouble() / 2.0).toInt())
 
       return Either.Right(SnailFishPair(this, left, right, depth + 1))
     }
 
-    return when {
-      needsLeftSplit                           -> { left = split(left); true; }
-      left.map { it.split() }.orNull() == true -> true
-      needsRightSplit                          -> { right = split(right); true; }
-      else                                     -> (right.map { it.split() }.orNull() ?: false)
+    when {
+      needsLeftSplit                           -> { left = split(left) }
+      left.map { it.split() }.orNull() == true -> return true
+      needsRightSplit                          -> { right = split(right) }
+      else                                     -> return (right.map { it.split() }.orNull() ?: false)
     }
+
+    return true
   }
 
   private fun addLeft(pair: SnailFishPair, n: Int): SnailFishPair = this.also { _ ->
@@ -95,4 +97,6 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
     it.parent = parent
     it.incrementDepth()
   }
+  
+  private fun <A, B> Either<A, B>.leftOr(default: A): A = this.fold({ it }, { default })
 }
