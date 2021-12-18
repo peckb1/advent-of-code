@@ -14,10 +14,10 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val added = data.reduce { acc, next ->
         println("$acc + $next")
         val addedPair = acc.add(next)
-        println(addedPair)
+        // println(addedPair)
         // addedPair.deepPrint()
         while(addedPair.explode() || addedPair.split()) {
-          println(addedPair)
+          // println(addedPair)
         }
         println()
         addedPair
@@ -26,6 +26,8 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
       // while(added.explode() || added.split()) {
       //   println(added)
       // }
+
+      println(added)
 
       -1
     }
@@ -93,10 +95,14 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         // println("maths: $leftInt -> [$leftLeft, $leftRight]")
 
-        left = Either.Right(SnailFishPair(this, leftLeft, leftRight, depth + 1).also { it.parent = this })
+        left = Either.Right(SnailFishPair(this, leftLeft, leftRight, depth + 1).also {
+          it.parent = this
+        })
         // left.map{ it.expl() }
-        println("split!")
-        println()
+        // println("split!")
+        // println()
+        true
+      } else if (left.map { it.split() }.orNull() == true) {
         true
       } else if (needsRightSplit) {
         val rightInt = right.swap().orNull()!!
@@ -107,12 +113,12 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         right = Either.Right(SnailFishPair(this, rightLeft, rightRight, depth + 1).also { it.parent = this })
         // right.map{ it.reduce() }
-        println("split!")
-        println()
+        // println("split!")
+        // println()
         true
       } else {
         // println("checking kids for splits")
-        (left.map { it.split() }.orNull() ?: false) || (right.map { it.split() }.orNull() ?: false)
+        (right.map { it.split() }.orNull() ?: false)
       }
     }
 
@@ -152,7 +158,7 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
         // println("Right Child $pair told me $this to add $n to its left, which should be $left")
         left = left.bimap(
           {
-            println("adding $n to $it")
+            // println("adding $n to $it")
             it + n
           },
           { it.addRight(this, n) }
@@ -160,13 +166,13 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
       } else if (pair === left.orNull()) {
         // our left child told us to add to its left
         // println("Left Child $pair told me $this to add $n to the left")
-        parent?.addLeft(this, n) ?: println("throwing away $n")
+        parent?.addLeft(this, n)// ?: println("throwing away $n")
       } else {
         // our parent told us to add to the left
         // println("My parent $pair told me $this to add $n to my left")
         left = left.bimap(
           {
-            println("adding $n to $it")
+            // println("adding $n to $it")
             it + n
           },
           { it.addLeft(this, n) }
@@ -181,7 +187,7 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
         // println("Left Child $pair told me $this to add $n to its right, which should be $right")
         right = right.bimap(
           {
-            println("adding $n to $it")
+            // println("adding $n to $it")
             it + n
           },
           { it.addLeft(this, n) }
@@ -189,13 +195,13 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
       } else if (pair === right.orNull()) {
         // our right child told us to add to its right
         // println("Right Child $pair told me $this to add $n to the right")
-        parent?.addRight(this, n) ?: println("throwing away $n")
+        parent?.addRight(this, n)// ?: println("throwing away $n")
       } else {
         // our parent told us to add to the right
         // println("My parent $pair told me $this to add $n to my right")
         right = right.bimap(
           {
-            println("adding $n to $it")
+            // println("adding $n to $it")
             it + n
           },
           { it.addRight(this, n) }
