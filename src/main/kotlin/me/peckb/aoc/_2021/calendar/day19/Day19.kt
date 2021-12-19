@@ -50,8 +50,9 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val sensorMappings: MutableMap<Int, MutableMap<Int, Triple<Int, Int, Int>>> = mutableMapOf()
+    val directions: MutableMap<Int, MutableMap<Int, Point>> = mutableMapOf()
 
+    // val sensorMappings: MutableMap<Int, MutableMap<Int, Triple<Int, Int, Triple<Int, Int, Int>>>> = mutableMapOf()
     scannerIdToBeaconReferenceViews.forEach { (myScannerId, myBeacons) ->
       // println()
       // println("Checking for an overlapping Scanner from Scanner ID: $myScannerId")
@@ -64,26 +65,78 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
           theirBeacons.forEach { neighborBeacon ->
             if (!(neighborBeacon === beacon)) {
               rotations.forEach { rotationX ->
-                val a = neighbors.map { rotateAroundX(rotationX, it) }
+                // val a = neighbors.map { rotateAroundX(rotationX, it) }
                 rotations.forEach { rotationY ->
-                  val b = a.map { rotateAroundY(rotationY, it) }
+                  // val b = a.map { rotateAroundY(rotationY, it) }
                   rotations.forEach { rotationZ ->
-                    val x = b.map { rotateAroundZ(rotationZ, it) }
+                    // val x = b.map { rotateAroundZ(rotationZ, it) }
+                    val myRotatedNeighbors = neighbors.map { p ->
+                      rotateAroundZ(rotationZ, rotateAroundY(rotationY, rotateAroundX(rotationX, p)))
+                    }
 
-                    val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(x)
+                    val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(myRotatedNeighbors)
 
                     if (matchingNeighborBeacons.size >= 11) {
-                      sensorMappings.compute(myScannerId) { _, matches ->
-                        (matches ?: mutableMapOf()).apply {
-                          put(theirScannerId, Triple(rotationX, rotationY, rotationZ))
+                      // LEGIT!
+                      val theirLocationRelativeToMe = (rotateAroundZ(rotationZ, rotateAroundY(rotationY, rotateAroundX(rotationX, beacon.scannerPoint.reverseDirection(myScannerId))))).add(neighborBeacon.scannerPoint)
+                      directions.compute(myScannerId) { _, directions ->
+                        (directions ?: mutableMapOf()).apply {
+                          this.put(theirScannerId, rotateAroundZ(rotationZ, rotateAroundY(rotationY, rotateAroundX(rotationX, theirLocationRelativeToMe))))
                         }
                       }
-                      println("$myScannerId $theirScannerId")
+
+
+                      -1
+
+                      // val theirVersionOfMatch = matchingNeighborBeacons.first()
+                      // val myVersionOfMatch = myRotatedNeighbors.find {
+                      //   it.x == theirVersionOfMatch.x &&
+                      //   it.y == theirVersionOfMatch.y &&
+                      //   it.z == theirVersionOfMatch.z
+                      // }!!
+                      //
+                      // val myScannerToCommonPoint = beacon.scannerPoint.reverseDirection(myScannerId).add(beacon.neighbors[myVersionOfMatch.id])
+                      // val theirScannerToCommonPoint = neighborBeacon.scannerPoint.reverseDirection(theirScannerId).add(neighborBeacon.neighbors[theirVersionOfMatch.id])
+
+                      // val myScannerToCommonPoint = beacon.scannerPoint.add(myVersionOfMatch)
+                      // val theirScannerToCommonPoint = neighborBeacon.scannerPoint.reverseDirection(theirScannerId).add(theirVersionOfMatch)
+                      //
+                      // val derotatedThem = rotateAroundX(-rotationX, rotateAroundY(-rotationY, rotateAroundZ(-rotationZ, theirScannerToCommonPoint)))
+                      //
+                      // val myScannerToTheirScanner = myScannerToCommonPoint.add(derotatedThem.reverseDirection(theirScannerId))
+
+                      -1
+
+                      // val test = neighborBeacon.neighbors.map { p ->
+                      //   rotateAroundZ(-rotationZ, rotateAroundY(-rotationY, rotateAroundX(-rotationX, p)))
+                      // }
+                      // val test2 = scannerData[0]!!.beaconPoints
+
+                      // sensorMappings.compute(myScannerId) { _, matches ->
+                      //   (matches ?: mutableMapOf()).apply {
+                      //     put(theirScannerId, Triple(beacon.id, neighborBeacon.id, Triple(rotationX, rotationY, rotationZ)))
+                      //   }
+                      // }
+                      // println("$myScannerId $theirScannerId")
+
+                      // val myBeacon = scannerData[myScannerId]!!.beaconPoints[beacon.id]
+                      // val theirBeacon = scannerData[theirScannerId]!!.beaconPoints[neighborBeacon.id]
+
+
+
+                      // val translationVector = neighborBeacon.scannerPoint.subtract(beacon.scannerPoint)
+                      // val rotatedTranslationVector = rotateAroundX(-rotationX, rotateAroundY(-rotationY, rotateAroundZ(-rotationZ, translationVector)))
+                      // val mappedPoints = scannerData[theirScannerId]!!.beaconPoints.map {
+                      //   it.add(rotatedTranslationVector)
+                      // }
+
                       // println("Scanner $myScannerId's point ${beacon.id} matches Scanner $theirScannerId's point ${neighborBeacon.id} ")
+                      // println()
                       // matchingNeighborBeacons.forEach { matchingNeighbor ->
-                      //   x.forEach { myNeighbor ->
+                      //   myRotatedNeighbors.forEach { myNeighbor ->
                       //     if (myNeighbor == matchingNeighbor) {
                       //       println("Scanner $myScannerId's point ${myNeighbor.id} matches Scanner $theirScannerId's point ${matchingNeighbor.id} ")
+                      //       println(beacon.scannerPoint.subtract(neighborBeacon.scannerPoint))
                       //     }
                       //   }
                       // }
@@ -99,55 +152,27 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    -1
-    /*
-
-...B.
-B....
-....B
-S....
-
-...B..
-B....S
-....B.
-
-...B..
-B....S
-....B.
-S.....
-
-     */
-
-    // val fullData = scannerData.mapValues { (_, points) ->
-    //   points.map { point ->
-    //     (1..4).flatMap { rotationA ->
-    //       val newPoints = mutableListOf<Point>()
-    //       val initialOrientationPoint = rotateAroundX(rotationA, point)
-    //       (1..4).forEach { rotationB ->
-    //         // get four y axis rotations for the initial initialOrientationPoint
-    //         newPoints.add(rotateAroundY(rotationB, initialOrientationPoint))
-    //       }
-    //       // also get a 90 degree around Z, and a 270 around Z
-    //       newPoints.add(rotateAroundZ(90, initialOrientationPoint))
-    //       newPoints.add(rotateAroundZ(270, initialOrientationPoint))
-    //       // we should have 6 Points per rotation A (four rotationA) giving us all 24 rotations
-    //       newPoints
-    //     }//.toSet() // TODO: confirm set is ok here
-    //   }
+    // val beacons = mutableListOf<Point>().apply {
+    //   addAll(scannerData[0]!!.beaconPoints)
     // }
     //
-    // val scanner0 = fullData[0]!!
-    // val scanner1 = fullData[1]!!
+    // val connectedNeighbors = mutableSetOf(0)
+    // val sensorZerosNeighbors = sensorMappings[0]!!
+    // sensorZerosNeighbors.forEach { (connectedScanner, data) ->
+    //   val (myReferenceBeacon, theirReferenceBeacon, rotationData) = data
     //
-    // scanner0.forEach { scanner0OrientationPoints ->
-    //   scanner1.forEach { scanner1OrientationPoints ->
-    //     val union = scanner0OrientationPoints.intersect(scanner1OrientationPoints)
-    //     if (union.size >= 1) {
-    //       -1
-    //     }
-    //   }
+    //   val theirBeacons = scannerIdToBeaconReferenceViews[connectedScanner]!!
+    //
+    //   // val rotatedPoints = scannerData[0]!!.beaconPoints.map { p ->
+    //   //   rotateAroundZ(rotationZ, rotateAroundY(rotationY, rotateAroundX(rotationX, p)))
+    //   // }
+    //   // val t = rotatedPoints.intersect(scannerData[connectedBeacon]!!.beaconPoints)
+    //   -1
     // }
 
+    // rotateAroundZ(0, rotateAroundY(180, rotateAroundX(0, scannerData[1].beaconPoints[0].subtract(directions[1][0]!!))))
+    val randomScanner1Beacon = scannerData[1]!!.beaconPoints[24]
+    val rotatedRandom = rotateAroundZ(0, rotateAroundY(180, rotateAroundX(0, randomScanner1Beacon.subtract(directions[1]!![0]!!))))
 
     -1
   }
@@ -201,5 +226,7 @@ S.....
     fun reverseDirection(scannerId: Int) = Point(-x, -y, -z).also { it.id = scannerId }
 
     fun subtract(other: Point) = Point(x-other.x, y-other.y, z-other.z).also { it.id = id }
+
+    fun add(other: Point) = Point(x+other.x, y+other.y, z+other.z).also { it.id = id }
   }
 }
