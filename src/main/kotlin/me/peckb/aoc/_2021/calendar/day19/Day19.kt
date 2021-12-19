@@ -50,7 +50,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val directions: MutableMap<Int, MutableMap<Int, Point>> = mutableMapOf()
+    val directions: MutableMap<Int, MutableMap<Int, Pair<Triple<Int, Int, Int>, Point>>> = mutableMapOf()
 
     // val sensorMappings: MutableMap<Int, MutableMap<Int, Triple<Int, Int, Triple<Int, Int, Int>>>> = mutableMapOf()
     scannerIdToBeaconReferenceViews.forEach { (myScannerId, myBeacons) ->
@@ -81,7 +81,10 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
                       val theirLocationRelativeToMe = (rotateAroundZ(rotationZ, rotateAroundY(rotationY, rotateAroundX(rotationX, beacon.scannerPoint.reverseDirection(myScannerId))))).add(neighborBeacon.scannerPoint)
                       directions.compute(myScannerId) { _, directions ->
                         (directions ?: mutableMapOf()).apply {
-                          this.put(theirScannerId, rotateAroundZ(rotationZ, rotateAroundY(rotationY, rotateAroundX(rotationX, theirLocationRelativeToMe))))
+                          this.put(
+                            theirScannerId,
+                            Triple(rotationX, rotationY, rotationZ) to rotateAroundZ(rotationZ, rotateAroundY(rotationY, rotateAroundX(rotationX, theirLocationRelativeToMe)))
+                          )
                         }
                       }
 
@@ -171,8 +174,16 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     // }
 
     // rotateAroundZ(0, rotateAroundY(180, rotateAroundX(0, scannerData[1].beaconPoints[0].subtract(directions[1][0]!!))))
-    val randomScanner1Beacon = scannerData[1]!!.beaconPoints[24]
-    val rotatedRandom = rotateAroundZ(0, rotateAroundY(180, rotateAroundX(0, randomScanner1Beacon.subtract(directions[1]!![0]!!))))
+
+    val (oneToZeroRotation, oneToZeroDirections) = directions[1]!![0]!!
+    val (xRotation, yRotation, zRotation) = oneToZeroRotation
+    val beaconsToPutIntoZerosReferenceFrame = scannerData[1]!!.beaconPoints
+    val scannerOneBeaconsInZerosReferenceFrame = beaconsToPutIntoZerosReferenceFrame.map {
+      rotateAroundZ(zRotation, rotateAroundY(yRotation, rotateAroundX(xRotation, it.subtract(oneToZeroDirections))))
+    }
+
+    // val randomScanner1Beacon = scannerData[1]!!.beaconPoints[24]
+    // val rotatedRandom = rotateAroundZ(0, rotateAroundY(180, rotateAroundX(0, randomScanner1Beacon.subtract(directions[1]!![0]!!))))
 
     -1
   }
