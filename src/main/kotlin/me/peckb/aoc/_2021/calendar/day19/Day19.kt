@@ -15,10 +15,9 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       return rotateAroundZ(zAngle, rotateAroundY(yAngle, rotateAroundX(xAngle, this)))
     }
 
-    @Deprecated("")
-    fun rotateAroundX(angle: Int, point: Point): Point {
-      val (x, y, z) = point
+    private fun rotateAroundX(angle: Int, point: Point): Point {
       val theta = angle * (Math.PI / 180)
+      val (x, y, z) = point
 
       val newX = x
       val newY = (y.toDouble() * cos(theta) - z.toDouble() * sin(theta)).roundToInt()
@@ -27,8 +26,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       return Point(newX, newY, newZ).also { it.id = point.id }
     }
 
-    @Deprecated("")
-    fun rotateAroundY(angle: Int, point: Point): Point {
+    private fun rotateAroundY(angle: Int, point: Point): Point {
       val (x, y, z) = point
       val theta = angle * (Math.PI / 180)
 
@@ -39,8 +37,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       return Point(newX, newY, newZ).also { it.id = point.id }
     }
 
-    @Deprecated("")
-    fun rotateAroundZ(angle: Int, point: Point): Point {
+    private fun rotateAroundZ(angle: Int, point: Point): Point {
       val (x, y, z) = point
       val theta = angle * (Math.PI / 180)
 
@@ -93,7 +90,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     maxCost
   }
 
-  private fun setupData(input: Sequence<String>): Pair<MutableMap<Int, Scanner>, MutableMap<Int, MutableMap<Int, Triple<Int, Triple<Int, Int, Int>, Int>>>> {
+  private fun setupData(input: Sequence<String>): Pair<MutableMap<Int, Scanner>, MutableMap<Int, MutableMap<Int, Triple<Int, Rotation, Int>>>> {
     val iterator = input.iterator()
 
     val scannerData: MutableMap<Int, Scanner> = mutableMapOf()
@@ -133,7 +130,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Triple<Int, Int, Int>, Int>>> = mutableMapOf()
+    val translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Rotation, Int>>> = mutableMapOf()
     val rotations = listOf(0, 90, 180, 270)
     scannerIdToBeaconReferenceViews.forEach { (myScannerId, myBeacons) ->
       scannerIdToBeaconReferenceViews.forEach scannerSearch@ { (theirScannerId, theirBeacons) ->
@@ -141,22 +138,18 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
           val neighbors = beacon.neighbors
           theirBeacons.forEach { neighborBeacon ->
             if (!(neighborBeacon === beacon)) {
+              val s = System.currentTimeMillis()
               rotations.forEach { rotationX ->
-                // val a = neighbors.map { rotateAroundX(rotationX, it) }
                 rotations.forEach { rotationY ->
-                  // val b = a.map { rotateAroundY(rotationY, it) }
                   rotations.forEach { rotationZ ->
-                    // val x = b.map { rotateAroundZ(rotationZ, it) }
-                    val myRotatedNeighbors = neighbors.map { p ->
-                      p.rotate(rotationX, rotationY, rotationZ)
-                    }
+                    val rotatedNeighbors = neighbors.map { it.rotate(rotationX, rotationY, rotationZ) }
 
-                    val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(myRotatedNeighbors)
+                    val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(rotatedNeighbors)
 
                     if (matchingNeighborBeacons.size >= 11) {
                       println("Found an overlap between $myScannerId and $theirScannerId")
                       val sourceReferencePoint = beacon.id
-                      val rotationData = Triple(rotationX, rotationY, rotationZ)
+                      val rotationData = Rotation(rotationX, rotationY, rotationZ)
                       val targetReferencePoint = neighborBeacon.id
 
                       translationData.compute(myScannerId) { _, destination ->
@@ -169,6 +162,8 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
                   }
                 }
               }
+              val e = System.currentTimeMillis()
+              println("rotation time: ${e-s}")
             }
           }
         }
@@ -181,7 +176,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
   data class Node(val id: Int, var parent: Node?, val children: List<Node>, var costToRoot: Point? = null) {
     fun updateCosts(
       scannerData: MutableMap<Int, Scanner>,
-      translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Triple<Int, Int, Int>, Int>>>,
+      translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Rotation, Int>>>,
       costs: MutableMap<Int, MutableMap<Int, Point>>
     ) {
       var p = parent
@@ -190,7 +185,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       while(p != null) {
         val (sourceReferencePoint, rotationData, targetReferencePoint) = translationData[cursorId]!![p.id]!!
         val meInReferenceToBeacon = scannerData[cursorId]!!.beaconPoints[sourceReferencePoint].subtract(distance)
-        val meRotated = meInReferenceToBeacon.rotate(rotationData.first, rotationData.second, rotationData.third)
+        val meRotated = meInReferenceToBeacon.rotate(rotationData.xRotation, rotationData.yRotation, rotationData.zRotation)
         distance = scannerData[p.id]!!.beaconPoints[targetReferencePoint].subtract(meRotated)
         cursorId = p.id
         p = p.parent
@@ -211,7 +206,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun findManhattanDistances(
     scanner: Scanner,
     scannerData: MutableMap<Int, Scanner>,
-    translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Triple<Int, Int, Int>, Int>>>,
+    translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Rotation, Int>>>,
     exploredNodes: MutableSet<Int>,
   ): Node {
 
@@ -230,7 +225,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun exploreAndAdd(
     scanner: Scanner,
     scannerData: MutableMap<Int, Scanner>,
-    translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Triple<Int, Int, Int>, Int>>>,
+    translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Rotation, Int>>>,
     exploredNodes: MutableSet<Int>,
     beacons: MutableMap<Int, java.util.LinkedHashSet<Point>>
   ) {
@@ -244,7 +239,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val (sourceReferencePoint, rotationData, targetReferencePoint) = translationData[scannerIndex]!![scanner.id]!!
       val convertedBeacons = scannerData[scannerIndex]!!.beaconPoints.map { sourceBeacon ->
         val meInReferenceToBeacon = scannerData[scannerIndex]!!.beaconPoints[sourceReferencePoint].subtract(sourceBeacon)
-        val meRotated = meInReferenceToBeacon.rotate(rotationData.first, rotationData.second, rotationData.third)
+        val meRotated = meInReferenceToBeacon.rotate(rotationData.xRotation, rotationData.yRotation, rotationData.zRotation)
         scannerData[scanner.id]!!.beaconPoints[targetReferencePoint].subtract(meRotated)
       }
       scannerData[scanner.id]!!.beaconPoints.addAll(convertedBeacons)
@@ -267,4 +262,6 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     fun add(other: Point) = Point(x+other.x, y+other.y, z+other.z).also { it.id = id }
   }
+  
+  data class Rotation(val xRotation: Int, val yRotation: Int, val zRotation: Int)
 }
