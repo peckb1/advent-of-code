@@ -50,11 +50,14 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
+    val sensorMappings: MutableMap<Int, MutableMap<Int, Triple<Int, Int, Int>>> = mutableMapOf()
+
     scannerIdToBeaconReferenceViews.forEach { (myScannerId, myBeacons) ->
-      println()
-      println("Checking for an overlapping Scanner from Scanner ID: $myScannerId")
-      println()
-      scannerIdToBeaconReferenceViews.forEach name@ { (theirScannerId, theirBeacons) ->
+      // println()
+      // println("Checking for an overlapping Scanner from Scanner ID: $myScannerId")
+      // println()
+      scannerIdToBeaconReferenceViews.forEach scannerSearch@ { (theirScannerId, theirBeacons) ->
+        // val theirBeacons = scannerIdToBeaconReferenceViews[theirScannerId]!!
         myBeacons.forEach { beacon ->
           val neighbors = beacon.neighbors
           val rotations = listOf(0, 90, 180, 270)
@@ -70,15 +73,22 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
                     val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(x)
 
                     if (matchingNeighborBeacons.size >= 11) {
-                      println("Scanner $myScannerId's point ${beacon.id} matches Scanner $theirScannerId's point ${neighborBeacon.id} ")
-                      matchingNeighborBeacons.forEach { matchingNeighbor ->
-                        x.forEach { myNeighbor ->
-                          if (myNeighbor == matchingNeighbor) {
-                            println("Scanner $myScannerId's point ${myNeighbor.id} matches Scanner $theirScannerId's point ${matchingNeighbor.id} ")
-                          }
+                      sensorMappings.compute(myScannerId) { _, matches ->
+                        (matches ?: mutableMapOf()).apply {
+                          put(theirScannerId, Triple(rotationX, rotationY, rotationZ))
                         }
                       }
-                      return@name
+                      println("$myScannerId $theirScannerId")
+                      // println("Scanner $myScannerId's point ${beacon.id} matches Scanner $theirScannerId's point ${neighborBeacon.id} ")
+                      // matchingNeighborBeacons.forEach { matchingNeighbor ->
+                      //   x.forEach { myNeighbor ->
+                      //     if (myNeighbor == matchingNeighbor) {
+                      //       println("Scanner $myScannerId's point ${myNeighbor.id} matches Scanner $theirScannerId's point ${matchingNeighbor.id} ")
+                      //     }
+                      //   }
+                      // }
+                      // println()
+                      return@scannerSearch
                     }
                   }
                 }
