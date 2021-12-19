@@ -32,11 +32,11 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val minYValue = area.yMin
     val maxYValue = abs(area.yMin) - 1
 
-    val validTrajectories = validXValues.associateWith { x ->
+    val validTrajectories = validXValues.sumOf { x ->
       findValidTrajectories(x, minYValue..maxYValue, area)
     }
 
-    validTrajectories.values.sum()
+    validTrajectories
   }
 
   private fun fetchArea(input: String): Area {
