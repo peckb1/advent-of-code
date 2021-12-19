@@ -2,17 +2,15 @@ package me.peckb.aoc._2021.calendar.day19
 
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
+import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
 class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
 
   companion object {
-    val inverseAngles = mapOf<Int, Int>(
-      0 to 0, 90 to 270, 180 to 180, 270 to 90
-    )
-
     fun rotateAroundX(angle: Int, point: Point): Point {
       val (x, y, z) = point
       val theta = angle * (Math.PI / 180)
@@ -46,7 +44,6 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       return Point(newX, newY, newZ).also { it.id = point.id}
     }
   }
-
 
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val iterator = input.iterator()
@@ -244,42 +241,6 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    /*
-
-val beacon2 = Point(0,0,0)
-val (sourceReferencePoint2, rotationData2, targetReferencePoint2) = translationData[3]!![1]!!
-val meInReferenceToBeacon2 = scannerData[3]!!.beaconPoints[sourceReferencePoint2].subtract(beacon2)
-val meRotated2 = rotateAroundZ(rotationData2.third,
-  rotateAroundY(rotationData2.second,
-    rotateAroundX(rotationData2.first,
-      meInReferenceToBeacon2
-    )
-  )
-)
-val beacon3 = scannerData[1]!!.beaconPoints[targetReferencePoint2].subtract(meRotated2)
-
-// beacon3.subtract(beacon2)
-
-// // val beacon2 = Point(0,0,0)
-val (sourceReferencePoint3, rotationData3, targetReferencePoint3) = translationData[1]!![0]!!
-val meInReferenceToBeacon3 = scannerData[1]!!.beaconPoints[sourceReferencePoint3].subtract(beacon3)
-val meRotated3 = rotateAroundZ(rotationData3.third,
-  rotateAroundY(rotationData3.second,
-    rotateAroundX(rotationData3.first,
-      meInReferenceToBeacon3
-    )
-  )
-)
-scannerData[0]!!.beaconPoints[targetReferencePoint3].subtract(meRotated3)
-
-     */
-
-    val distances: MutableMap<Int, Point> = mutableMapOf<Int, Point>().apply {
-      this.compute(0) { _, e ->
-        e ?: Point(0, 0, 0)
-      }
-    }
-
     val data = findManhattanDistances(
       scannerData[0]!!,
       scannerData,
@@ -287,15 +248,27 @@ scannerData[0]!!.beaconPoints[targetReferencePoint3].subtract(meRotated3)
       mutableSetOf(0)
     )
 
-    data.updateCosts(scannerData, translationData)
+    val costs: MutableMap<Int, MutableMap<Int, Point>> = mutableMapOf()
+    data.updateCosts(scannerData, translationData, costs)
 
-    
+    var maxCost = Int.MIN_VALUE
+    costs[0]!!.entries.drop(1).forEach { (_, aVector) ->
+      costs[0]!!.entries.drop(1).forEach { (_, bVector) ->
+        if (aVector != bVector) {
+          val cost = abs(aVector.x -bVector.x) + abs(aVector.y - bVector.y) + abs(aVector.z - bVector.z)
+          maxCost = max(cost, maxCost)
+        }
+      }
+    }
+
+    maxCost
   }
 
   data class Node(val id: Int, var parent: Node?, val children: List<Node>, var costToRoot: Point? = null) {
     fun updateCosts(
       scannerData: MutableMap<Int, Scanner>,
-      translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Triple<Int, Int, Int>, Int>>>
+      translationData: MutableMap<Int, MutableMap<Int, Triple<Int, Triple<Int, Int, Int>, Int>>>,
+      costs: MutableMap<Int, MutableMap<Int, Point>>
     ) {
       var p = parent
       var cursorId = id
@@ -316,7 +289,14 @@ scannerData[0]!!.beaconPoints[targetReferencePoint3].subtract(meRotated3)
         p = p.parent
       }
       costToRoot = distance
-      children.forEach { it.updateCosts(scannerData, translationData) }
+      costs.compute(0) { _, root ->
+        (root ?: mutableMapOf()).apply {
+          this.compute(id) { _, myCostVector ->
+            (myCostVector ?: distance)
+          }
+        }
+      }
+      children.forEach { it.updateCosts(scannerData, translationData, costs) }
     }
   }
 
@@ -373,8 +353,6 @@ scannerData[0]!!.beaconPoints[targetReferencePoint3].subtract(meRotated3)
       (maybeSet ?: linkedSetOf()).also { it.addAll(scannerData[scanner.id]!!.beaconPoints) }
     }
   }
-
-  fun day19(line: String) = -4
 
   data class Beacon(val id: Int, val neighbors: List<Point>, val scannerPoint: Point)
 
