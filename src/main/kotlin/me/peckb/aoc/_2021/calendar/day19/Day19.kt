@@ -70,11 +70,11 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
                     val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(x)
 
                     if (matchingNeighborBeacons.size >= 11) {
-                      println("Scanner $myScannerId's point ${beacon} matches Scanner $theirScannerId's point ${neighborBeacon} ")
+                      println("Scanner $myScannerId's point ${beacon.id} matches Scanner $theirScannerId's point ${neighborBeacon.id} ")
                       matchingNeighborBeacons.forEach { matchingNeighbor ->
                         x.forEach { myNeighbor ->
                           if (myNeighbor == matchingNeighbor) {
-                            println("Scanner $myScannerId's point ${myNeighbor} matches Scanner $theirScannerId's point ${matchingNeighbor} ")
+                            println("Scanner $myScannerId's point ${myNeighbor.id} matches Scanner $theirScannerId's point ${matchingNeighbor.id} ")
                           }
                         }
                       }
@@ -142,9 +142,9 @@ S.....
     -1
   }
 
-  private fun rotateAroundX(angleMultiplier: Int, point: Point): Point {
+  private fun rotateAroundX(angle: Int, point: Point): Point {
     val (x, y, z) = point
-    val theta = (90 * angleMultiplier) * (Math.PI / 180)
+    val theta = angle * (Math.PI / 180)
 
     val newX = x
     val newY = (y.toDouble() * cos(theta) - z.toDouble() * sin(theta)).roundToInt()
@@ -153,9 +153,9 @@ S.....
     return Point(newX, newY, newZ).also { it.id = point.id }
   }
 
-  private fun rotateAroundY(angleMultiplier: Int, point: Point): Point {
+  private fun rotateAroundY(angle: Int, point: Point): Point {
     val (x, y, z) = point
-    val theta = (90 * angleMultiplier) * (Math.PI / 180)
+    val theta = angle * (Math.PI / 180)
 
     val newX = (x.toDouble()*cos(theta) + z.toDouble()*sin(theta)).roundToInt()
     val newY = y
@@ -164,9 +164,9 @@ S.....
     return Point(newX, newY, newZ).also { it.id = point.id }
   }
 
-  private fun rotateAroundZ(angleMultiplier: Int, point: Point): Point {
+  private fun rotateAroundZ(angle: Int, point: Point): Point {
     val (x, y, z) = point
-    val theta = (90 * angleMultiplier) * (Math.PI / 180)
+    val theta = angle * (Math.PI / 180)
 
     val newX = (x.toDouble()*cos(theta) - y.toDouble()*sin(theta)).roundToInt()
     val newY = (x.toDouble()*sin(theta) + y.toDouble()*cos(theta)).roundToInt()
