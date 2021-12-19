@@ -11,7 +11,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val yMin = input // full string
       .split("target area: ").last() // x and y data
       .split(", ").map { it.split("=").last() }.last() // just the y data range
-      .split("..").first().toInt() // the min Y value
+      .split("..").first().toLong() // the min Y value
 
     triangleNumber(yMin)
   }
@@ -24,7 +24,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     val singleJumpValues = area.xRange
     val multiJumpValues = (lowestMultiJumpX..highestMultiJumpX)
-    val validXValues = mutableListOf<Int>().apply {
+    val validXValues = mutableListOf<Long>().apply {
       addAll(singleJumpValues)
       addAll(multiJumpValues)
     }
@@ -36,28 +36,28 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
       findValidTrajectories(x, minYValue..maxYValue, area)
     }
 
-    validTrajectories.values.sumOf { it.size }
+    validTrajectories.values.sum()
   }
 
   private fun fetchArea(input: String): Area {
     val area = input.split("target area: ").last()
     val (xData, yData) = area.split(", ").map { it.split("=").last() }
 
-    val (xMin, xMax) = xData.split("..").map { it.toInt() }
-    val (yMin, yMax) = yData.split("..").map { it.toInt() }
+    val (xMin, xMax) = xData.split("..").map { it.toLong() }
+    val (yMin, yMax) = yData.split("..").map { it.toLong() }
 
     return Area(xMin, xMax, yMin, yMax)
   }
 
-  private fun findValidTrajectories(xVelocity: Int, validYRange: IntRange, area: Area): List<Int> {
-    return validYRange.filter { y ->
+  private fun findValidTrajectories(xVelocity: Long, validYRange: LongRange, area: Area): Long {
+    return validYRange.sumOf { y ->
       var xSpeed = xVelocity
       var ySpeed = y
       var posX = xSpeed
       var posY = ySpeed
 
       while (posX <= area.xMax && posY >= area.yMin) {
-        if (posX in area.xRange && posY in area.yRange) return@filter true
+        if (posX in area.xRange && posY in area.yRange) return@sumOf 1L
 
         xSpeed = max(0, xSpeed - 1)
         ySpeed -= 1
@@ -65,13 +65,13 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
         posY += ySpeed
       }
 
-      return@filter false
+      return@sumOf 0L
     }
   }
 
-  private fun triangleNumber(n: Int) = ((n + 1) * n) / 2
+  private fun triangleNumber(n: Long) = ((n + 1) * n) / 2
 
-  data class Area(val xMin: Int, val xMax: Int, val yMin: Int, val yMax: Int) {
+  data class Area(val xMin: Long, val xMax: Long, val yMin: Long, val yMax: Long) {
     val xRange = (xMin..xMax)
     val yRange = (yMin..yMax)
   }
