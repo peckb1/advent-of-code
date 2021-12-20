@@ -125,52 +125,32 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         if (myScannerId == theirScannerId) return@scannerSearch
 
-        fun overlap(sourceBeacon: Beacon, destinationBeacon: Beacon, rotationX: Int, rotationY: Int, rotationZ: Int): Boolean {
-          val rotatedNeighbors = sourceBeacon.neighbors.map { it.rotate(Rotation(rotationX, rotationY, rotationZ)) }
-          val matchingNeighborBeacons = destinationBeacon.neighbors.intersect(rotatedNeighbors)
-
-          return if (matchingNeighborBeacons.size == 11) {
-            val sourceReferencePoint = sourceBeacon.id
-            val rotationData = Rotation(rotationX, rotationY, rotationZ)
-            val targetReferencePoint = destinationBeacon.id
-
-            translationData.compute(sourceBeacon.scannerPoint.id) { _, destination ->
-              (destination ?: mutableMapOf()).also {
-                it[destinationBeacon.scannerPoint.id] = Instruction(sourceReferencePoint, rotationData, targetReferencePoint)
-              }
-            }
-            true
-          } else {
-            false
-          }
-        }
-
         var match: Pair<Beacon, Beacon>? = null
 
         myBeacons.forEach search@ { beacon ->
           match?.let { (destination, source) ->
             rotations.forEach { rotationX ->
               rotations.forEach { rotationY ->
-                if (overlap(source, destination, rotationX, rotationY, 0)) return@scannerSearch
+                if (overlap(translationData, source, destination, rotationX, rotationY, 0)) return@scannerSearch
               }
-              if (overlap(source, destination, rotationX, 0, 90)) return@scannerSearch
-              if (overlap(source, destination, rotationX, 0, 270)) return@scannerSearch
+              if (overlap(translationData, source, destination, rotationX, 0, 90)) return@scannerSearch
+              if (overlap(translationData, source, destination, rotationX, 0, 270)) return@scannerSearch
             }
           }
 
           theirBeacons.forEach { neighborBeacon ->
             rotations.forEach { rotationX ->
               rotations.forEach { rotationY ->
-                if (overlap(beacon, neighborBeacon, rotationX, rotationY, 0)) {
+                if (overlap(translationData, beacon, neighborBeacon, rotationX, rotationY, 0)) {
                   match = beacon to neighborBeacon
                   return@search
                 }
               }
-              if (overlap(beacon, neighborBeacon, rotationX, 0, 90)) {
+              if (overlap(translationData, beacon, neighborBeacon, rotationX, 0, 90)) {
                 match = beacon to neighborBeacon
                 return@search
               }
-              if (overlap(beacon, neighborBeacon, rotationX, 0, 270)) {
+              if (overlap(translationData, beacon, neighborBeacon, rotationX, 0, 270)) {
                 match = beacon to neighborBeacon
                 return@search
               }
@@ -212,6 +192,32 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
+  private fun overlap(
+    translationData: MutableMap<Int, MutableMap<Int, Instruction>>,
+    sourceBeacon: Beacon,
+    destinationBeacon: Beacon,
+    rotationX: Int,
+    rotationY: Int,
+    rotationZ: Int
+  ): Boolean {
+    val rotatedNeighbors = sourceBeacon.neighbors.map { it.rotate(Rotation(rotationX, rotationY, rotationZ)) }
+    val matchingNeighborBeacons = destinationBeacon.neighbors.intersect(rotatedNeighbors)
+
+    return if (matchingNeighborBeacons.size == 11) {
+      val sourceReferencePoint = sourceBeacon.id
+      val rotationData = Rotation(rotationX, rotationY, rotationZ)
+      val targetReferencePoint = destinationBeacon.id
+
+      translationData.compute(sourceBeacon.scannerPoint.id) { _, destination ->
+        (destination ?: mutableMapOf()).also {
+          it[destinationBeacon.scannerPoint.id] = Instruction(sourceReferencePoint, rotationData, targetReferencePoint)
+        }
+      }
+      true
+    } else {
+      false
+    }
+  }
 
   private fun findManhattanDistances(
     scanner: Scanner,
