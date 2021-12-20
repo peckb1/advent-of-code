@@ -7,7 +7,7 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
   companion object {
     const val OUTPUT_LIT = '#'
     const val OUTPUT_DIM = ' '
-    
+
     const val INPUT_LIT = '#'
     const val INPUT_DIM = '.'
 
@@ -23,9 +23,7 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val (algorithm, image) = parse(input)
 
-    var imageArray = image.map { it.toList() }
-
-    (1..2).forEach { count -> imageArray = enhance(algorithm, imageArray, count) }
+    val imageArray = runEnhancement(algorithm, image.map { it.toList() }, 2)
 
     imageArray.sumOf { it.count { c -> c == OUTPUT_LIT } }
   }
@@ -33,18 +31,21 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val (algorithm, image) = parse(input)
 
-    var imageArray = image.map { it.toList() }
-
-    (1..50).forEach { count -> imageArray = enhance(algorithm, imageArray, count) }
-
-    imageArray.forEach {
-      println(it.joinToString(""))
-    }
+    val imageArray = runEnhancement(algorithm, image.map { it.toList() }, 50)
 
     imageArray.sumOf { it.count { c -> c == OUTPUT_LIT } }
   }
 
-  private fun enhance(algorithm: String, imageArray: List<List<Char>>, count: Int = 1): List<List<Char>> {
+  private fun runEnhancement(algorithm: Algorithm, input: List<List<Char>>, times: Int): List<List<Char>> {
+    var imageArray = input
+    repeat(times) {
+      imageArray = enhance(algorithm, imageArray)
+    }
+    return imageArray
+  }
+
+  private fun enhance(algorithm: Algorithm, imageArray: List<List<Char>>): List<List<Char>> {
+    algorithm.incrementEnhance()
     val borderSizeIncrease = 2
     val result = MutableList(imageArray.size + borderSizeIncrease) {
       MutableList(imageArray[0].size + borderSizeIncrease) {
@@ -59,7 +60,7 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         val encoding = (imageYFromResultY - 1..imageYFromResultY + 1).flatMap { imageY ->
           (imageXFromResultY - 1..imageXFromResultY + 1).map { imageX ->
-            imageArray.find(imageY, imageX, count, algorithm)
+            imageArray.find(imageY, imageX, algorithm)
           }
         }
 
@@ -67,28 +68,37 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
           .joinToString("")
           .toInt(2)
 
-        result[resultY][resultX] = conversion(algorithm[code])
+        result[resultY][resultX] = conversion(algorithm.fromCode(code))
       }
     }
 
     return result
   }
 
-  private fun List<List<Char>>.find(y: Int, x: Int, count: Int, algorithm: String) : Char {
-    return this.getOrNull(y)?.getOrNull(x)?: run {
-      if (count % 2 == 0) {
-        conversion(algorithm[0])
-      } else {
-        OUTPUT_DIM
-      }
-    }
+  private fun List<List<Char>>.find(y: Int, x: Int, algorithm: Algorithm) : Char {
+    return this.getOrNull(y)?.getOrNull(x)?: conversion(algorithm.getInfinity())
   }
 
-  private fun parse(input: Sequence<String>): Pair<String, List<String>> {
+  private fun parse(input: Sequence<String>): Pair<Algorithm, List<String>> {
     val data = input.toList()
-    val algorithm = data.first()
+    val algorithm = Algorithm.fromData(data.first())
     val image = data.drop(2)
 
     return algorithm to image.map { it.replace(INPUT_LIT, OUTPUT_LIT).replace(INPUT_DIM, OUTPUT_DIM) }
+  }
+
+  class Algorithm private constructor(private val enhancement: String, private var infiniteMarker: Char) {
+    companion object {
+      fun fromData(enhancement: String) = Algorithm(enhancement, enhancement[0])
+    }
+
+    fun fromCode(code: Int): Char = enhancement[code]
+
+    fun incrementEnhance() {
+      val num = if (infiniteMarker == INPUT_LIT) 1 else 0
+      infiniteMarker = fromCode(num.toString().repeat(9).toInt(2))
+    }
+
+    fun getInfinity() = infiniteMarker
   }
 }
