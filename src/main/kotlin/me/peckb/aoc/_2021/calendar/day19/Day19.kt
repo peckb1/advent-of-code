@@ -147,7 +147,19 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
 
         var match: Pair<Beacon, Beacon>? = null
+        
         myBeacons.forEach search@ { beacon ->
+          match?.let { (destination, source) ->
+            rotations.forEach { rotationX ->
+              rotations.forEach { rotationY ->
+                if (overlap(source, destination, rotationX, rotationY, 0)) return@scannerSearch
+              }
+              if (overlap(source, destination, rotationX, 0, 90)) return@scannerSearch
+              if (overlap(source, destination, rotationX, 0, 270)) return@scannerSearch
+            }
+            return@scannerSearch
+          }
+
           theirBeacons.forEach { neighborBeacon ->
             rotations.forEach { rotationX ->
               rotations.forEach { rotationY ->
@@ -165,17 +177,6 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
                 return@search
               }
             }
-          }
-          match?.let { (destination, source) ->
-            rotations.forEach { rotationX ->
-              rotations.forEach { rotationY ->
-                if (overlap(source, destination, rotationX, rotationY, 0)) return@scannerSearch
-              }
-              if (overlap(source, destination, rotationX, 0, 90)) return@scannerSearch
-              if (overlap(source, destination, rotationX, 0, 270)) return@scannerSearch
-            }
-
-            return@scannerSearch
           }
         }
       }
