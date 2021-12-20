@@ -120,40 +120,62 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val translationData: MutableMap<Int, MutableMap<Int, Instruction>> = mutableMapOf()
     val rotations = listOf(0, 90, 180, 270)
     scannerIdToBeaconReferenceViews.forEach { (myScannerId, myBeacons) ->
-      scannerIdToBeaconReferenceViews.forEach scannerSearch@ { (theirScannerId, theirBeacons) ->
-        myBeacons.forEach { beacon ->
-          val neighbors = beacon.neighbors
+      (myScannerId until scannerIdToBeaconReferenceViews.size).forEach scannerSearch@ { theirScannerId ->
+        val theirBeacons = scannerIdToBeaconReferenceViews[theirScannerId]!!
+
+        if (myScannerId == theirScannerId) return@scannerSearch
+
+        fun overlap(sourceBeacon: Beacon, destinationBeacon: Beacon, rotationX: Int, rotationY: Int, rotationZ: Int): Boolean {
+          val rotatedNeighbors = sourceBeacon.neighbors.map { it.rotate(Rotation(rotationX, rotationY, rotationZ)) }
+          val matchingNeighborBeacons = destinationBeacon.neighbors.intersect(rotatedNeighbors)
+
+          return if (matchingNeighborBeacons.size >= 10) {
+            println("${sourceBeacon.scannerPoint.id} ${destinationBeacon.scannerPoint.id}")
+            val sourceReferencePoint = sourceBeacon.id
+            val rotationData = Rotation(rotationX, rotationY, rotationZ)
+            val targetReferencePoint = destinationBeacon.id
+
+            translationData.compute(sourceBeacon.scannerPoint.id) { _, destination ->
+              (destination ?: mutableMapOf()).also {
+                it[destinationBeacon.scannerPoint.id] = Instruction(sourceReferencePoint, rotationData, targetReferencePoint)
+              }
+            }
+            true
+          } else {
+            false
+          }
+        }
+
+        var match: Pair<Beacon, Beacon>? = null
+        myBeacons.forEach search@ { beacon ->
           theirBeacons.forEach { neighborBeacon ->
-            fun overlap(rotationX: Int, rotationY: Int, rotationZ: Int): Boolean {
-              val rotatedNeighbors = neighbors.map { it.rotate(Rotation(rotationX, rotationY, rotationZ)) }
-              val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(rotatedNeighbors)
-
-              return if (matchingNeighborBeacons.size >= 11) {
-                println("$myScannerId $theirScannerId")
-                val sourceReferencePoint = beacon.id
-                val rotationData = Rotation(rotationX, rotationY, rotationZ)
-                val targetReferencePoint = neighborBeacon.id
-
-                translationData.compute(myScannerId) { _, destination ->
-                  (destination ?: mutableMapOf()).also {
-                    it[theirScannerId] = Instruction(sourceReferencePoint, rotationData, targetReferencePoint)
-                  }
+            rotations.forEach { rotationX ->
+              rotations.forEach { rotationY ->
+                if (overlap(beacon, neighborBeacon, rotationX, rotationY, 0)) {
+                  match = beacon to neighborBeacon
+                  return@search
                 }
-                true
-              } else {
-                false
+              }
+              if (overlap(beacon, neighborBeacon, rotationX, 0, 90)) {
+                match = beacon to neighborBeacon
+                return@search
+              }
+              if (overlap(beacon, neighborBeacon, rotationX, 0, 270)) {
+                match = beacon to neighborBeacon
+                return@search
               }
             }
-
-            if (!(neighborBeacon === beacon)) {
-              rotations.forEach { rotationX ->
-                rotations.forEach { rotationY ->
-                  if (overlap(rotationX, rotationY, 0)) return@scannerSearch
-                }
-                if (overlap(rotationX, 0, 90)) return@scannerSearch
-                if (overlap(rotationX, 0, 270)) return@scannerSearch
+          }
+          match?.let { (destination, source) ->
+            rotations.forEach { rotationX ->
+              rotations.forEach { rotationY ->
+                if (overlap(source, destination, rotationX, rotationY, 0)) return@scannerSearch
               }
+              if (overlap(source, destination, rotationX, 0, 90)) return@scannerSearch
+              if (overlap(source, destination, rotationX, 0, 270)) return@scannerSearch
             }
+
+            return@scannerSearch
           }
         }
       }
@@ -251,7 +273,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     fun add(other: Point) = Point(x+other.x, y+other.y, z+other.z).also { it.id = id }
   }
-  
+
   data class Rotation(val xRotation: Int, val yRotation: Int, val zRotation: Int)
 
   data class Instruction(val sourceReferencePoint: Int, val rotationData: Rotation, val targetReferencePoint: Int)
