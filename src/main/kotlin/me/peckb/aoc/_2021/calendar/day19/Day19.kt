@@ -129,8 +129,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
           val rotatedNeighbors = sourceBeacon.neighbors.map { it.rotate(Rotation(rotationX, rotationY, rotationZ)) }
           val matchingNeighborBeacons = destinationBeacon.neighbors.intersect(rotatedNeighbors)
 
-          return if (matchingNeighborBeacons.size >= 10) {
-            println("${sourceBeacon.scannerPoint.id} ${destinationBeacon.scannerPoint.id}")
+          return if (matchingNeighborBeacons.size == 11) {
             val sourceReferencePoint = sourceBeacon.id
             val rotationData = Rotation(rotationX, rotationY, rotationZ)
             val targetReferencePoint = destinationBeacon.id
@@ -147,7 +146,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
 
         var match: Pair<Beacon, Beacon>? = null
-        
+
         myBeacons.forEach search@ { beacon ->
           match?.let { (destination, source) ->
             rotations.forEach { rotationX ->
@@ -157,7 +156,6 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
               if (overlap(source, destination, rotationX, 0, 90)) return@scannerSearch
               if (overlap(source, destination, rotationX, 0, 270)) return@scannerSearch
             }
-            return@scannerSearch
           }
 
           theirBeacons.forEach { neighborBeacon ->
