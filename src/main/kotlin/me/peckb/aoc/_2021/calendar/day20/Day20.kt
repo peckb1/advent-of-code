@@ -4,6 +4,22 @@ import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
+  companion object {
+    const val OUTPUT_LIT = '#'
+    const val OUTPUT_DIM = ' '
+    
+    const val INPUT_LIT = '#'
+    const val INPUT_DIM = '.'
+
+    private fun conversion(c: Char): Char {
+      return when (c) {
+        INPUT_DIM -> OUTPUT_DIM
+        INPUT_LIT -> OUTPUT_LIT
+        else -> throw IllegalArgumentException()
+      }
+    }
+  }
+
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val (algorithm, image) = parse(input)
 
@@ -11,7 +27,7 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     (1..2).forEach { count -> imageArray = enhance(algorithm, imageArray, count) }
 
-    imageArray.sumOf { it.count { c -> c == '#' } }
+    imageArray.sumOf { it.count { c -> c == OUTPUT_LIT } }
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
@@ -21,14 +37,18 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     (1..50).forEach { count -> imageArray = enhance(algorithm, imageArray, count) }
 
-    imageArray.sumOf { it.count { c -> c == '#' } }
+    imageArray.forEach {
+      println(it.joinToString(""))
+    }
+
+    imageArray.sumOf { it.count { c -> c == OUTPUT_LIT } }
   }
 
   private fun enhance(algorithm: String, imageArray: List<List<Char>>, count: Int = 1): List<List<Char>> {
     val borderSizeIncrease = 2
     val result = MutableList(imageArray.size + borderSizeIncrease) {
       MutableList(imageArray[0].size + borderSizeIncrease) {
-        '.'
+        OUTPUT_DIM
       }
     }
 
@@ -43,11 +63,11 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
           }
         }
 
-        val code = encoding.map { if (it == '.') 0 else 1 }
+        val code = encoding.map { if (it == OUTPUT_DIM) 0 else 1 }
           .joinToString("")
           .toInt(2)
 
-        result[resultY][resultX] = algorithm[code]
+        result[resultY][resultX] = conversion(algorithm[code])
       }
     }
 
@@ -57,9 +77,9 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun List<List<Char>>.find(y: Int, x: Int, count: Int, algorithm: String) : Char {
     return this.getOrNull(y)?.getOrNull(x)?: run {
       if (count % 2 == 0) {
-        algorithm[0]
+        conversion(algorithm[0])
       } else {
-        '.'
+        OUTPUT_DIM
       }
     }
   }
@@ -69,6 +89,6 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val algorithm = data.first()
     val image = data.drop(2)
 
-    return algorithm to image
+    return algorithm to image.map { it.replace(INPUT_LIT, OUTPUT_LIT).replace(INPUT_DIM, OUTPUT_DIM) }
   }
 }
