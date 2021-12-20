@@ -4,7 +4,6 @@ import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention.VECTOR_OPERATOR
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder.ZYX
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D
-import java.lang.NullPointerException
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.max
@@ -17,16 +16,16 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     private fun Int.toRad() = this * (Math.PI / 180.0)
 
     private val ROTATION_MATRICES = mutableMapOf<Rotation, MathRotation>().apply {
-      val rs = listOf(0, 90, 180, 270)
-      rs.forEach { x ->
-        rs.forEach { y ->
-          rs.forEach { z ->
-            this[Rotation(x, y, z)] = MathRotation(ZYX, VECTOR_OPERATOR, z.toRad(), y.toRad(), x.toRad())
+      val rs = listOf(0, 90, 180, 270).associateWith { it.toRad() }
+
+      rs.forEach { (xDeg, xRad) ->
+        rs.forEach { (yDeg, yRad) ->
+          rs.forEach { (zDeg, zRad) ->
+            this[Rotation(xDeg, yDeg, zDeg)] = MathRotation(ZYX, VECTOR_OPERATOR, zRad, yRad, xRad)
           }
         }
       }
     }
-
 
     fun Point.rotate(rotation: Rotation) : Point {
       val r = ROTATION_MATRICES[rotation]!!
