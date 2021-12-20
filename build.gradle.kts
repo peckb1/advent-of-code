@@ -24,6 +24,7 @@ dependencies {
     implementation("com.google.dagger:dagger:2.40.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
     implementation("io.arrow-kt:arrow-core:1.0.1")
+    implementation("org.apache.commons:commons-math3:3.6.1")
 
     kapt("com.google.dagger:dagger-compiler:2.40.3")
     kaptTest("com.google.dagger:dagger-compiler:2.40.3")

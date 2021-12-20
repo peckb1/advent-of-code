@@ -1,51 +1,39 @@
 package me.peckb.aoc._2021.calendar.day19
 
 import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention.VECTOR_OPERATOR
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder.ZYX
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D
+import java.lang.NullPointerException
 import javax.inject.Inject
 import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.math.sin
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation as MathRotation
 
 class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
 
   companion object {
-    fun Point.rotate(xAngle: Int, yAngle: Int, zAngle: Int) : Point {
-      return rotateAroundZ(zAngle, rotateAroundY(yAngle, rotateAroundX(xAngle, this)))
+    private fun Int.toRad() = this * (Math.PI / 180.0)
+
+    private val ROTATION_MATRICES = mutableMapOf<Rotation, MathRotation>().apply {
+      val rs = listOf(0, 90, 180, 270)
+      rs.forEach { x ->
+        rs.forEach { y ->
+          rs.forEach { z ->
+            this[Rotation(x, y, z)] = MathRotation(ZYX, VECTOR_OPERATOR, z.toRad(), y.toRad(), x.toRad())
+          }
+        }
+      }
     }
 
-    private fun rotateAroundX(angle: Int, point: Point): Point {
-      val theta = angle * (Math.PI / 180)
-      val (x, y, z) = point
 
-      val newX = x
-      val newY = (y.toDouble() * cos(theta) - z.toDouble() * sin(theta)).roundToInt()
-      val newZ = (y.toDouble() * sin(theta) + z.toDouble() * cos(theta)).roundToInt()
+    fun Point.rotate(rotation: Rotation) : Point {
+      val r = ROTATION_MATRICES[rotation]!!
+      val v = Vector3D(x.toDouble(), y.toDouble(), z.toDouble())
+      val b = r.applyTo(v)
 
-      return Point(newX, newY, newZ).also { it.id = point.id }
-    }
-
-    private fun rotateAroundY(angle: Int, point: Point): Point {
-      val (x, y, z) = point
-      val theta = angle * (Math.PI / 180)
-
-      val newX = (x.toDouble()*cos(theta) + z.toDouble()*sin(theta)).roundToInt()
-      val newY = y
-      val newZ = (z.toDouble()*cos(theta) - x.toDouble()*sin(theta)).roundToInt()
-
-      return Point(newX, newY, newZ).also { it.id = point.id }
-    }
-
-    private fun rotateAroundZ(angle: Int, point: Point): Point {
-      val (x, y, z) = point
-      val theta = angle * (Math.PI / 180)
-
-      val newX = (x.toDouble()*cos(theta) - y.toDouble()*sin(theta)).roundToInt()
-      val newY = (x.toDouble()*sin(theta) + y.toDouble()*cos(theta)).roundToInt()
-      val newZ = z
-
-      return Point(newX, newY, newZ).also { it.id = point.id}
+      return Point(b.x.roundToInt(), b.y.roundToInt(), b.z.roundToInt()).also { it.id = this.id }
     }
   }
 
@@ -138,11 +126,11 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
           val neighbors = beacon.neighbors
           theirBeacons.forEach { neighborBeacon ->
             fun overlap(rotationX: Int, rotationY: Int, rotationZ: Int): Boolean {
-              val rotatedNeighbors = neighbors.map { it.rotate(rotationX, rotationY, rotationZ) }
+              val rotatedNeighbors = neighbors.map { it.rotate(Rotation(rotationX, rotationY, rotationZ)) }
               val matchingNeighborBeacons = neighborBeacon.neighbors.intersect(rotatedNeighbors)
 
               return if (matchingNeighborBeacons.size >= 11) {
-                // println("$myScannerId $theirScannerId")
+                println("$myScannerId $theirScannerId")
                 val sourceReferencePoint = beacon.id
                 val rotationData = Rotation(rotationX, rotationY, rotationZ)
                 val targetReferencePoint = neighborBeacon.id
@@ -187,7 +175,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       while(p != null) {
         val (sourceReferencePoint, rotationData, targetReferencePoint) = translationData[cursorId]!![p.id]!!
         val meInReferenceToBeacon = scannerData[cursorId]!!.beaconPoints[sourceReferencePoint].subtract(distance)
-        val meRotated = meInReferenceToBeacon.rotate(rotationData.xRotation, rotationData.yRotation, rotationData.zRotation)
+        val meRotated = meInReferenceToBeacon.rotate(rotationData)
         distance = scannerData[p.id]!!.beaconPoints[targetReferencePoint].subtract(meRotated)
         cursorId = p.id
         p = p.parent
@@ -241,7 +229,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val (sourceReferencePoint, rotationData, targetReferencePoint) = translationData[scannerIndex]!![scanner.id]!!
       val convertedBeacons = scannerData[scannerIndex]!!.beaconPoints.map { sourceBeacon ->
         val meInReferenceToBeacon = scannerData[scannerIndex]!!.beaconPoints[sourceReferencePoint].subtract(sourceBeacon)
-        val meRotated = meInReferenceToBeacon.rotate(rotationData.xRotation, rotationData.yRotation, rotationData.zRotation)
+        val meRotated = meInReferenceToBeacon.rotate(rotationData)
         scannerData[scanner.id]!!.beaconPoints[targetReferencePoint].subtract(meRotated)
       }
       scannerData[scanner.id]!!.beaconPoints.addAll(convertedBeacons)
