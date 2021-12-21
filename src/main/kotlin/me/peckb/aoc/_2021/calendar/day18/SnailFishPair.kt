@@ -3,16 +3,18 @@ package me.peckb.aoc._2021.calendar.day18
 import kotlin.math.ceil
 import kotlin.math.floor
 
-data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var right: FishPair, var depth: Int) {
+data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var right: FishPair, private var depth: Int) {
   private val needsExploding get() = depth >= 4
   private val needsLeftSplit get() = left.leftOr(0) > 9
   private val needsRightSplit get() = right.leftOr(0) > 9
 
   fun explode(): Boolean {
     return if (needsExploding && left.isLiteral() && right.isLiteral()) {
-      parent?.addLeft(this, left.leftOr(0))
-      parent?.addRight(this, right.leftOr(0))
-      parent?.setZero(this)
+      parent?.let {
+        it.addLeft(this, left.leftOr(0))
+        it.addRight(this, right.leftOr(0))
+        it.setZero(this)
+      }
       true
     } else {
       (left.map { it.explode() }.orNull() ?: false) || (right.map { it.explode() }.orNull()?: false)

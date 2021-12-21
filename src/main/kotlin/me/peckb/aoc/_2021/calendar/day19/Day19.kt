@@ -275,8 +275,6 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     fun reverseDirection(scannerId: Int) = Point(-x, -y, -z).also { it.id = scannerId }
 
     fun subtract(other: Point) = Point(x-other.x, y-other.y, z-other.z).also { it.id = id }
-
-    fun add(other: Point) = Point(x+other.x, y+other.y, z+other.z).also { it.id = id }
   }
 
   data class Rotation(val xRotation: Int, val yRotation: Int, val zRotation: Int)
