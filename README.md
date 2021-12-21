@@ -21,12 +21,6 @@ as the value which passed the given day/phase combination
 
 **Favourite problem(s):**
 
-* Day 01.
-  * A nice simple intro to get us started.
-
-* Day 04.
-  * After Day 03's shennanigans, this was a happy break.
-    
 * Day 07.
   * A nice little bit of maths.
     
