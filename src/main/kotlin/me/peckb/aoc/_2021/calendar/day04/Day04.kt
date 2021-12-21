@@ -1,7 +1,7 @@
 package me.peckb.aoc._2021.calendar.day04
 
 import me.peckb.aoc._2021.calendar.day04.Board.BingoPosition
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 

@@ -1,7 +1,7 @@
 package me.peckb.aoc._2021.calendar.day18
 
 import arrow.core.Either
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import kotlin.math.max

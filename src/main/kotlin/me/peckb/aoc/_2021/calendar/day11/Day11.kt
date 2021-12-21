@@ -1,7 +1,7 @@
 package me.peckb.aoc._2021.calendar.day11
 
 import me.peckb.aoc._2021.calendar.day11.Day11.Octopus
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 typealias Octopi = List<List<Octopus>>

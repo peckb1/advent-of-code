@@ -1,6 +1,6 @@
 package me.peckb.aoc._2021.calendar.day01
 
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 class Day01 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {

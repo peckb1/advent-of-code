@@ -1,6 +1,6 @@
 package me.peckb.aoc._2021.calendar.day14
 
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 
 typealias Action<T> = Pair<String, T>

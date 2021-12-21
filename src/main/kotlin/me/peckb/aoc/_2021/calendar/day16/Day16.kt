@@ -2,7 +2,7 @@ package me.peckb.aoc._2021.calendar.day16
 
 import me.peckb.aoc._2021.calendar.day16.Instruction.Literal
 import me.peckb.aoc._2021.calendar.day16.Instruction.Operator
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.lang.StringBuilder
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
