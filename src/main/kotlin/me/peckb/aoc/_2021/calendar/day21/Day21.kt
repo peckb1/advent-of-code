@@ -5,10 +5,23 @@ import javax.inject.Inject
 
 class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
+    const val PLAYER_1_INDEX = 0
+    const val PLAYER_2_INDEX = 1
+    const val WINNING_SCORE = 21
+
     val BOARD = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    val MOVE_SETS = mapOf(
+      3 to 1L,
+      4 to 3L,
+      5 to 6L,
+      6 to 7L,
+      7 to 6L,
+      8 to 3L,
+      9 to 1L
+    )
   }
 
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::player) { input ->
+  fun deterministicScore(fileName: String) = generatorFactory.forFile(fileName).readAs(::player) { input ->
     val players = input.toList()
     val die = DeterministicD100()
 
@@ -17,73 +30,56 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val player = players[playerCounter % players.size]
       val distanceToTravel = (1..3).sumOf { die.roll() }
       val circularDistance = distanceToTravel % BOARD.size
-      player.zeroIndexedSpace += circularDistance
-      player.zeroIndexedSpace %= BOARD.size
-      player.points+= BOARD[player.zeroIndexedSpace]
+      player.index = (player.index + circularDistance) % BOARD.size
+      player.points+= BOARD[player.index]
       playerCounter++
     }
 
     players.filterNot { it.points >= 1000 }.sumOf { it.points } * die.rollCount
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::player) { input ->
-    val d = input.toList()
-    val p1 = d.first().let { it.zeroIndexedSpace to it.points }
-    val p2 = d.last().let { it.zeroIndexedSpace to it.points }
+  fun multiUniverseWinCount(fileName: String) = generatorFactory.forFile(fileName).readAs(::player) { input ->
+    val (player1, player2) = input.toList()
+    val firstGame = Game(player1.index, 0, player2.index, 0)
+    val gamesMap = mutableMapOf(firstGame to 1L)
 
-    val firstGame = Game(p1, p2, 1, 0)
+    val winCounts = mutableMapOf<Int, Long>().withDefault { 0 }
 
-    val moveSets = mapOf(
-      3 to 1,
-      4 to 3,
-      5 to 6,
-      6 to 7,
-      7 to 6,
-      8 to 3,
-      9 to 1
-    )
+    while(gamesMap.isNotEmpty()) {
+      val iterator = gamesMap.iterator()
+      val (game, universesIExistIn) = iterator.next()
+      gamesMap.remove(game)
 
-    var games = mutableListOf(firstGame)
+      MOVE_SETS.forEach { (player1RollSum, extraUniversesAfterPlayer1) ->
+        val newPlayer1Index = (game.player1Index + player1RollSum) % BOARD.size
+        val newPlayer1Points = game.player1Points + BOARD[newPlayer1Index]
 
-    val winCounts = mutableMapOf<Int, Long>().apply {
-      this[0] = 0
-      this[1] = 0
-    }
+        val newUniverseCountAfterOneMove = universesIExistIn * extraUniversesAfterPlayer1
+        if (newPlayer1Points >= WINNING_SCORE) {
+          winCounts[PLAYER_1_INDEX] = winCounts.getValue(PLAYER_1_INDEX) + newUniverseCountAfterOneMove
+        } else {
+          MOVE_SETS.forEach { (player2RollSum, extraUniversesAfterPlayer2) ->
+            val newPlayer2Index = (game.player2Index + player2RollSum) % BOARD.size
+            val newPlayer2Points = game.player2Points + BOARD[newPlayer2Index]
 
-    while(games.isNotEmpty()) {
-      val newGames = mutableListOf<Game>()
-
-      games.forEachIndexed { i, game ->
-        moveSets.forEach { (dieSum, newUniverseCount) ->
-          val (playerAIndex, playerAPoints) = game.player1
-          val (playerBIndex, playerBPoints) = game.player2
-          val newIndex = (playerAIndex + dieSum) % 10
-          val newPoints = playerAPoints + BOARD[newIndex]
-
-          if (newPoints >= 21) {
-            winCounts[game.nextPlayer] = winCounts[game.nextPlayer]!! + (game.universesIExistIn * newUniverseCount)
-          } else {
-            newGames.add(
-              Game(
-                player1 = playerBIndex to playerBPoints,
-                player2 = newIndex to newPoints,
-                universesIExistIn = game.universesIExistIn * newUniverseCount,
-                nextPlayer = (game.nextPlayer + 1) % 2
-              )
-            )
+            val newUniverseCountAfterTwoMoves: Long = newUniverseCountAfterOneMove * extraUniversesAfterPlayer2
+            if (newPlayer2Points >= WINNING_SCORE) {
+              winCounts[PLAYER_2_INDEX] = winCounts.getValue(PLAYER_2_INDEX) + newUniverseCountAfterTwoMoves
+            } else {
+              val newGame = Game(newPlayer1Index, newPlayer1Points, newPlayer2Index, newPlayer2Points)
+              gamesMap.merge(newGame, newUniverseCountAfterTwoMoves, Long::plus)
+            }
           }
         }
       }
-
-      games = newGames
     }
 
     winCounts.maxOf { it.value }
   }
 
-  data class Game(val player1: Pair<Int, Int>, val player2: Pair<Int, Int>, val universesIExistIn: Long, val nextPlayer: Int)
+  data class Game(val player1Index: Int, val player1Points: Int, val player2Index: Int, val player2Points: Int)
 
-  data class Player(val id: Int, var zeroIndexedSpace: Int, var points: Int = 0)
+  data class Player(var index: Int, var points: Int = 0)
 
   class DeterministicD100 {
     private var result = 100
@@ -99,8 +95,5 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
-  private fun player(line: String) = Player(
-    Character.getNumericValue(line[7]),
-    Character.getNumericValue(line[line.length - 1]) - 1
-  )
+  private fun player(line: String) = Player(Character.getNumericValue(line[line.length - 1]) - 1)
 }
