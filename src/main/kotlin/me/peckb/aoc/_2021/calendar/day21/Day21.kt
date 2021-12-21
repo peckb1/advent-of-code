@@ -46,8 +46,7 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val winCounts = mutableMapOf<Int, Long>().withDefault { 0 }
 
     while(gamesMap.isNotEmpty()) {
-      val iterator = gamesMap.iterator()
-      val (game, universesIExistIn) = iterator.next()
+      val (game, universesIExistIn) = gamesMap.iterator().next()
       gamesMap.remove(game)
 
       MOVE_SETS.forEach { (player1RollSum, extraUniversesAfterPlayer1) ->
@@ -56,7 +55,7 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         val newUniverseCountAfterOneMove = universesIExistIn * extraUniversesAfterPlayer1
         if (newPlayer1Points >= WINNING_SCORE) {
-          winCounts[PLAYER_1_INDEX] = winCounts.getValue(PLAYER_1_INDEX) + newUniverseCountAfterOneMove
+          winCounts.merge(PLAYER_1_INDEX, newUniverseCountAfterOneMove, Long::plus)
         } else {
           MOVE_SETS.forEach { (player2RollSum, extraUniversesAfterPlayer2) ->
             val newPlayer2Index = (game.player2Index + player2RollSum) % BOARD.size
@@ -64,8 +63,11 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
             val newUniverseCountAfterTwoMoves: Long = newUniverseCountAfterOneMove * extraUniversesAfterPlayer2
             if (newPlayer2Points >= WINNING_SCORE) {
-              winCounts[PLAYER_2_INDEX] = winCounts.getValue(PLAYER_2_INDEX) + newUniverseCountAfterTwoMoves
+              winCounts.merge(PLAYER_2_INDEX, newUniverseCountAfterTwoMoves, Long::plus)
             } else {
+              // since we don't make a new game until both players have gone
+              // we don't need to worry about storing which player goes next
+              // every time we pull a game to play, it's player one's turn
               val newGame = Game(newPlayer1Index, newPlayer1Points, newPlayer2Index, newPlayer2Points)
               gamesMap.merge(newGame, newUniverseCountAfterTwoMoves, Long::plus)
             }
