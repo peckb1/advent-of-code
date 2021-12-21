@@ -1,6 +1,6 @@
 package me.peckb.aoc._2021.calendar.day06
 
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.time.DayOfWeek
 import java.time.DayOfWeek.*
 import javax.inject.Inject

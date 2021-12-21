@@ -1,4 +1,4 @@
-package me.peckb.aoc._2021.generators
+package me.peckb.aoc.generators
 
 import java.io.BufferedReader
 import java.io.File

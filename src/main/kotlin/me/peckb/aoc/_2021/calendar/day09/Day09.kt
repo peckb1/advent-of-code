@@ -1,6 +1,6 @@
 package me.peckb.aoc._2021.calendar.day09
 
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 import kotlin.Int.Companion.MAX_VALUE
 

@@ -3,7 +3,7 @@ package me.peckb.aoc._2021.calendar.day02
 import me.peckb.aoc._2021.calendar.day02.Day02.Path.Direction.FORWARD
 import me.peckb.aoc._2021.calendar.day02.Day02.Path.Direction.DOWN
 import me.peckb.aoc._2021.calendar.day02.Day02.Path.Direction.UP
-import me.peckb.aoc._2021.generators.InputGenerator
+import me.peckb.aoc.generators.InputGenerator
 import javax.inject.Inject
 import kotlin.math.max
 

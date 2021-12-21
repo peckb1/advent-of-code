@@ -1,6 +1,6 @@
 package me.peckb.aoc._2021.calendar.day19
 
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention.VECTOR_OPERATOR
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder.ZYX
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D

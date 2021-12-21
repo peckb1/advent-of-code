@@ -5,7 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import me.peckb.aoc._2021.calendar.day03.Day03.Bit
-import me.peckb.aoc._2021.generators.InputGenerator
+import me.peckb.aoc.generators.InputGenerator
 import javax.inject.Inject
 
 private typealias BitSet = List<Bit>

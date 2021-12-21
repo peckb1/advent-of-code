@@ -3,7 +3,7 @@ package me.peckb.aoc._2021.calendar.day10
 import arrow.core.Either
 import arrow.core.Either.Left
 import arrow.core.Either.Right
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.util.ArrayDeque
 import javax.inject.Inject
 

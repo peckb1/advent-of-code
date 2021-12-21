@@ -1,6 +1,6 @@
 package me.peckb.aoc._2021.calendar.day15
 
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.util.PriorityQueue
 import javax.inject.Inject
 import kotlin.Float.Companion.POSITIVE_INFINITY

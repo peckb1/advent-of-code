@@ -1,8 +1,8 @@
-package me.peckb.aoc._2021
+package me.peckb.aoc
 
 import dagger.Module
 import dagger.Provides
-import me.peckb.aoc._2021.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Singleton
 
 @Module
