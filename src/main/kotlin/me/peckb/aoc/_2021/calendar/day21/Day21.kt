@@ -20,17 +20,11 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
       player.zeroIndexedSpace += circularDistance
       player.zeroIndexedSpace %= BOARD.size
       player.points+= BOARD[player.zeroIndexedSpace]
-
-
-
       playerCounter++
     }
 
     players.filterNot { it.points >= 1000 }.sumOf { it.points } * die.rollCount
   }
-
-
-  data class Game(val player1: Pair<Int, Int>, val player2: Pair<Int, Int>, val universesIExistIn: Long, val nextPlayer: Int)
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::player) { input ->
     val d = input.toList()
@@ -49,8 +43,6 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
       9 to 1
     )
 
-
-
     var games = mutableListOf(firstGame)
 
     val winCounts = mutableMapOf<Int, Long>().apply {
@@ -59,7 +51,6 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     while(games.isNotEmpty()) {
-      println("Games: ${games.size}")
       val newGames = mutableListOf<Game>()
 
       games.forEachIndexed { i, game ->
@@ -90,41 +81,21 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
     winCounts.maxOf { it.value }
   }
 
-  data class Player(val id: Int, var zeroIndexedSpace: Int, var points: Int = 0) {
-    fun move(distanceToTravel: Int): Player {
-      return copy().also {
-        val circularDistance = distanceToTravel % BOARD.size
-        it.zeroIndexedSpace += circularDistance
-        it.zeroIndexedSpace %= BOARD.size
-        it.points+= BOARD[it.zeroIndexedSpace]
-      }
-    }
-  }
+  data class Game(val player1: Pair<Int, Int>, val player2: Pair<Int, Int>, val universesIExistIn: Long, val nextPlayer: Int)
 
-  interface Dice {
-    fun roll(): Int
-    fun rollCount(): Long
-  }
+  data class Player(val id: Int, var zeroIndexedSpace: Int, var points: Int = 0)
 
-  class DiracDice {
-    fun roll(): List<Int> = listOf(1, 2, 3)
-  }
-
-  class DeterministicD100 : Dice {
-    var result = 100
+  class DeterministicD100 {
+    private var result = 100
     var rollCount: Long = 0
 
-    override fun roll(): Int {
+    fun roll(): Int {
       rollCount++
       result++
       if (result > 100) {
         result = 1
       }
       return result
-    }
-
-    override fun rollCount(): Long {
-      return rollCount()
     }
   }
 
