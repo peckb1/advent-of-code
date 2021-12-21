@@ -39,9 +39,9 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
    val (scannerData, translationData) = setupData(input)
 
-    val beacons = mutableMapOf<Int, java.util.LinkedHashSet<Point>>().also {
+    val beacons = mutableMapOf<Int, MutableSet<Point>>().also {
       it.compute(0) { _, setMaybe ->
-        (setMaybe ?: linkedSetOf()).also { set ->
+        (setMaybe ?: mutableSetOf()).also { set ->
           set.addAll(scannerData[0]!!.beaconPoints)
         }
       }
@@ -240,10 +240,10 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   private fun exploreAndAdd(
     scanner: Scanner,
-    scannerData: MutableMap<Int, Scanner>,
-    translationData: MutableMap<Int, MutableMap<Int, Instruction>>,
+    scannerData: Map<Int, Scanner>,
+    translationData: Map<Int, Map<Int, Instruction>>,
     exploredNodes: MutableSet<Int>,
-    beacons: MutableMap<Int, java.util.LinkedHashSet<Point>>
+    beacons: MutableMap<Int, MutableSet<Point>>
   ) {
     val scannersNotExploredYet = translationData[scanner.id]!!.keys.filterNot { exploredNodes.contains(it) }
 
@@ -261,7 +261,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       scannerData[scanner.id]!!.beaconPoints.addAll(convertedBeacons)
     }
     beacons.compute(scanner.id) { _, maybeSet ->
-      (maybeSet ?: linkedSetOf()).also { it.addAll(scannerData[scanner.id]!!.beaconPoints) }
+      (maybeSet ?: mutableSetOf()).also { it.addAll(scannerData[scanner.id]!!.beaconPoints) }
     }
   }
 
