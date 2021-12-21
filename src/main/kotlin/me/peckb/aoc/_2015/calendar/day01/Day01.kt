@@ -17,9 +17,7 @@ class Day01 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     val noBasement = input.takeWhile { c ->
       counts.merge(c, 1, Long::plus)
-      (counts['(']!! - counts[')']!! >= 0).also {
-        -1
-      }
+      (counts['(']!! - counts[')']!! >= 0)
     }
 
     noBasement.length + 1
