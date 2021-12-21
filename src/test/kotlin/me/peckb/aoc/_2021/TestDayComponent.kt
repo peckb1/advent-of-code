@@ -21,6 +21,7 @@ import me.peckb.aoc._2021.calendar.day17.Day17Test
 import me.peckb.aoc._2021.calendar.day18.Day18Test
 import me.peckb.aoc._2021.calendar.day19.Day19Test
 import me.peckb.aoc._2021.calendar.day20.Day20Test
+import me.peckb.aoc._2021.calendar.day21.Day21Test
 import javax.inject.Singleton
 
 @Singleton
@@ -46,4 +47,5 @@ internal interface TestDayComponent : DayComponent {
   fun inject(day18Test: Day18Test)
   fun inject(day19Test: Day19Test)
   fun inject(day20Test: Day20Test)
+  fun inject(day21Test: Day21Test)
 }
