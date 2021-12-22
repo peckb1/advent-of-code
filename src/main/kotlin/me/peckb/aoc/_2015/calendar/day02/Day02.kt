@@ -16,7 +16,7 @@ class Day02 @Inject constructor(private val generatorFactory: InputGeneratorFact
     .map { it.toInt() }
     .let { (h, w, l) -> Box(h, w, l) }
 
-  data class Box(val h: Int, val w: Int, val l: Int) {
+  data class Box(private val h: Int, private val w: Int, private val l: Int) {
     val area = (2*l*w) + (2*w*h) + (2*h*l)
 
     val paperRequired = area + minOf(l*w, w*h, l*h)
