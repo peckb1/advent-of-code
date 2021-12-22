@@ -6,27 +6,28 @@ import org.apache.commons.geometry.euclidean.threed.Vector3D
 import javax.inject.Inject
 
 class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  fun partOne(fileName: String) = generatorFactory.forFile(fileName).readAs(::instruction) { input ->
-    maths(input.take(20)).toLong()
+  fun initializationArea(fileName: String) = generatorFactory.forFile(fileName).readAs(::instruction) { input ->
+    calculateOverlappingCuboidArea(input.take(20)).toLong()
   }
 
-  fun partTwo(fileName: String) = generatorFactory.forFile(fileName).readAs(::instruction) { input ->
-    maths(input).toLong()
+  fun fullReactorArea(fileName: String) = generatorFactory.forFile(fileName).readAs(::instruction) { input ->
+    calculateOverlappingCuboidArea(input).toLong()
   }
 
-  private fun maths(data: Sequence<Instruction>): Double {
+  private fun calculateOverlappingCuboidArea(instructions: Sequence<Instruction>): Double {
     val everyOverlapInstruction = mutableListOf<Instruction>()
-    data.forEach { mainInstruction ->
-      val newOverlapInstruction = mutableListOf(mainInstruction)
-      val (_, newCube) = mainInstruction
+
+    instructions.forEach { instruction ->
+      val newOverlapInstructions = mutableListOf(instruction)
+      val (_, newCube) = instruction
 
       everyOverlapInstruction.forEach { (overlapActivation, overlapCube) ->
         val intersectionCube: Bounds3D? = newCube.intersection(overlapCube)
         intersectionCube?.let {
-          newOverlapInstruction.add(Instruction(overlapActivation.invert(), intersectionCube))
+          newOverlapInstructions.add(Instruction(overlapActivation.invert(), it))
         }
       }
-      everyOverlapInstruction.addAll(newOverlapInstruction)
+      everyOverlapInstruction.addAll(newOverlapInstructions)
     }
 
     return everyOverlapInstruction.sumOf { it.cube.area() * it.activation.areaModifier }

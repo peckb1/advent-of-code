@@ -20,11 +20,11 @@ internal class Day22Test {
 
   @Test
   fun testDay22PartOne() {
-    assertEquals(612714, day22.partOne(DAY_22))
+    assertEquals(612714, day22.initializationArea(DAY_22))
   }
 
   @Test
   fun testDay22PartTwo() {
-    assertEquals(1311612259117092, day22.partTwo(DAY_22))
+    assertEquals(1311612259117092, day22.fullReactorArea(DAY_22))
   }
 }
