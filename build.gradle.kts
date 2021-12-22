@@ -26,6 +26,11 @@ dependencies {
     implementation("io.arrow-kt:arrow-core:1.0.1")
     implementation("org.apache.commons:commons-math3:3.6.1")
 
+    implementation("org.apache.commons:commons-geometry-core:1.0")
+    implementation("org.apache.commons:commons-geometry-euclidean:1.0")
+
+    implementation("org.fxyz3d:fxyz3d:0.5.4")
+
     kapt("com.google.dagger:dagger-compiler:2.40.3")
     kaptTest("com.google.dagger:dagger-compiler:2.40.3")
 
