@@ -23,36 +23,19 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
       everyOverlap.forEach { (previousOverlapActivation, previousOverlapCube) ->
         val intersectionCube: Bounds3D? = previousOverlapCube.intersection(mainInstructionCube)
         intersectionCube?.let {
-          newOverlapInstructions.add(Instruction(-previousOverlapActivation, intersectionCube))
+          newOverlapInstructions.add(Instruction(previousOverlapActivation.invert(), intersectionCube))
         }
       }
       everyOverlap.addAll(newOverlapInstructions)
     }
 
-    return everyOverlap.sumOf { it.cube.area() * it.activation }
-  }
-
-  enum class Activation(var sumModifier: Int) {
-    ENABLE(1), DISABLE(0), OVERAGE_FIXER(-1);
-
-    fun swap() = when (this) {
-      ENABLE -> OVERAGE_FIXER
-      DISABLE -> DISABLE
-      OVERAGE_FIXER -> OVERAGE_FIXER
-    }
-
-    companion object {
-      fun from(activationString: String): Activation = if (activationString == "on") ENABLE else DISABLE
-    }
+    return everyOverlap.sumOf { it.cube.area() * it.activation.areaModifier }
   }
 
   private fun Bounds3D.area() = (max.x - min.x + 1) * (max.y - min.y + 1) * (max.z - min.z + 1)
 
-  data class Instruction(val activation: Int, val cube: Bounds3D)
-
   private fun instruction(line: String): Instruction {
-    // val activation = Activation.from(line.split(" ").first())
-    val activation = if (line.split(" ").first() == "on") 1 else 0
+    val activation = Activation.from(line.split(" ").first())
 
     val (xData, yData, zData) =
       line.split(",")
@@ -67,5 +50,23 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val maxVector = Vector3D.of(xData.last(), yData.last(), zData.last())
 
     return Instruction(activation, Bounds3D.from(minVector, maxVector))
+  }
+
+  data class Instruction(val activation: Activation, val cube: Bounds3D)
+
+  enum class Activation(var areaModifier: Int) {
+    ENABLE(1),
+    DISABLE(0),
+    OVERAGE_FIXER(-1);
+
+    fun invert() = when (this) {
+      ENABLE -> OVERAGE_FIXER
+      DISABLE -> DISABLE
+      OVERAGE_FIXER -> ENABLE
+    }
+
+    companion object {
+      fun from(activationString: String): Activation = if (activationString == "on") ENABLE else DISABLE
+    }
   }
 }
