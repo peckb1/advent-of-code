@@ -15,21 +15,21 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun maths(data: Sequence<Instruction>): Double {
-    val everyOverlap = mutableListOf<Instruction>()
+    val everyOverlapInstruction = mutableListOf<Instruction>()
     data.forEach { mainInstruction ->
-      val newOverlapInstructions = mutableListOf(mainInstruction)
-      val (_, mainInstructionCube) = mainInstruction
+      val newOverlapInstruction = mutableListOf(mainInstruction)
+      val (_, newCube) = mainInstruction
 
-      everyOverlap.forEach { (previousOverlapActivation, previousOverlapCube) ->
-        val intersectionCube: Bounds3D? = previousOverlapCube.intersection(mainInstructionCube)
+      everyOverlapInstruction.forEach { (overlapActivation, overlapCube) ->
+        val intersectionCube: Bounds3D? = newCube.intersection(overlapCube)
         intersectionCube?.let {
-          newOverlapInstructions.add(Instruction(previousOverlapActivation.invert(), intersectionCube))
+          newOverlapInstruction.add(Instruction(overlapActivation.invert(), intersectionCube))
         }
       }
-      everyOverlap.addAll(newOverlapInstructions)
+      everyOverlapInstruction.addAll(newOverlapInstruction)
     }
 
-    return everyOverlap.sumOf { it.cube.area() * it.activation.areaModifier }
+    return everyOverlapInstruction.sumOf { it.cube.area() * it.activation.areaModifier }
   }
 
   private fun Bounds3D.area() = (max.x - min.x + 1) * (max.y - min.y + 1) * (max.z - min.z + 1)
@@ -66,7 +66,7 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     companion object {
-      fun from(activationString: String): Activation = if (activationString == "on") ENABLE else DISABLE
+      fun from(activationString: String) = if (activationString == "on") ENABLE else DISABLE
     }
   }
 }
