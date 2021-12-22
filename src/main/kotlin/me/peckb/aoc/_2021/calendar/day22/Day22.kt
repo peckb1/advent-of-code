@@ -39,13 +39,11 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val activation = Activation.from(line.split(" ").first())
 
     val (xData, yData, zData) =
-      line.split(",")
-        .map { data ->
-          data.split("=")
-            .last()
-            .split("..")
-            .map { it.toDouble() }
-        }
+      line.split(",").map { it
+        .substringAfter("=")
+        .split("..")
+        .map(String::toDouble)
+      }
 
     val minVector = Vector3D.of(xData.first(), yData.first(), zData.first())
     val maxVector = Vector3D.of(xData.last(), yData.last(), zData.last())
