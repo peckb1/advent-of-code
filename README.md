@@ -19,7 +19,7 @@ as the value which passed the given day/phase combination
 
 ## Highlights
 
-###Favourite problem(s):
+### Favourite problem(s):
 
 #### 2015
 
@@ -40,7 +40,7 @@ as the value which passed the given day/phase combination
 * **Day 17**
   * **I miss maths sometimes, and spending the time to get the mathmatical solution for part 1 was quite nice.** 
 
-###Interesting approaches:
+### Interesting approaches:
 
 #### 2015
 
