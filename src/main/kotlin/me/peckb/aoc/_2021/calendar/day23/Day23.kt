@@ -166,45 +166,55 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       // check anyone in the hallway, and see if they can go into their room
       hall.forEachIndexed { hallIndex, occupant ->
         if (occupant != EMPTY) {
+          val hallway = min(hallIndex, OCCUPANT_DOORWAY[occupant]!!)..max(hallIndex, OCCUPANT_DOORWAY[occupant]!!)
+          val pathClear = hall.slice(hallway).all { it == EMPTY }
           when (occupant) {
             AMBER -> {
               val myDoorway = doorways[AMBER_DOORWAY]
-              if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
-                val cost = abs(hallIndex - AMBER_DOORWAY) * AMBER_COST + (2 * AMBER_COST)
-                moves.add(EnterRoomFromHall(hallIndex, AMBER_DOORWAY, 1, cost))
-              } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == AMBER) {
-                val cost = abs(hallIndex - AMBER_DOORWAY) * AMBER_COST + (AMBER_COST)
-                moves.add(EnterRoomFromHall(hallIndex, AMBER_DOORWAY, 1, cost))
+              if (pathClear) {
+                if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
+                  val cost = abs(hallIndex - AMBER_DOORWAY) * AMBER_COST + (2 * AMBER_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, AMBER_DOORWAY, 1, cost))
+                } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == AMBER) {
+                  val cost = abs(hallIndex - AMBER_DOORWAY) * AMBER_COST + (AMBER_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, AMBER_DOORWAY, 1, cost))
+                }
               }
             }
             BRONZE -> {
               val myDoorway = doorways[BRONZE_DOORWAY]
-              if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
-                val cost = abs(hallIndex - BRONZE_DOORWAY) * BRONZE_COST + (2 * BRONZE_COST)
-                moves.add(EnterRoomFromHall(hallIndex, BRONZE_DOORWAY, 1, cost))
-              } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == BRONZE) {
-                val cost = abs(hallIndex - BRONZE_DOORWAY) * BRONZE_COST + (BRONZE_COST)
-                moves.add(EnterRoomFromHall(hallIndex, BRONZE_DOORWAY, 1, cost))
+              if (pathClear) {
+                if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
+                  val cost = abs(hallIndex - BRONZE_DOORWAY) * BRONZE_COST + (2 * BRONZE_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, BRONZE_DOORWAY, 1, cost))
+                } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == BRONZE) {
+                  val cost = abs(hallIndex - BRONZE_DOORWAY) * BRONZE_COST + (BRONZE_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, BRONZE_DOORWAY, 1, cost))
+                }
               }
             }
             COPPER -> {
               val myDoorway = doorways[COPPER_DOORWAY]
-              if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
-                val cost = abs(hallIndex - COPPER_DOORWAY) * COPPER_COST + (2 * COPPER_COST)
-                moves.add(EnterRoomFromHall(hallIndex, COPPER_DOORWAY, 1, cost))
-              } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == COPPER) {
-                val cost = abs(hallIndex - COPPER_DOORWAY) * COPPER_COST + (COPPER_COST)
-                moves.add(EnterRoomFromHall(hallIndex, COPPER_DOORWAY, 1, cost))
+              if (pathClear) {
+                if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
+                  val cost = abs(hallIndex - COPPER_DOORWAY) * COPPER_COST + (2 * COPPER_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, COPPER_DOORWAY, 1, cost))
+                } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == COPPER) {
+                  val cost = abs(hallIndex - COPPER_DOORWAY) * COPPER_COST + (COPPER_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, COPPER_DOORWAY, 1, cost))
+                }
               }
             }
             DESERT -> {
               val myDoorway = doorways[DESERT_DOORWAY]
-              if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
-                val cost = abs(hallIndex - DESERT_DOORWAY) * DESERT_COST + (2 * DESERT_COST)
-                moves.add(EnterRoomFromHall(hallIndex, DESERT_DOORWAY, 1, cost))
-              } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == DESERT) {
-                val cost = abs(hallIndex - DESERT_DOORWAY) * DESERT_COST + (DESERT_COST)
-                moves.add(EnterRoomFromHall(hallIndex, DESERT_DOORWAY, 1, cost))
+              if (pathClear) {
+                if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == EMPTY) {
+                  val cost = abs(hallIndex - DESERT_DOORWAY) * DESERT_COST + (2 * DESERT_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, DESERT_DOORWAY, 1, cost))
+                } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == DESERT) {
+                  val cost = abs(hallIndex - DESERT_DOORWAY) * DESERT_COST + (DESERT_COST)
+                  moves.add(EnterRoomFromHall(hallIndex, DESERT_DOORWAY, 1, cost))
+                }
               }
             }
           }
@@ -263,36 +273,37 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
           // check outside the door
           if (hall[doorKey] == EMPTY) {
             moves.add(EnterHallFromRoom(doorKey, 1, doorKey, OCCUPANT_COST[occupant]!!))
-          }
-          // check walking left from the door
-          var canKeepWalkingLeft = true
-          var leftSteps = 0
-          while (canKeepWalkingLeft && (doorKey - ++leftSteps) >= 0) {
-            if (hall[doorKey - leftSteps] == EMPTY) {
-              moves.add(EnterHallFromRoom(doorKey, 1, doorKey - leftSteps, (leftSteps + 2) * OCCUPANT_COST[occupant]!!))
-            } else {
-              canKeepWalkingLeft = false
-            }
-          }
 
-          // check walking right form the door
-          var canKeepWalkingRight = true
-          var rightSteps = 0
-          while (canKeepWalkingRight && (doorKey + ++rightSteps) < hall.size) {
-            if (hall[doorKey + rightSteps] == EMPTY) {
-              moves.add(EnterHallFromRoom(doorKey, 1, doorKey + rightSteps, (rightSteps + 2) * OCCUPANT_COST[occupant]!!))
-            } else {
-              canKeepWalkingRight = false
+            // check walking left from the door
+            var canKeepWalkingLeft = true
+            var leftSteps = 0
+            while (canKeepWalkingLeft && (doorKey - ++leftSteps) >= 0) {
+              if (hall[doorKey - leftSteps] == EMPTY) {
+                moves.add(EnterHallFromRoom(doorKey, 1, doorKey - leftSteps, (leftSteps + 2) * OCCUPANT_COST[occupant]!!))
+              } else {
+                canKeepWalkingLeft = false
+              }
             }
-          }
 
-          val myTargetDoor = doorways[OCCUPANT_DOORWAY[occupant]!!]!!
-          val hallway = min(doorKey, OCCUPANT_DOORWAY[occupant]!!)..max(doorKey, OCCUPANT_DOORWAY[occupant]!!)
-          val pathClear = hall.slice(hallway).all { it == EMPTY }
-          if (pathClear && myTargetDoor.spaces[0] == EMPTY && myTargetDoor.spaces[1] == EMPTY) {
-            moves.add(EnterRoomFromRoom(doorKey, 0, OCCUPANT_DOORWAY[occupant]!!, 1, (hallway.count() + 3) * OCCUPANT_COST[occupant]!!))
-          } else if (pathClear && myTargetDoor.spaces[0] == EMPTY && myTargetDoor.spaces[1] == occupant) {
-            moves.add(EnterRoomFromRoom(doorKey, 0, OCCUPANT_DOORWAY[occupant]!!, 0, (hallway.count() + 2) * OCCUPANT_COST[occupant]!!))
+            // check walking right form the door
+            var canKeepWalkingRight = true
+            var rightSteps = 0
+            while (canKeepWalkingRight && (doorKey + ++rightSteps) < hall.size) {
+              if (hall[doorKey + rightSteps] == EMPTY) {
+                moves.add(EnterHallFromRoom(doorKey, 1, doorKey + rightSteps, (rightSteps + 2) * OCCUPANT_COST[occupant]!!))
+              } else {
+                canKeepWalkingRight = false
+              }
+            }
+
+            val myTargetDoor = doorways[OCCUPANT_DOORWAY[occupant]!!]!!
+            val hallway = min(doorKey, OCCUPANT_DOORWAY[occupant]!!)..max(doorKey, OCCUPANT_DOORWAY[occupant]!!)
+            val pathClear = hall.slice(hallway).all { it == EMPTY }
+            if (pathClear && myTargetDoor.spaces[0] == EMPTY && myTargetDoor.spaces[1] == EMPTY) {
+              moves.add(EnterRoomFromRoom(doorKey, 0, OCCUPANT_DOORWAY[occupant]!!, 1, (hallway.count() + 3) * OCCUPANT_COST[occupant]!!))
+            } else if (pathClear && myTargetDoor.spaces[0] == EMPTY && myTargetDoor.spaces[1] == occupant) {
+              moves.add(EnterRoomFromRoom(doorKey, 0, OCCUPANT_DOORWAY[occupant]!!, 0, (hallway.count() + 2) * OCCUPANT_COST[occupant]!!))
+            }
           }
         }
       }
