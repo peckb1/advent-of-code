@@ -81,35 +81,50 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     // print("$hallway + $cheapestCost - ")
 
-    while(moves.isNotEmpty()) {
-      val nextMove = moves.remove()
-      if (depth == 0) {
-        println("Top level moves left: ${moves.size + 1}: $nextMove")
-      }
-
-      if (cheapestCost > hallway.movesMade.sumOf { it.cost } + nextMove.cost) {
+    fun doMove(nextMove: Movement): List<Movement>? {
+      return if (cheapestCost > hallway.movesMade.sumOf { it.cost } + nextMove.cost) {
         hallway.makeMove(nextMove)
         if (hallway.isComplete()) {
-          val finishedPath = hallway.movesMade
-          val finishedCost = finishedPath.sumOf { it.cost }
-          if (finishedCost < cheapestCost) {
-            cheapestMoves = ArrayList(finishedPath)
-            cheapestCost = finishedCost
-          }
+          ArrayList(hallway.movesMade)
+          // val finishedPath = hallway.movesMade
+          // val finishedCost = finishedPath.sumOf { it.cost }
+          // if (finishedCost < cheapestCost) {
+          //   cheapestMoves = ArrayList(finishedPath)
+          //   cheapestCost = finishedCost
+          // }
         } else {
           // if (cheapestCost != Int.MAX_VALUE) {
           //   println("$hallway - $cheapestCost - ${hallway.movesMade.sumOf { it.cost }}")
           // }
           // Thread.sleep(100)
-          playGame(hallway, depth + 1)?.let { cheapestChildMoves ->
-            val finishedCost = cheapestChildMoves.sumOf { it.cost }
-            if (finishedCost < cheapestCost) {
-              cheapestMoves = ArrayList(cheapestChildMoves)
-              cheapestCost = finishedCost
-            }
+          playGame(hallway, depth + 1)
+          //   ?.let { cheapestChildMoves ->
+          //   val finishedCost = cheapestChildMoves.sumOf { it.cost }
+          //   if (finishedCost < cheapestCost) {
+          //     cheapestMoves = ArrayList(cheapestChildMoves)
+          //     cheapestCost = finishedCost
+          //   }
+          // }
+        }.also {
+          hallway.undoMove(nextMove)
+        }
+      } else {
+        null
+      }
+    }
+
+    while(moves.isNotEmpty()) {
+      val nextMove = moves.remove()
+      if (depth == 0) {
+        println("Top level moves left: ${moves.size + 1}: $nextMove")
+      } else {
+        doMove(nextMove)?.also { finishedPath ->
+          val finishedCost = finishedPath.sumOf { it.cost }
+          if (finishedCost < cheapestCost) {
+            cheapestMoves = finishedPath
+            cheapestCost = finishedCost
           }
         }
-        hallway.undoMove(nextMove)
       }
     }
 
