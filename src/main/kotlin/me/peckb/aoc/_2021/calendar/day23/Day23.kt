@@ -52,9 +52,9 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val hallway = setupInitialHallway(input.toList())
 
 
+    val cheapestMoves = playGame(hallway)
 
-    // val cheapestMoves = playGame(hallway)
-
+    // EXAMPLE INPUT MOVEMENTS
     // hallway.makeMove(EnterHallFromRoom(6, 0, 3, 40))
     // hallway.makeMove(EnterRoomFromRoom(4, 0, 6, 0, 400))
     // hallway.makeMove(EnterHallFromRoom(4, 1, 5, 3000))
@@ -62,16 +62,11 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     // hallway.makeMove(EnterRoomFromRoom(2, 0, 4, 0, 40))
     // hallway.makeMove(EnterHallFromRoom(8, 0, 7, 2000))
     // hallway.makeMove(EnterHallFromRoom(8, 1, 9, 3))
-
-    val cheapestMoves = playGame(hallway)
-
     // hallway.makeMove(EnterRoomFromHall(7, 8, 1, 3000))
     // hallway.makeMove(EnterRoomFromHall(5, 8, 0, 4000))
     // hallway.makeMove(EnterRoomFromHall(9, 2, 0, 8))
-    //
-    // hallway.availableMoves()
 
-    cheapestMoves?.sumOf { it.cost }// to cheapestMoves
+    cheapestMoves?.sumOf { it.cost } to cheapestMoves
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
@@ -84,8 +79,13 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var cheapestMoves: List<Movement>? = null
     var cheapestCost = Int.MAX_VALUE
 
+    // print("$hallway + $cheapestCost - ")
+
     while(moves.isNotEmpty()) {
       val nextMove = moves.remove()
+      if (depth == 0) {
+        println("Top level moves left: ${moves.size + 1}: $nextMove")
+      }
 
       hallway.makeMove(nextMove)
       if (hallway.isComplete()) {
@@ -96,6 +96,9 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
           cheapestCost = finishedCost
         }
       } else {
+        // if (cheapestCost != Int.MAX_VALUE) {
+        //   println("$hallway - $cheapestCost - ${hallway.movesMade.sumOf { it.cost }}")
+        // }
         // Thread.sleep(100)
         playGame(hallway, depth + 1)?.let { cheapestChildMoves ->
           val finishedCost = cheapestChildMoves.sumOf { it.cost }
@@ -407,13 +410,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val desertShallow = doorways[DESERT_DOORWAY]?.spaces?.get(0) ?: EMPTY
       val desertDeep = doorways[DESERT_DOORWAY]?.spaces?.get(1) ?: EMPTY
 
-      return """
-      #############
-      #${shortFormHall}#
-      ###$amberShallow#$bronzeShallow#$copperShallow#$desertShallow###
-        #$amberDeep#$bronzeDeep#$copperDeep#$desertDeep#
-        #########
-      """.trimIndent()
+      return """##############${shortFormHall}####$amberShallow#$bronzeShallow#$copperShallow#$desertShallow####$amberDeep#$bronzeDeep#$copperDeep#$desertDeep##########""".trimIndent()
     }
 
     fun isComplete(): Boolean {
