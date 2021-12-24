@@ -20,11 +20,11 @@ internal class Day24Test {
 
   @Test
   fun testDay24PartOne() {
-    assertEquals(-1, day24.partOne(DAY_24))
+    assertEquals(89959794919939, day24.partOne(DAY_24))
   }
 
   @Test
   fun testDay24PartTwo() {
-    assertEquals(-1, day24.partTwo(DAY_24))
+    assertEquals(17115131916112, day24.partTwo(DAY_24))
   }
 }
