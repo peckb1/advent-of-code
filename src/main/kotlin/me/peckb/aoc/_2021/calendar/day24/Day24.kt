@@ -28,8 +28,8 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     blocks.forEachIndexed { mainResultIndex, instructions ->
       // note: the input has an equal number of `div z 26` and `div z 1`
       // the `div z 26` are the inputs that actually determine the values in the result
-      // the `div z 1` values are purely derivative from the most previous, but not used
-      // `add y [value]` instruction
+      // the `div z 1` values are purely derivative from the previous (unused) `add y [value]` instruction
+      //   we keep track of "unused" by using a stack of addY(s)
       if (instructions[4] == "div z 26") {
         @Suppress("UnnecessaryVariable")
         val addXIndex = mainResultIndex
@@ -38,7 +38,7 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
         // janky bit of "reading the input here"
         // whenever `div z 26` shows up, the `value` inside `add x [value]` is always negative
         // so we get the difference between the Y we want to add, and the X we want to subtract
-        // NOTE: the y `value` is actually the value from the previous instruction
+        // REMINDER: the `add y [value]` is actually the value from the previous unused `div z 1` instruction
         val diff = addYValue + addXValue
 
         if (diff >= 0) {
@@ -65,7 +65,7 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
           result[addYIndex] = min(idealResult - diff, MAXIMUM_ALLOWED)
         }
       } else {
-        // build up a stack of all of the "add y [value]" in a pair of the
+        // build up the stack of all of the "add y [value]" in a pair of the
         // index that we found the instruction, and the [value] to add it to
         addYStack.add(mainResultIndex to instructions[15].substringAfterLast(" ").toInt())
       }
