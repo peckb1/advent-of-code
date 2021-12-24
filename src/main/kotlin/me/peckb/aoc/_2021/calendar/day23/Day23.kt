@@ -4,6 +4,7 @@ import me.peckb.aoc._2021.calendar.day23.Day23.Movement.EnterHallFromRoom
 import me.peckb.aoc._2021.calendar.day23.Day23.Movement.EnterRoomFromHall
 import me.peckb.aoc._2021.calendar.day23.Day23.Movement.EnterRoomFromRoom
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import java.io.File
 import java.util.PriorityQueue
 import javax.inject.Inject
 import kotlin.math.abs
@@ -44,50 +45,71 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     private const val EMPTY = '.'
   }
 
+  var rando = 0L
+  val output = File("src/test/resources/2021/day23.output")
+
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val hallway = setupInitialHallway(input.toList())
 
+
+
+    // val cheapestMoves = playGame(hallway)
+
+    // hallway.makeMove(EnterHallFromRoom(6, 0, 3, 40))
+    // hallway.makeMove(EnterRoomFromRoom(4, 0, 6, 0, 400))
+    // hallway.makeMove(EnterHallFromRoom(4, 1, 5, 3000))
+    // hallway.makeMove(EnterRoomFromHall(3, 4, 1, 30))
+    // hallway.makeMove(EnterRoomFromRoom(2, 0, 4, 0, 40))
+    // hallway.makeMove(EnterHallFromRoom(8, 0, 7, 2000))
+    // hallway.makeMove(EnterHallFromRoom(8, 1, 9, 3))
+
     val cheapestMoves = playGame(hallway)
 
-    -1
+    // hallway.makeMove(EnterRoomFromHall(7, 8, 1, 3000))
+    // hallway.makeMove(EnterRoomFromHall(5, 8, 0, 4000))
+    // hallway.makeMove(EnterRoomFromHall(9, 2, 0, 8))
+    //
+    // hallway.availableMoves()
+
+    cheapestMoves?.sumOf { it.cost } to cheapestMoves
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     -1
   }
 
-  private fun playGame(hallway: Hallway): List<Movement>? {
-    println(hallway)
-    println()
-
+  private fun playGame(hallway: Hallway, depth: Int = 0): List<Movement>? {
     val moves = hallway.availableMoves()
 
-    var cheapestMoves = listOf<Movement>()
+    var cheapestMoves: List<Movement>? = null
     var cheapestCost = Int.MAX_VALUE
 
     while(moves.isNotEmpty()) {
       val nextMove = moves.remove()
+
       hallway.makeMove(nextMove)
       if (hallway.isComplete()) {
         val finishedPath = hallway.movesMade
         val finishedCost = finishedPath.sumOf { it.cost }
         if (finishedCost < cheapestCost) {
-          cheapestMoves = finishedPath
+          cheapestMoves = ArrayList(finishedPath)
           cheapestCost = finishedCost
         }
       } else {
-        playGame(hallway)?.let { cheapestChildMoves ->
+        // Thread.sleep(100)
+        playGame(hallway, depth + 1)?.let { cheapestChildMoves ->
           val finishedCost = cheapestChildMoves.sumOf { it.cost }
           if (finishedCost < cheapestCost) {
-            cheapestMoves = cheapestChildMoves
+            cheapestMoves = ArrayList(cheapestChildMoves)
             cheapestCost = finishedCost
           }
         }
       }
       hallway.undoMove(nextMove)
+      -1
     }
 
-    return cheapestMoves.ifEmpty { null }
+    return cheapestMoves
   }
 
   private fun setupInitialHallway(data: List<String>): Hallway {
@@ -116,9 +138,21 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
 
   sealed class Movement(val cost: Int) {
-    class EnterRoomFromHall(val hallIndex: Int, val roomKey: Int, val roomIndex: Int, cost: Int) : Movement(cost)
-    class EnterHallFromRoom(val roomKey: Int, val roomIndex: Int, val hallIndex: Int, cost: Int): Movement(cost)
-    class EnterRoomFromRoom(val sourceRoomKey: Int, val sourceRoomIndex: Int, val destinationRoomKey: Int, val destinationRoomIndex: Int, cost: Int) : Movement(cost)
+    class EnterRoomFromHall(val hallIndex: Int, val roomKey: Int, val roomIndex: Int, cost: Int) : Movement(cost) {
+      override fun toString(): String {
+        return "H[$hallIndex] -> R[$roomKey,$roomIndex]: $cost"
+      }
+    }
+    class EnterHallFromRoom(val roomKey: Int, val roomIndex: Int, val hallIndex: Int, cost: Int): Movement(cost) {
+      override fun toString(): String {
+        return "R[$roomKey,$roomIndex] -> H[$hallIndex]: $cost"
+      }
+    }
+    class EnterRoomFromRoom(val sourceRoomKey: Int, val sourceRoomIndex: Int, val destinationRoomKey: Int, val destinationRoomIndex: Int, cost: Int) : Movement(cost) {
+      override fun toString(): String {
+        return "R[$sourceRoomKey,$sourceRoomIndex] -> R[$destinationRoomKey,$destinationRoomIndex]: $cost"
+      }
+    }
   }
 
   data class Hallway(
@@ -136,16 +170,17 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       when (movement) {
         is EnterHallFromRoom -> {
           hall[movement.hallIndex] = doorways[movement.roomKey]!!.spaces[movement.roomIndex]
-          doorways[movement.roomKey] = doorways[movement.roomKey]!!.also { it.spaces[movement.roomIndex] = '.' }
+          doorways[movement.roomKey]!!.spaces[movement.roomIndex] = '.'
         }
         is EnterRoomFromHall -> {
-          doorways[movement.roomKey] = doorways[movement.roomKey]!!.also { it.spaces[movement.roomIndex] = hall[movement.hallIndex] }
+          doorways[movement.roomKey]!!.spaces[movement.roomIndex] = hall[movement.hallIndex]
           hall[movement.hallIndex] = '.'
         }
         is EnterRoomFromRoom -> {
           doorways[movement.destinationRoomKey]!!.spaces[movement.destinationRoomIndex] =
             doorways[movement.sourceRoomKey]!!.spaces[movement.sourceRoomIndex]
-          doorways[movement.sourceRoomKey]!!.spaces[movement.sourceRoomKey] = '.'
+
+          doorways[movement.sourceRoomKey]!!.spaces[movement.sourceRoomIndex] = '.'
         }
       }
       movesMade.add(movement)
@@ -153,9 +188,23 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     fun undoMove(movement: Movement) {
       when (movement) {
-        is EnterHallFromRoom -> TODO()
-        is EnterRoomFromHall -> TODO()
-        is EnterRoomFromRoom -> TODO()
+        is EnterHallFromRoom -> {
+          // go back into the room from the hallway
+          doorways[movement.roomKey]!!.spaces[movement.roomIndex] = hall[movement.hallIndex]
+          hall[movement.hallIndex] = '.'
+        }
+        is EnterRoomFromHall -> {
+          // go back into the hall from the room
+          hall[movement.hallIndex] = doorways[movement.roomKey]!!.spaces[movement.roomIndex]
+          doorways[movement.roomKey]!!.spaces[movement.roomIndex] = '.'
+        }
+        is EnterRoomFromRoom -> {
+          // go back to the original room from the new room
+          doorways[movement.sourceRoomKey]!!.spaces[movement.sourceRoomIndex] =
+            doorways[movement.destinationRoomKey]!!.spaces[movement.destinationRoomIndex]
+
+          doorways[movement.destinationRoomKey]!!.spaces[movement.destinationRoomIndex] = '.'
+        }
       }
       movesMade.removeLast()
     }
@@ -166,7 +215,17 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       // check anyone in the hallway, and see if they can go into their room
       hall.forEachIndexed { hallIndex, occupant ->
         if (occupant != EMPTY) {
-          val hallway = min(hallIndex, OCCUPANT_DOORWAY[occupant]!!)..max(hallIndex, OCCUPANT_DOORWAY[occupant]!!)
+          val hallway = when {
+            hallIndex == OCCUPANT_DOORWAY[occupant]!! -> {
+              IntProgression.fromClosedRange(hallIndex, hallIndex, 1)
+            }
+            hallIndex < OCCUPANT_DOORWAY[occupant]!! -> {
+              IntProgression.fromClosedRange(hallIndex + 1, OCCUPANT_DOORWAY[occupant]!!, 1)
+            }
+            else -> {
+              IntProgression.fromClosedRange(hallIndex - 1, OCCUPANT_DOORWAY[occupant]!!, -1)
+            }
+          }
           val pathClear = hall.slice(hallway).all { it == EMPTY }
           when (occupant) {
             AMBER -> {
@@ -177,7 +236,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
                   moves.add(EnterRoomFromHall(hallIndex, AMBER_DOORWAY, 1, cost))
                 } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == AMBER) {
                   val cost = abs(hallIndex - AMBER_DOORWAY) * AMBER_COST + (AMBER_COST)
-                  moves.add(EnterRoomFromHall(hallIndex, AMBER_DOORWAY, 1, cost))
+                  moves.add(EnterRoomFromHall(hallIndex, AMBER_DOORWAY, 0, cost))
                 }
               }
             }
@@ -189,7 +248,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
                   moves.add(EnterRoomFromHall(hallIndex, BRONZE_DOORWAY, 1, cost))
                 } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == BRONZE) {
                   val cost = abs(hallIndex - BRONZE_DOORWAY) * BRONZE_COST + (BRONZE_COST)
-                  moves.add(EnterRoomFromHall(hallIndex, BRONZE_DOORWAY, 1, cost))
+                  moves.add(EnterRoomFromHall(hallIndex, BRONZE_DOORWAY, 0, cost))
                 }
               }
             }
@@ -201,7 +260,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
                   moves.add(EnterRoomFromHall(hallIndex, COPPER_DOORWAY, 1, cost))
                 } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == COPPER) {
                   val cost = abs(hallIndex - COPPER_DOORWAY) * COPPER_COST + (COPPER_COST)
-                  moves.add(EnterRoomFromHall(hallIndex, COPPER_DOORWAY, 1, cost))
+                  moves.add(EnterRoomFromHall(hallIndex, COPPER_DOORWAY, 0, cost))
                 }
               }
             }
@@ -213,7 +272,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
                   moves.add(EnterRoomFromHall(hallIndex, DESERT_DOORWAY, 1, cost))
                 } else if (myDoorway?.spaces?.get(0) == EMPTY && myDoorway.spaces[1] == DESERT) {
                   val cost = abs(hallIndex - DESERT_DOORWAY) * DESERT_COST + (DESERT_COST)
-                  moves.add(EnterRoomFromHall(hallIndex, DESERT_DOORWAY, 1, cost))
+                  moves.add(EnterRoomFromHall(hallIndex, DESERT_DOORWAY, 0, cost))
                 }
               }
             }
@@ -226,7 +285,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       //   * the hallway
       doorways.forEach { (doorKey, room) ->
         val occupant = room.spaces[0]
-        if (occupant != EMPTY) {
+        if (occupant != EMPTY && (room.owner != occupant || room.spaces[1] != occupant)) {
           // check outside the door
           if (hall[doorKey] == EMPTY) {
             moves.add(EnterHallFromRoom(doorKey, 0, doorKey, OCCUPANT_COST[occupant]!!))
@@ -254,7 +313,17 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
           }
 
           val myTargetDoor = doorways[OCCUPANT_DOORWAY[occupant]!!]!!
-          val hallway = min(doorKey, OCCUPANT_DOORWAY[occupant]!!)..max(doorKey, OCCUPANT_DOORWAY[occupant]!!)
+          val hallway = when {
+            doorKey == OCCUPANT_DOORWAY[occupant]!! -> {
+              IntProgression.fromClosedRange(doorKey, doorKey, 1)
+            }
+            doorKey < OCCUPANT_DOORWAY[occupant]!! -> {
+              IntProgression.fromClosedRange(doorKey, OCCUPANT_DOORWAY[occupant]!!, 1)
+            }
+            else -> {
+              IntProgression.fromClosedRange(doorKey, OCCUPANT_DOORWAY[occupant]!!, -1)
+            }
+          }
           val pathClear = hall.slice(hallway).all { it == EMPTY }
           if (pathClear && myTargetDoor.spaces[0] == EMPTY && myTargetDoor.spaces[1] == EMPTY) {
             moves.add(EnterRoomFromRoom(doorKey, 0, OCCUPANT_DOORWAY[occupant]!!, 1, (hallway.count() + 2) * OCCUPANT_COST[occupant]!!))
@@ -269,7 +338,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       //   * the hallway
       doorways.forEach { (doorKey, room) ->
         val occupant = room.spaces[1]
-        if (occupant != EMPTY && room.spaces[0] == EMPTY) {
+        if (occupant != EMPTY && room.owner != occupant && room.spaces[0] == EMPTY) {
           // check outside the door
           if (hall[doorKey] == EMPTY) {
             moves.add(EnterHallFromRoom(doorKey, 1, doorKey, OCCUPANT_COST[occupant]!!))
@@ -297,12 +366,22 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
             }
 
             val myTargetDoor = doorways[OCCUPANT_DOORWAY[occupant]!!]!!
-            val hallway = min(doorKey, OCCUPANT_DOORWAY[occupant]!!)..max(doorKey, OCCUPANT_DOORWAY[occupant]!!)
+            val hallway = when {
+              doorKey == OCCUPANT_DOORWAY[occupant]!! -> {
+                IntProgression.fromClosedRange(doorKey, doorKey, 1)
+              }
+              doorKey < OCCUPANT_DOORWAY[occupant]!! -> {
+                IntProgression.fromClosedRange(doorKey, OCCUPANT_DOORWAY[occupant]!!, 1)
+              }
+              else -> {
+                IntProgression.fromClosedRange(doorKey, OCCUPANT_DOORWAY[occupant]!!, -1)
+              }
+            }
             val pathClear = hall.slice(hallway).all { it == EMPTY }
             if (pathClear && myTargetDoor.spaces[0] == EMPTY && myTargetDoor.spaces[1] == EMPTY) {
-              moves.add(EnterRoomFromRoom(doorKey, 0, OCCUPANT_DOORWAY[occupant]!!, 1, (hallway.count() + 3) * OCCUPANT_COST[occupant]!!))
+              moves.add(EnterRoomFromRoom(doorKey, 1, OCCUPANT_DOORWAY[occupant]!!, 1, (hallway.count() + 3) * OCCUPANT_COST[occupant]!!))
             } else if (pathClear && myTargetDoor.spaces[0] == EMPTY && myTargetDoor.spaces[1] == occupant) {
-              moves.add(EnterRoomFromRoom(doorKey, 0, OCCUPANT_DOORWAY[occupant]!!, 0, (hallway.count() + 2) * OCCUPANT_COST[occupant]!!))
+              moves.add(EnterRoomFromRoom(doorKey, 1, OCCUPANT_DOORWAY[occupant]!!, 0, (hallway.count() + 2) * OCCUPANT_COST[occupant]!!))
             }
           }
         }
@@ -329,11 +408,11 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val desertDeep = doorways[DESERT_DOORWAY]?.spaces?.get(1) ?: EMPTY
 
       return """
-        #############
-        #${shortFormHall}#
-        ###$amberShallow#$bronzeShallow#$copperShallow#$desertShallow###
-          #$amberDeep#$bronzeDeep#$copperDeep#$desertDeep#
-          #########
+      #############
+      #${shortFormHall}#
+      ###$amberShallow#$bronzeShallow#$copperShallow#$desertShallow###
+        #$amberDeep#$bronzeDeep#$copperDeep#$desertDeep#
+        #########
       """.trimIndent()
     }
 
@@ -348,5 +427,35 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   data class Room(val owner: Char, val spaces: MutableList<Char> = Array(2) { EMPTY }.toMutableList())
 
+  /*
+
+#############
+#.A.......A.#
+###.#B#C#.###
+  #D#B#C#D#
+  #########
+
+
+
+
+
+
+
+ 6000
+ 9000
+15000
+
+  500
+  400
+  900
+
+16300
+15900
+------
+  400
+
+
+
+   */
 
 }
