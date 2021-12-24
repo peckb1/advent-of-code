@@ -34,16 +34,13 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
         @Suppress("UnnecessaryVariable")
         val addXIndex = mainResultIndex
         val addXValue = instructions[5].substringAfterLast(" ").toInt()
-        val (addYIndex, addYValue) = addYStack.removeFirst()
+        val (addYIndex, addYValue) = addYStack.removeLast()
         // janky bit of "reading the input here"
         // whenever `div z 26` shows up, the `value` inside `add x [value]` is always negative
         // so we get the difference between the Y we want to add, and the X we want to subtract
         // NOTE: the y `value` is actually the value from the previous instruction
         val diff = addYValue + addXValue
 
-        // part2 == true  -> min
-        // part2 == false -> max
-        //val best = if (part2) 1 else 9
         if (diff >= 0) {
           // if the difference is a positive number:
           //   the `min value` for our x index            would be `1 + diff`
@@ -69,9 +66,8 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
       } else {
         // build up a stack of all of the "add y [value]" in a pair of the
-        // index (same as our output index) that we found the instruction,
-        // and the [value] to add it to
-        addYStack.addFirst(mainResultIndex to instructions[15].substringAfterLast(" ").toInt())
+        // index that we found the instruction, and the [value] to add it to
+        addYStack.add(mainResultIndex to instructions[15].substringAfterLast(" ").toInt())
       }
     }
 
