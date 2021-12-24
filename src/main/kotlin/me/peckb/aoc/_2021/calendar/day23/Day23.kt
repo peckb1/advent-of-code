@@ -87,29 +87,30 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
         println("Top level moves left: ${moves.size + 1}: $nextMove")
       }
 
-      hallway.makeMove(nextMove)
-      if (hallway.isComplete()) {
-        val finishedPath = hallway.movesMade
-        val finishedCost = finishedPath.sumOf { it.cost }
-        if (finishedCost < cheapestCost) {
-          cheapestMoves = ArrayList(finishedPath)
-          cheapestCost = finishedCost
-        }
-      } else {
-        // if (cheapestCost != Int.MAX_VALUE) {
-        //   println("$hallway - $cheapestCost - ${hallway.movesMade.sumOf { it.cost }}")
-        // }
-        // Thread.sleep(100)
-        playGame(hallway, depth + 1)?.let { cheapestChildMoves ->
-          val finishedCost = cheapestChildMoves.sumOf { it.cost }
+      if (cheapestCost > hallway.movesMade.sumOf { it.cost } + nextMove.cost) {
+        hallway.makeMove(nextMove)
+        if (hallway.isComplete()) {
+          val finishedPath = hallway.movesMade
+          val finishedCost = finishedPath.sumOf { it.cost }
           if (finishedCost < cheapestCost) {
-            cheapestMoves = ArrayList(cheapestChildMoves)
+            cheapestMoves = ArrayList(finishedPath)
             cheapestCost = finishedCost
           }
+        } else {
+          // if (cheapestCost != Int.MAX_VALUE) {
+          //   println("$hallway - $cheapestCost - ${hallway.movesMade.sumOf { it.cost }}")
+          // }
+          // Thread.sleep(100)
+          playGame(hallway, depth + 1)?.let { cheapestChildMoves ->
+            val finishedCost = cheapestChildMoves.sumOf { it.cost }
+            if (finishedCost < cheapestCost) {
+              cheapestMoves = ArrayList(cheapestChildMoves)
+              cheapestCost = finishedCost
+            }
+          }
         }
+        hallway.undoMove(nextMove)
       }
-      hallway.undoMove(nextMove)
-      -1
     }
 
     return cheapestMoves

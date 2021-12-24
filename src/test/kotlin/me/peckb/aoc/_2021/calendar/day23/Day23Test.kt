@@ -20,7 +20,7 @@ internal class Day23Test {
   @Inject internal lateinit var day23: Day23
 
   @Test
-  @Ignore
+  // @Ignore
   fun testDay23PartOne() {
     assertEquals(16300, day23.partOne(DAY_23))
   }
