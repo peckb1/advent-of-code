@@ -71,7 +71,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     //
     // hallway.availableMoves()
 
-    cheapestMoves?.sumOf { it.cost } to cheapestMoves
+    cheapestMoves?.sumOf { it.cost }// to cheapestMoves
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
@@ -341,7 +341,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
         if (occupant != EMPTY && room.owner != occupant && room.spaces[0] == EMPTY) {
           // check outside the door
           if (hall[doorKey] == EMPTY) {
-            moves.add(EnterHallFromRoom(doorKey, 1, doorKey, OCCUPANT_COST[occupant]!!))
+            moves.add(EnterHallFromRoom(doorKey, 1, doorKey, 2 * OCCUPANT_COST[occupant]!!))
 
             // check walking left from the door
             var canKeepWalkingLeft = true
