@@ -29,12 +29,7 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val southFacingCucumbers = mutableListOf<SeaCucumber>()
 
     val encodedWorld = input.toList()
-
-    val world: MutableList<MutableList<SeaCucumber?>> = Array(encodedWorld.size) {
-      Array<SeaCucumber?>(encodedWorld[0].length) {
-        null
-      }.toMutableList()
-    }.toMutableList()
+    val world = Array(encodedWorld.size) { Array<SeaCucumber?>(encodedWorld[0].length) { null } }
 
     encodedWorld.indices.forEach { y ->
       encodedWorld[y].forEachIndexed { x, c ->
@@ -52,48 +47,33 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     var cucumbersStillMoving = true
-    var direction = EAST
     var waitTime = 0
 
     while(cucumbersStillMoving) {
-      var eastMoves = false
-      var southMoves = true
       waitTime++
-      runBlocking {
+
+      val eastMoves = runBlocking {
         val deferredMovements =
-          when (direction) {
-            EAST -> eastFacingCucumbers.chunked(COROUTINES).map {
-              async {
-                it.map { it.movement(world) }
-              }
-            }
-            SOUTH -> southFacingCucumbers.chunked(COROUTINES).map {
-              async {
-                it.map { it.movement(world) }
-              }
+          eastFacingCucumbers.chunked(COROUTINES).map {
+            async {
+              it.map { it.movement(world) }
             }
           }
+
         val movements= deferredMovements.awaitAll()
         val movesMade = movements.flatMap { movementList ->
           movementList.mapNotNull {
             it?.invoke()
           }
         }
-        eastMoves = movesMade.isNotEmpty()
-        direction = direction.next()
+        movesMade.isNotEmpty()
       }
-      runBlocking {
+
+      val southMoves = runBlocking {
         val deferredMovements =
-          when (direction) {
-            EAST -> eastFacingCucumbers.chunked(COROUTINES).map {
-              async {
-                it.map { it.movement(world) }
-              }
-            }
-            SOUTH -> southFacingCucumbers.chunked(COROUTINES).map {
-              async {
-                it.map { it.movement(world) }
-              }
+          southFacingCucumbers.chunked(COROUTINES).map {
+            async {
+              it.map { it.movement(world) }
             }
           }
         val movements= deferredMovements.awaitAll()
@@ -102,8 +82,7 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
             it?.invoke()
           }
         }
-        southMoves = movesMade.isNotEmpty()
-        direction = direction.next()
+        movesMade.isNotEmpty()
       }
 
       cucumbersStillMoving = eastMoves || southMoves
@@ -113,7 +92,7 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   data class SeaCucumber(val direction: Direction, var y: Int, var x: Int) {
-    fun movement(world: MutableList<MutableList<SeaCucumber?>>): (() -> Unit)? {
+    fun movement(world: Array<Array<SeaCucumber?>>): (() -> Unit)? {
       return when (direction) {
         EAST -> {
           val newX = (x + 1) % world[y].size
