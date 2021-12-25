@@ -14,37 +14,11 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   enum class Direction {
-    EAST, SOUTH;
-
-    fun next(): Direction {
-      return when (this) {
-        EAST -> SOUTH
-        SOUTH -> EAST
-      }
-    }
+    EAST, SOUTH
   }
 
   fun partOne(fileName: String) = generatorFactory.forFile(fileName).read { input ->
-    val eastFacingCucumbers = mutableListOf<SeaCucumber>()
-    val southFacingCucumbers = mutableListOf<SeaCucumber>()
-
-    val encodedWorld = input.toList()
-    val world = Array(encodedWorld.size) { Array<SeaCucumber?>(encodedWorld[0].length) { null } }
-
-    encodedWorld.indices.forEach { y ->
-      encodedWorld[y].forEachIndexed { x, c ->
-        when (c) {
-          'v' -> SeaCucumber(SOUTH, y, x).apply {
-            southFacingCucumbers.add(this)
-            world[y][x] = this
-          }
-          '>' -> SeaCucumber(EAST, y, x).apply {
-            eastFacingCucumbers.add(this)
-            world[y][x] = this
-          }
-        }
-      }
-    }
+    val world = setupWorld(input)
 
     var cucumbersStillMoving = true
     var waitTime = 0
@@ -52,44 +26,59 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
     while(cucumbersStillMoving) {
       waitTime++
 
-      val eastMoves = runBlocking {
-        val deferredMovements =
-          eastFacingCucumbers.chunked(COROUTINES).map {
-            async {
-              it.map { it.movement(world) }
-            }
-          }
-
-        val movements= deferredMovements.awaitAll()
-        val movesMade = movements.flatMap { movementList ->
-          movementList.mapNotNull {
-            it?.invoke()
-          }
-        }
-        movesMade.isNotEmpty()
-      }
-
-      val southMoves = runBlocking {
-        val deferredMovements =
-          southFacingCucumbers.chunked(COROUTINES).map {
-            async {
-              it.map { it.movement(world) }
-            }
-          }
-        val movements= deferredMovements.awaitAll()
-        val movesMade = movements.flatMap { movementList ->
-          movementList.mapNotNull {
-            it?.invoke()
-          }
-        }
-        movesMade.isNotEmpty()
-      }
+      val eastMoves = world.floor.moveCucumbers(world.eastCucumbers)
+      val southMoves = world.floor.moveCucumbers(world.southCucumbers)
 
       cucumbersStillMoving = eastMoves || southMoves
     }
 
     waitTime
   }
+
+  private fun setupWorld(input: Sequence<String>): World {
+    val eastFacingCucumbers = mutableListOf<SeaCucumber>()
+    val southFacingCucumbers = mutableListOf<SeaCucumber>()
+
+    val encodedWorld = input.toList()
+    val floor = Array(encodedWorld.size) { Array<SeaCucumber?>(encodedWorld[0].length) { null } }
+
+    encodedWorld.indices.forEach { y ->
+      encodedWorld[y].forEachIndexed { x, c ->
+        when (c) {
+          'v' -> SeaCucumber(SOUTH, y, x).apply {
+            southFacingCucumbers.add(this)
+            floor[y][x] = this
+          }
+          '>' -> SeaCucumber(EAST, y, x).apply {
+            eastFacingCucumbers.add(this)
+            floor[y][x] = this
+          }
+        }
+      }
+    }
+
+    return World(floor, eastFacingCucumbers, southFacingCucumbers)
+  }
+
+  private fun Array<Array<SeaCucumber?>>.moveCucumbers(cucumbers: List<SeaCucumber>): Boolean {
+    val floor = this
+
+    return runBlocking {
+      val movements =
+        cucumbers.chunked(COROUTINES).map {
+          async {
+            it.map { it.movement(floor) }
+          }
+        }.awaitAll()
+
+      val movesMade = movements.flatMap { movementList ->
+        movementList.mapNotNull { it?.invoke() }
+      }
+      movesMade.isNotEmpty()
+    }
+  }
+
+  class World(val floor: Array<Array<SeaCucumber?>>, val eastCucumbers: List<SeaCucumber>, val southCucumbers: List<SeaCucumber>)
 
   data class SeaCucumber(val direction: Direction, var y: Int, var x: Int) {
     fun movement(world: Array<Array<SeaCucumber?>>): (() -> Unit)? {
@@ -114,13 +103,6 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
             }
           } else { null }
         }
-      }
-    }
-
-    override fun toString(): String {
-      return when (direction) {
-        EAST -> ">"
-        SOUTH -> "v"
       }
     }
   }
