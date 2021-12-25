@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   companion object {
-    const val COROUTINES = 50
+    const val COROUTINES = 1000
   }
 
   enum class Direction {
@@ -122,7 +122,6 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
               world[y][newX] = this
               world[y][x] = null
               this.x = newX
-              -1
             }
           } else { null }
         }
@@ -133,7 +132,6 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
               world[newY][x] = this
               world[y][x] = null
               this.y = newY
-              -1
             }
           } else { null }
         }
@@ -147,30 +145,4 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
   }
-
-  /*
-
-v...>>.vv>
-.vv>>.vv..
->>.>v>...v
->>v>>.>.v.
-v>v.vv.v..
->.>>..v...
-.vv..>.>v.
-v.v..>>v.v
-....v..v.>
-
-....>.>v.>   ....>..vv>
-v.v>.>v.v.   .vv>..vv..
->v>>..>v..   >..>.>...v
->>v>v>.>.v   >..>..>.v.
-.>v.v...v.   v>..vv.v..
-v>>.>vvv..   >.>...v...
-..v...>>..   .vv..>.>..
-vv...>>vv.   v.v..>...v
->.v.v..v.v   ....v..v.>
-
-
-
-   */
 }
