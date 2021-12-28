@@ -2,6 +2,9 @@ package me.peckb.aoc._2021.calendar.day23
 
 import java.util.PriorityQueue
 
+/**
+ * NOTE: whatever class you use for `Node` should be a `data class`
+ */
 interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWithCost<Node, Cost>> {
   fun solve(start: Node): MutableMap<Node, Cost> {
     val toVisit = PriorityQueue<NodeWithCost>().apply { add(start.withCost(minCost())) }
