@@ -10,6 +10,7 @@ apply(plugin = "kotlin-kapt")
 plugins {
     kotlin("jvm") version "1.5.10"
     kotlin("kapt") version "1.6.0"
+    application
     jacoco
 }
 
@@ -107,4 +108,12 @@ fun printResults(desc: TestDescriptor, result: TestResult) {
         println(testResultLine)
         println(separationLine)
     }
+}
+
+application {
+    mainClass.set("me.peckb.aoc.generators.SkeletonGenerator")
+}
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
 }
