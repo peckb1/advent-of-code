@@ -67,8 +67,6 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
       override fun resolveGate(gates: MutableMap<String, Logic>): Int {
         return signal.toIntOrNull() ?: gates[signal]!!.resolve(gates)
       }
-
-      override fun toString() = "$signal -> $destination"
     }
 
     class And(private val inputA: String, private val inputB: String, _destination: String) : Logic(_destination) {
@@ -77,8 +75,6 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
         val b = inputB.toIntOrNull() ?: gates[inputB]!!.resolve(gates)
         return a and b
       }
-
-      override fun toString() = "$inputA AND $inputB -> $destination"
     }
 
     class Or(private val inputA: String, private val inputB: String, _destination: String) : Logic(_destination) {
@@ -87,8 +83,6 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
         val b = inputB.toIntOrNull() ?: gates[inputB]!!.resolve(gates)
         return a or b
       }
-
-      override fun toString() = "$inputA OR $inputB -> $destination"
     }
 
     class LeftShift(val input: String, private val shiftValue: Int, _destination: String) : Logic(_destination) {
@@ -96,8 +90,6 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
         val a = gates[input]!!.resolve(gates)
         return a shl shiftValue
       }
-
-      override fun toString() = "$input LSHIFT $shiftValue -> $destination"
     }
 
     class RightShift(val input: String, private val shiftValue: Int, _destination: String) : Logic(_destination) {
@@ -105,16 +97,12 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
         val a = gates[input]!!.resolve(gates)
         return a shr shiftValue
       }
-
-      override fun toString() = "$input RSHIFT $shiftValue -> $destination"
     }
 
     class Not(val input: String, _destination: String) : Logic(_destination) {
       override fun resolveGate(gates: MutableMap<String, Logic>): Int {
         return MAX + (gates[input]!!.resolve(gates).inv() + 1)
       }
-
-      override fun toString() = "NOT $input -> $destination"
     }
   }
 }
