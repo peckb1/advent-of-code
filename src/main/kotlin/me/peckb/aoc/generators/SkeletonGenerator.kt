@@ -18,6 +18,7 @@ class SkeletonGenerator(private val year: String, private val day: String) {
     private val INPUT_GENERATOR_FACTORY_NAME = InputGeneratorFactory::class.java.simpleName
 
     private const val SRC_DIRECTORY = "src/main/kotlin"
+    private const val TEST_DIRECTORY = "src/test"
   }
 
   fun generateAdventSkeleton() {
@@ -99,6 +100,7 @@ class SkeletonGenerator(private val year: String, private val day: String) {
   }
 
   private fun generateInput() {
-    
+    val path = Paths.get("$TEST_DIRECTORY/resources/$year/day$day.input")
+    Files.createFile(path)
   }
 }
