@@ -12,7 +12,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import javax.inject.Inject
 
-class SkeletonGenerator(val year: String, val day: String) {
+class SkeletonGenerator(private val year: String, private val day: String) {
   companion object {
     private val INPUT_GENERATOR_FACTORY_PACKAGE = InputGenerator::class.java.let { "${it.packageName}.${it.simpleName}" }
     private val INPUT_GENERATOR_FACTORY_NAME = InputGeneratorFactory::class.java.simpleName
@@ -70,8 +70,8 @@ class SkeletonGenerator(val year: String, val day: String) {
 
     file.writeTo(File(SRC_DIRECTORY))
 
-    // remove all the extraneous `public` modifiers
     // and the safety import of `kotlin.String`
+    // remove all the extraneous `public` modifiers
     val path = Paths.get("$SRC_DIRECTORY/me/peckb/aoc/_$year/calendar/day$day/Day$day.kt")
     val content = String(Files.readAllBytes(path))
       .replace("public ".toRegex(), "")
@@ -79,12 +79,26 @@ class SkeletonGenerator(val year: String, val day: String) {
     Files.write(path, content.toByteArray())
   }
 
-  fun generateREADME() {
+  private fun generateREADME() {
+    val path = Paths.get("$SRC_DIRECTORY/me/peckb/aoc/_$year/calendar/day$day/README.md")
+    val content = """
+      ## [](https://adventofcode.com/$year/day/${day.toInt()})
+      
+      ---
+      
+      
+      ## --- Part Two ---
+      ###
+      
+      """.trimIndent()
+    Files.write(path, content.toByteArray())
   }
 
-  fun generateTestClass() {
+  private fun generateTestClass() {
+
   }
 
-  fun generateInput() {
+  private fun generateInput() {
+    
   }
 }
