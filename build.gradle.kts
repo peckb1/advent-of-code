@@ -10,6 +10,7 @@ apply(plugin = "kotlin-kapt")
 plugins {
     kotlin("jvm") version "1.5.10"
     kotlin("kapt") version "1.6.0"
+    application
     jacoco
 }
 
@@ -27,6 +28,8 @@ dependencies {
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
+
+    implementation("com.squareup:kotlinpoet:1.10.2")
 
     kapt("com.google.dagger:dagger-compiler:2.40.3")
     kaptTest("com.google.dagger:dagger-compiler:2.40.3")
@@ -107,4 +110,12 @@ fun printResults(desc: TestDescriptor, result: TestResult) {
         println(testResultLine)
         println(separationLine)
     }
+}
+
+application {
+    mainClass.set("me.peckb.aoc.Application")
+}
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
 }
