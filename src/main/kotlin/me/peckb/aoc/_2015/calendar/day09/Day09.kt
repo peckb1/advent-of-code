@@ -5,9 +5,7 @@ import javax.inject.Inject
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.math.min
 
-class Day09 @Inject constructor(
-  private val generatorFactory: InputGeneratorFactory
-) {
+class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val data = input.toList()
     val routeCosts = generateDistances(data)
