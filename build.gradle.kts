@@ -22,19 +22,23 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.dagger:dagger:2.40.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
+    // main dependencies
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
     implementation("io.arrow-kt:arrow-core:1.0.1")
     implementation("org.apache.commons:commons-text:1.9")
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
-
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    // used for generating skeletons
     implementation("com.squareup:kotlinpoet:1.10.2")
 
+    // dependency injection library and annotation procressing
+    implementation("com.google.dagger:dagger:2.40.3")
     kapt("com.google.dagger:dagger-compiler:2.40.3")
     kaptTest("com.google.dagger:dagger-compiler:2.40.3")
 
+    // test libraries
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.0")
 }
