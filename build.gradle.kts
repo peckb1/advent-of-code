@@ -42,7 +42,7 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     testLogging {
-        events("PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
+        events("SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
         exceptionFormat = FULL
     }
     addTestListener(object : TestListener {
