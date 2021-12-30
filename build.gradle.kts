@@ -25,6 +25,7 @@ dependencies {
     implementation("com.google.dagger:dagger:2.40.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
     implementation("io.arrow-kt:arrow-core:1.0.1")
+    implementation("org.apache.commons:commons-text:1.9")
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
