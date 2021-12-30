@@ -3,22 +3,19 @@ package me.peckb.aoc._2015.calendar.day09
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 import kotlin.Int.Companion.MAX_VALUE
+import kotlin.math.max
 import kotlin.math.min
 
 class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val data = input.toList()
-    val routeCosts = generateDistances(data)
-    routeCosts.minOf { it }
+    generateDistances(input.toList(), ::min)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val data = input.toList()
-    val routeCosts = generateDistances(data)
-    routeCosts.maxOf { it }
+    generateDistances(input.toList(), ::max)
   }
 
-  private fun generateDistances(data: List<String>): List<Long> {
+  private fun generateDistances(data: List<String>, comparator: (Long, Long) -> Long): Long {
     val allCities = mutableSetOf<String>()
 
     data.forEach {
@@ -49,9 +46,12 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
     val permutations = generatePermutations(mutatingData, 0, distances.size - 1)
 
-    return permutations.map { permutation ->
-      permutation.toList().windowed(2).sumOf { (s, d) -> distances[s][d] }
+    var bestCost = permutations.first().toList().windowed(2).sumOf { (s, d) -> distances[s][d] }
+    permutations.drop(1).map { permutation ->
+      val cost = permutation.toList().windowed(2).sumOf { (s, d) -> distances[s][d] }
+      bestCost = comparator(bestCost, cost)
     }
+    return bestCost
   }
 
   private fun generatePermutations(data: Array<Int>, l: Int, r: Int): MutableList<Array<Int>> {
