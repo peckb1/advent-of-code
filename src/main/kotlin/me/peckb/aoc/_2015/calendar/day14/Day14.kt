@@ -57,7 +57,7 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return Reindeer(name, speedKmS.toInt(), flyTimeSeconds.toInt(), restTimeSeconds.toInt())
   }
 
-  private data class Reindeer(val name: String, val speedKmS: Int, val flyTimeSeconds: Int, val restTimeSeconds: Int) {
+  private data class Reindeer(val name: String, private val speedKmS: Int, private val flyTimeSeconds: Int, private val restTimeSeconds: Int) {
     fun at(raceTimeSeconds: Int): Long {
       var timeLeft = raceTimeSeconds
       var rested = true
