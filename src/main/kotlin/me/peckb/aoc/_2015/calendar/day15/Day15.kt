@@ -4,94 +4,46 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 import kotlin.math.max
 
+typealias Counts = List<Int>
+
 class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::ingredient) { input ->
     val ingredients = input.toList()
-
     findHighestTotal(ingredients).first
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::ingredient) { input ->
     val ingredients = input.toList()
-    val lowestCalorieIngredient = ingredients.withIndex().minByOrNull { it.value.calories }!!
+    val lowestCalorieIngredient = ingredients.minByOrNull { it.calories }!!
 
-    val perfectCookies: MutableList<Pair<Long, List<Int>>> = mutableListOf()
+    val perfectCookieOptions: MutableList<Pair<Long, Counts>> = mutableListOf()
     var counts = findHighestTotal(ingredients).second
     var calorieCount = calculateCalories(counts, ingredients)
 
+    // there is a VERY GOOD chance that our bes cost cookie has more calories than our wanted calories
+    // the problem is actually setup just in such a way
+    // so while we have not found the perfect cookie yet, keep lower the cost until we do
     while (calorieCount != WANTED_CALORIES) {
-      val sneakies = counts.indices.flatMap { indexToSwapOut ->
-        counts.indices.mapNotNull { indexToSwapIn ->
-          if (indexToSwapOut != indexToSwapIn) {
-            counts.mapIndexed { i, c ->
-              when (i) {
-                indexToSwapOut -> c - 1
-                indexToSwapIn -> c + 1
-                else -> c
-              }
-            }
-          } else {
-            null
-          }
-        }
+      findPerfectCookieCount(counts, ingredients)?.let {
+        perfectCookieOptions.add(calculateTotal(it, ingredients) to it)
       }
 
-      val perfectCookieOption = sneakies.firstOrNull { calculateCalories(it, ingredients) == WANTED_CALORIES }
-      perfectCookieOption?.let { perfectCookies.add(calculateTotal(it, ingredients) to it) }
-
-      if (calorieCount > 500) {
-        // find the x highest calorie counts
-        val highestCalorieIngredients =
-          ingredients.withIndex().filterNot { it.value == lowestCalorieIngredient.value }
-
-        val possibleRemovals = highestCalorieIngredients.map { iv ->
-          iv.index to counts.mapIndexed { i, c ->
-            if (i == iv.index) {
-              c - 1
-            } else {
-              c
-            }
-          }
-        }
-
-        // find out which removal has the highest total cost
-        // remove one from that count
-        val afterRemovals = possibleRemovals.withIndex().maxByOrNull {
-          max(calculateTotal(it.value.second, ingredients), 0)
-        }!!
-
-        val ingredientRemoved = ingredients[afterRemovals.value.first]
-
-        // find calorie counts less than the one we just removed
-        val ingredientsToAddBack =
-          ingredients.withIndex().filterNot { it.value.calories >= ingredientRemoved.calories }
-
-        val possibleAddBacks = ingredientsToAddBack.map { iv ->
-          iv.index to afterRemovals.value.second.mapIndexed { i, c ->
-            if (i == iv.index) {
-              c + 1
-            } else {
-              c
-            }
-          }
-        }
-
-        // find out which addition has the highest total cost
-        // add that one back in
-        val afterAddBacks = possibleAddBacks.withIndex().maxByOrNull {
-          max(calculateTotal(it.value.second, ingredients), 0)
-        }!!
-
-        counts = afterAddBacks.value.second
+      counts = if (calorieCount > WANTED_CALORIES) {
+        // our calorie count is too high, so we need to swap out a high calorie count item
+        // with an ingredient that has lower calories, but we only want to swap one at a time
+        // finding the highest total cost each time we have to lower our calories
+        lowerCalorieCount(counts, ingredients, lowestCalorieIngredient).value.second
       } else {
-        counts = perfectCookies.maxByOrNull { it.first }!!.second
+        // once we've gone under our wanted calories, we can look at all of the perfect cookie
+        // options we found, and the perfect cookie option with the highest total is the winner
+        perfectCookieOptions.maxByOrNull { it.first }!!.second
       }
       calorieCount = calculateCalories(counts, ingredients)
     }
     calculateTotal(counts, ingredients)
   }
 
-  private fun findHighestTotal(ingredients: List<Ingredient>) : Pair<Long, List<Int>> {
+  private fun findHighestTotal(ingredients: List<Ingredient>) : Pair<Long, Counts> {
     var counts = ingredients.map { 1 }
     while (counts.sum() < INGREDIENT_TOTAL) {
       val nextIncrements = counts.indices.map {
@@ -99,11 +51,10 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
       counts = nextIncrements.maxByOrNull { max(calculateTotal(it, ingredients), 0) }!!
     }
-
     return calculateTotal(counts, ingredients) to counts
   }
 
-  private fun calculateTotal(counts: List<Int>, ingredients: List<Ingredient>): Long {
+  private fun calculateTotal(counts: Counts, ingredients: List<Ingredient>): Long {
     val totals = counts.zip(ingredients).map { (count, ingredient) ->
       CookieTotal(
         ingredient.capacity * count,
@@ -118,12 +69,72 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return cookieTotal.capacity * cookieTotal.durability * cookieTotal.flavor * cookieTotal.texture
   }
 
-  private fun calculateCalories(counts: List<Int>, ingredients: List<Ingredient>): Long {
+  private fun calculateCalories(counts: Counts, ingredients: List<Ingredient>): Long {
     val calories = counts.zip(ingredients).map { (count, ingredient) ->
       ingredient.calories * count
     }
 
     return calories.sum()
+  }
+
+  private fun findPerfectCookieCount(counts: Counts, ingredients: List<Ingredient>): Counts? {
+    val possiblePerfectCookieCounts = counts.indices.flatMap { indexToSwapOut ->
+      counts.indices.mapNotNull { indexToSwapIn ->
+        if (indexToSwapOut != indexToSwapIn) {
+          counts.mapIndexed { i, c ->
+            when (i) {
+              indexToSwapOut -> c - 1
+              indexToSwapIn -> c + 1
+              else -> c
+            }
+          }
+        } else {
+          null
+        }
+      }
+    }
+
+    return possiblePerfectCookieCounts.firstOrNull { calculateCalories(it, ingredients) == WANTED_CALORIES }
+  }
+
+  private fun lowerCalorieCount(counts: Counts, ingredients: List<Ingredient>, lowestCalorieIngredient: Ingredient): IndexedValue<Pair<Int, Counts>> {
+    // find the x highest calorie counts
+    val highestCalorieIngredients =
+      ingredients.withIndex().filterNot { it.value == lowestCalorieIngredient }
+
+    val possibleRemovals = highestCalorieIngredients.map { iv ->
+      iv.index to counts.mapIndexed { i, c ->
+        if (i == iv.index) c - 1 else c
+      }
+    }
+
+    // find out which removal has the highest total cost
+    // remove one from that count
+    val afterRemovals = possibleRemovals.withIndex().maxByOrNull {
+      max(calculateTotal(it.value.second, ingredients), 0)
+    }!!
+
+    val ingredientRemoved = ingredients[afterRemovals.value.first]
+
+    // find calorie counts less than the one we just removed
+    val ingredientsToAddBack =
+      ingredients.withIndex().filterNot { it.value.calories >= ingredientRemoved.calories }
+
+    val possibleAddBacks = ingredientsToAddBack.map { iv ->
+      iv.index to afterRemovals.value.second.mapIndexed { i, c ->
+        if (i == iv.index) {
+          c + 1
+        } else {
+          c
+        }
+      }
+    }
+
+    // find out which addition has the highest total cost
+    // add that one back in
+    return possibleAddBacks.withIndex().maxByOrNull {
+      max(calculateTotal(it.value.second, ingredients), 0)
+    }!!
   }
 
   private fun ingredient(line: String): Ingredient {
