@@ -70,11 +70,9 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun calculateCalories(counts: Counts, ingredients: List<Ingredient>): Long {
-    val calories = counts.zip(ingredients).map { (count, ingredient) ->
+    return counts.zip(ingredients).sumOf { (count, ingredient) ->
       ingredient.calories * count
     }
-
-    return calories.sum()
   }
 
   private fun findPerfectCookieCount(counts: Counts, ingredients: List<Ingredient>): Counts? {
@@ -99,35 +97,27 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   private fun lowerCalorieCount(counts: Counts, ingredients: List<Ingredient>, lowestCalorieIngredient: Ingredient): IndexedValue<Pair<Int, Counts>> {
     // find the x highest calorie counts
-    val highestCalorieIngredients =
-      ingredients.withIndex().filterNot { it.value == lowestCalorieIngredient }
+    val highestCalorieIndex = ingredients.indices.filterNot { ingredients[it] == lowestCalorieIngredient }
 
-    val possibleRemovals = highestCalorieIngredients.map { iv ->
-      iv.index to counts.mapIndexed { i, c ->
-        if (i == iv.index) c - 1 else c
-      }
+    val possibleRemovals = highestCalorieIndex.map { index ->
+      index to counts.mapIndexed { i, c -> if (i == index) c - 1 else c }
     }
 
     // find out which removal has the highest total cost
     // remove one from that count
-    val afterRemovals = possibleRemovals.withIndex().maxByOrNull {
-      max(calculateTotal(it.value.second, ingredients), 0)
+    val afterRemovals = possibleRemovals.maxByOrNull {
+      max(calculateTotal(it.second, ingredients), 0)
     }!!
 
-    val ingredientRemoved = ingredients[afterRemovals.value.first]
+    val ingredientRemoved = ingredients[afterRemovals.first]
 
     // find calorie counts less than the one we just removed
-    val ingredientsToAddBack =
-      ingredients.withIndex().filterNot { it.value.calories >= ingredientRemoved.calories }
+    val addBackIngredientIndices = ingredients.indices.filterNot { index ->
+      ingredients[index].calories >= ingredientRemoved.calories
+    }
 
-    val possibleAddBacks = ingredientsToAddBack.map { iv ->
-      iv.index to afterRemovals.value.second.mapIndexed { i, c ->
-        if (i == iv.index) {
-          c + 1
-        } else {
-          c
-        }
-      }
+    val possibleAddBacks = addBackIngredientIndices.map { index ->
+      index to afterRemovals.second.mapIndexed { i, c -> if (i == index) c + 1 else c }
     }
 
     // find out which addition has the highest total cost
