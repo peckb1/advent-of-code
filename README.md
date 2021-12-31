@@ -25,6 +25,9 @@ as the value which passed the given day/phase combination
 
 * Day 14
   * A good example of when coroutines can actually make things slower
+    
+* Day 15
+  * The first `lockpicking` type problem to find the max total for ingredients.
 
 #### 2021
 
@@ -47,7 +50,9 @@ as the value which passed the given day/phase combination
 
 #### 2015
 
-* Day 14 utilizes coroutines to calculate each reindeer's speed, and at every second. However, since each reindeer's math has no actual slow down involved, and is all just maths, using coroutines actually slows things down.   
+* Day 14 utilizes coroutines to calculate each reindeer's speed, and at every second. However, since each reindeer's math has no actual slow down involved, and is all just maths, using coroutines actually slows things down.
+
+* Day 15 was the first `lockpicking` problem of AoC it seems. Where you just alter one value at a time from a base, checking that you are getting closer to your goal instead of further away.
 
 #### 2021
 
