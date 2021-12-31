@@ -1,8 +1,6 @@
 package me.peckb.aoc._2015.calendar.day15
 
-import arrow.core.Tuple4
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import java.util.Arrays
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -10,47 +8,26 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::ingredient) { input ->
     val ingredients = input.toList()
 
-    var counts = ingredients.map { 1 }
-    while (counts.sum() < 100) {
-      val nextIncrements = counts.indices.map {
-        counts.mapIndexed { i, c -> if (i == it) c + 1 else c }
-      }
-      counts = nextIncrements.maxByOrNull {
-        max(calculateTotal(it, ingredients), 0)
-      }!!
-    }
-
-    calculateTotal(counts, ingredients)
+    findHighestTotal(ingredients).first
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::ingredient) { input ->
     val ingredients = input.toList()
-
-    var counts = ingredients.map { 1 }
-    while (counts.sum() < 100) {
-      val nextIncrements = counts.indices.map {
-        counts.mapIndexed { i, c -> if (i == it) c + 1 else c }
-      }
-      counts = nextIncrements.maxByOrNull {
-        max(calculateTotal(it, ingredients), 0)
-      }!!
-    }
-
-    var calorieCount = calculateCalories(counts, ingredients)
     val lowestCalorieIngredient = ingredients.withIndex().minByOrNull { it.value.calories }!!
-    val magicValues: MutableList<Pair<Long, List<Int>>> = mutableListOf()
 
-    while (calorieCount != 500) {
+    val perfectCookies: MutableList<Pair<Long, List<Int>>> = mutableListOf()
+    var counts = findHighestTotal(ingredients).second
+    var calorieCount = calculateCalories(counts, ingredients)
+
+    while (calorieCount != WANTED_CALORIES) {
       val sneakies = counts.indices.flatMap { indexToSwapOut ->
         counts.indices.mapNotNull { indexToSwapIn ->
           if (indexToSwapOut != indexToSwapIn) {
             counts.mapIndexed { i, c ->
-              if (i == indexToSwapOut) {
-                c - 1
-              } else if (i == indexToSwapIn) {
-                c + 1
-              } else {
-                c
+              when (i) {
+                indexToSwapOut -> c - 1
+                indexToSwapIn -> c + 1
+                else -> c
               }
             }
           } else {
@@ -59,15 +36,8 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
       }
 
-      val magicValue2 = sneakies.firstOrNull {
-        calculateCalories(it, ingredients) == 500
-      }
-
-      if (magicValue2 != null) {
-        val magicValueTotal = calculateTotal(magicValue2, ingredients)
-        magicValues.add(magicValueTotal to magicValue2)
-      }
-
+      val perfectCookieOption = sneakies.firstOrNull { calculateCalories(it, ingredients) == WANTED_CALORIES }
+      perfectCookieOption?.let { perfectCookies.add(calculateTotal(it, ingredients) to it) }
 
       if (calorieCount > 500) {
         // find the x highest calorie counts
@@ -114,14 +84,41 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         counts = afterAddBacks.value.second
       } else {
-        counts = magicValues.maxByOrNull { it.first }!!.second
+        counts = perfectCookies.maxByOrNull { it.first }!!.second
       }
       calorieCount = calculateCalories(counts, ingredients)
     }
     calculateTotal(counts, ingredients)
   }
 
-  private fun calculateCalories(counts: List<Int>, ingredients: List<Ingredient>): Int {
+  private fun findHighestTotal(ingredients: List<Ingredient>) : Pair<Long, List<Int>> {
+    var counts = ingredients.map { 1 }
+    while (counts.sum() < INGREDIENT_TOTAL) {
+      val nextIncrements = counts.indices.map {
+        counts.mapIndexed { i, c -> if (i == it) c + 1 else c }
+      }
+      counts = nextIncrements.maxByOrNull { max(calculateTotal(it, ingredients), 0) }!!
+    }
+
+    return calculateTotal(counts, ingredients) to counts
+  }
+
+  private fun calculateTotal(counts: List<Int>, ingredients: List<Ingredient>): Long {
+    val totals = counts.zip(ingredients).map { (count, ingredient) ->
+      CookieTotal(
+        ingredient.capacity * count,
+        ingredient.durability * count,
+        ingredient.flavor * count,
+        ingredient.texture * count,
+      )
+    }
+
+    val cookieTotal = totals.fold(CookieTotal(0, 0, 0, 0)) { acc, next -> acc + next }
+
+    return cookieTotal.capacity * cookieTotal.durability * cookieTotal.flavor * cookieTotal.texture
+  }
+
+  private fun calculateCalories(counts: List<Int>, ingredients: List<Ingredient>): Long {
     val calories = counts.zip(ingredients).map { (count, ingredient) ->
       ingredient.calories * count
     }
@@ -129,61 +126,27 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return calories.sum()
   }
 
-  private fun calculateTotal(counts: List<Int>, ingredients: List<Ingredient>): Long {
-    val tuples = counts.zip(ingredients).map { (count, ingredient) ->
-      Tuple4(
-        ingredient.capacity * count,
-        ingredient.durability * count,
-        ingredient.flavor * count,
-        ingredient.texture * count
-      )
-    }
-
-    val tupleSum = tuples.fold(Tuple4(0L, 0L, 0L, 0L)) { acc, next ->
-      Tuple4(
-        acc.first + next.first,
-        acc.second + next.second,
-        acc.third + next.third,
-        acc.fourth + next.fourth,
-      )
-    }
-
-    return tupleSum.first * tupleSum.second * tupleSum.third * tupleSum.fourth
-  }
-
   private fun ingredient(line: String): Ingredient {
     // Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
     val (name, data) = line.split(": ")
     val (cap, dur, fla, tex, cal) = data.split(", ").map { it.split(" ").last() }
 
-    return Ingredient(name, cap.toInt(), dur.toInt(), fla.toInt(), tex.toInt(), cal.toInt())
+    return Ingredient(name, cap.toLong(), dur.toLong(), fla.toLong(), tex.toLong(), cal.toLong())
   }
 
-  data class Ingredient(
-    val name: String,
-    val capacity: Int,
-    val durability: Int,
-    val flavor: Int,
-    val texture: Int,
-    val calories: Int
-  )
+  data class Ingredient(val name: String, val capacity: Long, val durability: Long, val flavor: Long, val texture: Long, val calories: Long)
 
-  private fun sum_up_recursive(numbers: ArrayList<Int>, target: Int, partial: ArrayList<Int>) {
-    var s = 0
-    for (x in partial) s += x
-    if (s == target) println("sum(" + Arrays.toString(partial.toTypedArray()) + ")=" + target)
-    if (s >= target) return
-    for (i in numbers.indices) {
-      val remaining = ArrayList<Int>()
-      val n = numbers[i]
-      for (j in i + 1 until numbers.size) remaining.add(numbers[j])
-      val partial_rec = ArrayList(partial)
-      partial_rec.add(n)
-      sum_up_recursive(remaining, target, partial_rec)
-    }
+  data class CookieTotal(val capacity: Long, val durability: Long, val flavor: Long, val texture: Long) {
+    infix operator fun plus(other: CookieTotal) = CookieTotal(
+      capacity + other.capacity,
+      durability + other.durability,
+      flavor + other.flavor,
+      texture + other.texture,
+    )
   }
 
-  private fun sum_up(numbers: ArrayList<Int>, target: Int) {
-    sum_up_recursive(numbers, target, ArrayList())
+  companion object {
+    const val INGREDIENT_TOTAL = 100
+    const val WANTED_CALORIES = 500L
   }
 }
