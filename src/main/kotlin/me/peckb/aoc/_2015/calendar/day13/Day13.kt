@@ -6,7 +6,7 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import kotlin.math.max
 
 class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::day13) { input ->
+  fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::happinessMeasurement) { input ->
     val seatingOptions = generateSeatingOptions(input)
 
     val people = seatingOptions.keys.toTypedArray()
@@ -15,7 +15,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     findBestArrangement(peoplePermutations, seatingOptions)
   }
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day13) { input ->
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::happinessMeasurement) { input ->
     val seatingOptions = generateSeatingOptions(input)
 
     var people = seatingOptions.keys.toTypedArray()
@@ -31,7 +31,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     findBestArrangement(peoplePermutations, seatingOptions)
   }
 
-  private fun day13(line: String): HappinessMeasurement {
+  private fun happinessMeasurement(line: String): HappinessMeasurement {
     // Alice would gain 54 happiness units by sitting next to Bob.
     val (occupantAndHappiness, neighbor) = line.split(" happiness units by sitting next to ")
     val (occupant, happiness) = occupantAndHappiness.split(" would ")

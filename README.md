@@ -23,9 +23,12 @@ as the value which passed the given day/phase combination
 
 #### 2015
 
+* Day 14
+  * A good example of when coroutines can actually make things slower
+
 #### 2021
 
-* Day 07.
+* Day 07
   * A nice little bit of maths.
     
 * **Day 08**
@@ -43,6 +46,8 @@ as the value which passed the given day/phase combination
 ### Interesting approaches:
 
 #### 2015
+
+* Day 14 utilizes coroutines to calculate each reindeer's speed, and at every second. However, since each reindeer's math has no actual slow down involved, and is all just maths, using coroutines actually slows things down.   
 
 #### 2021
 
@@ -62,10 +67,12 @@ as the value which passed the given day/phase combination
 ## Takeaways
 
 * Setting up a Kotlin project with Dagger should have more examples than the multitude of Android examples out there
-  * And subsequent nice looking test outout for the command line.
+  * And subsequent nice looking test output for the command line.
     
 
 * Coding up a better abstraction in Part one *often* leads to a much simpler part two instead of just hacking together a solution.
   
 
 * Don't try to recreate Dikjstra, or A* from scratch. If you know you need to find a path, just check the pseudocode in Wikipedia
+
+* Coroutines are a good way to run slow, non pure-maths asynchronously.
