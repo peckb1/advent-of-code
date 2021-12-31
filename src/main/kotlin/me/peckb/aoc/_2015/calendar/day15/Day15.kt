@@ -26,12 +26,6 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::ingredient) { input ->
     val ingredients = input.toList()
 
-    // val numbers = ArrayList<Int>()
-    // ingredients.forEach { numbers.add(it.calories) }
-    // sum_up(numbers, 500)
-    //
-    // -1
-
     var counts = ingredients.map { 1 }
     while (counts.sum() < 100) {
       val nextIncrements = counts.indices.map {
@@ -40,45 +34,29 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
       counts = nextIncrements.maxByOrNull {
         max(calculateTotal(it, ingredients), 0)
       }!!
-
     }
-
-
-    -1
-
-    // val nextIncrements = counts.indices.map {
-    //   counts.mapIndexed { i, c -> if (i == it) c + 1 else c }
-    // }
-    // counts = nextIncrements.maxByOrNull {
-    //   max(calculateTotal(it, ingredients), 0)
-    // }!!
-
 
     var calorieCount = calculateCalories(counts, ingredients)
     val lowestCalorieIngredient = ingredients.withIndex().minByOrNull { it.value.calories }!!
-    val highestCalorieIngredient = ingredients.withIndex().maxByOrNull { it.value.calories }!!
-
     val magicValues: MutableList<Pair<Long, List<Int>>> = mutableListOf()
 
-    while(calorieCount != 500) {
+    while (calorieCount != 500) {
       val sneakies = counts.indices.flatMap { indexToSwapOut ->
         counts.indices.mapNotNull { indexToSwapIn ->
           if (indexToSwapOut != indexToSwapIn) {
-            // counts.indices.map {
             counts.mapIndexed { i, c ->
               if (i == indexToSwapOut) {
                 c - 1
-              } else if(i == indexToSwapIn) {
+              } else if (i == indexToSwapIn) {
                 c + 1
               } else {
                 c
               }
             }
-            // }
           } else {
             null
           }
-        }//.flatten()
+        }
       }
 
       val magicValue2 = sneakies.firstOrNull {
@@ -90,115 +68,58 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         magicValues.add(magicValueTotal to magicValue2)
       }
 
-      val magicValue: List<Int>? = null
 
-      // if (magicValue != null) {
-      //  counts = magicValue
-      // } else {
-        if (calorieCount > 500) {
-          // find the x highest calorie counts
-          val highestCalorieIngredients =
-            ingredients.withIndex().filterNot { it.value == lowestCalorieIngredient.value }
+      if (calorieCount > 500) {
+        // find the x highest calorie counts
+        val highestCalorieIngredients =
+          ingredients.withIndex().filterNot { it.value == lowestCalorieIngredient.value }
 
-          val possibleRemovals = highestCalorieIngredients.map { iv ->
-            iv.index to counts.mapIndexed { i, c ->
-              if (i == iv.index) {
-                c - 1
-              } else {
-                c
-              }
+        val possibleRemovals = highestCalorieIngredients.map { iv ->
+          iv.index to counts.mapIndexed { i, c ->
+            if (i == iv.index) {
+              c - 1
+            } else {
+              c
             }
           }
-
-          // find out which removal has the highest total cost
-          // remove one from that count
-          val afterRemovals = possibleRemovals.withIndex().maxByOrNull {
-            max(calculateTotal(it.value.second, ingredients), 0)
-          }!!
-
-          val ingredientRemoved = ingredients[afterRemovals.value.first]
-
-          // find calorie counts less than the one we just removed
-          val ingredientsToAddBack =
-            ingredients.withIndex().filterNot { it.value.calories >= ingredientRemoved.calories }
-
-          val possibleAddBacks = ingredientsToAddBack.map { iv ->
-            iv.index to afterRemovals.value.second.mapIndexed { i, c ->
-              if (i == iv.index) {
-                c + 1
-              } else {
-                c
-              }
-            }
-          }
-
-          // find out which addition has the highest total cost
-          // add that one back in
-          val afterAddBacks = possibleAddBacks.withIndex().maxByOrNull {
-            max(calculateTotal(it.value.second, ingredients), 0)
-          }!!
-
-          counts = afterAddBacks.value.second
-        } else {
-          counts = magicValues.maxByOrNull {
-            it.first
-          }!!.second
-          -1
-          //
-          // // find the x highest calorie counts
-          // val lowestCalorieIngredients =
-          //   ingredients.withIndex().filterNot { it.value == highestCalorieIngredient.value }
-          //
-          // val possibleAdditions = lowestCalorieIngredients.map { iv ->
-          //   iv.index to counts.mapIndexed { i, c ->
-          //     if (i == iv.index) {
-          //       c - 1
-          //     } else {
-          //       c
-          //     }
-          //   }
-          // }
-          //
-          // // find out which removal has the highest total cost
-          // // remove one from that count
-          // val afterAddBack = possibleAdditions.withIndex().maxByOrNull {
-          //   max(calculateTotal(it.value.second, ingredients), 0)
-          // }!!
-          //
-          // val ingredientAdded = ingredients[afterAddBack.value.first]
-          //
-          // // find calorie counts less than the one we just removed
-          // val ingredientsToTakeBack =
-          //   ingredients.withIndex().filterNot { it.value.calories <= ingredientAdded.calories }
-          //
-          // val possibleRemoves = ingredientsToTakeBack.map { iv ->
-          //   iv.index to afterAddBack.value.second.mapIndexed { i, c ->
-          //     if (i == iv.index) {
-          //       c + 1
-          //     } else {
-          //       c
-          //     }
-          //   }
-          // }
-          // // find out which addition has the highest total cost
-          // // add that one back in
-          // val afterRemoval = possibleRemoves.withIndex().maxByOrNull {
-          //   max(calculateTotal(it.value.second, ingredients), 0)
-          // }!!
-          //
-          // counts = afterRemoval.value.second
         }
-      // }
+
+        // find out which removal has the highest total cost
+        // remove one from that count
+        val afterRemovals = possibleRemovals.withIndex().maxByOrNull {
+          max(calculateTotal(it.value.second, ingredients), 0)
+        }!!
+
+        val ingredientRemoved = ingredients[afterRemovals.value.first]
+
+        // find calorie counts less than the one we just removed
+        val ingredientsToAddBack =
+          ingredients.withIndex().filterNot { it.value.calories >= ingredientRemoved.calories }
+
+        val possibleAddBacks = ingredientsToAddBack.map { iv ->
+          iv.index to afterRemovals.value.second.mapIndexed { i, c ->
+            if (i == iv.index) {
+              c + 1
+            } else {
+              c
+            }
+          }
+        }
+
+        // find out which addition has the highest total cost
+        // add that one back in
+        val afterAddBacks = possibleAddBacks.withIndex().maxByOrNull {
+          max(calculateTotal(it.value.second, ingredients), 0)
+        }!!
+
+        counts = afterAddBacks.value.second
+      } else {
+        counts = magicValues.maxByOrNull { it.first }!!.second
+      }
       calorieCount = calculateCalories(counts, ingredients)
     }
-
-    // 15798420 too low
-    // 16346880 also wrong
-    // 16970420 too high
-    val xx = calculateTotal(counts, ingredients)
-    xx
+    calculateTotal(counts, ingredients)
   }
-
 
   private fun calculateCalories(counts: List<Int>, ingredients: List<Ingredient>): Int {
     val calories = counts.zip(ingredients).map { (count, ingredient) ->
