@@ -47,7 +47,7 @@ as the value which passed the given day/phase combination
 
 #### 2015
 
-* Day 14 utilizes coroutines to calculate each reindeer's speed, and at every second. However, the overhead of spinning up a new coroutine for each reindeer compared to the limited amount of calculations actually needed, ended slowing down the program compared to running them serially.   
+* Day 14 utilizes coroutines to calculate each reindeer's speed, and at every second. However, since each reindeer's math has no actual slow down involved, and is all just maths, using coroutines actually slows things down.   
 
 #### 2021
 
@@ -75,4 +75,4 @@ as the value which passed the given day/phase combination
 
 * Don't try to recreate Dikjstra, or A* from scratch. If you know you need to find a path, just check the pseudocode in Wikipedia
 
-* Coroutines are a good way to run *slow* code asynchronously
+* Coroutines are a good way to run slow, non pure-maths asynchronously.
