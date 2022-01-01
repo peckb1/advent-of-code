@@ -86,16 +86,7 @@ class SkeletonGenerator(private val year: String, private val day: String) {
 
   private fun generateREADME() {
     val path = Paths.get("$SRC_DIRECTORY/me/peckb/aoc/_$year/calendar/day$day/README.md")
-    val content = """
-      ## [](https://adventofcode.com/$year/day/${day.toInt()})
-      
-      ---
-      
-      
-      ## --- Part Two ---
-      ###
-      
-      """.trimIndent()
+    val content = "## [](https://adventofcode.com/$year/day/${day.toInt()})"
     Files.write(path, content.toByteArray())
   }
 
