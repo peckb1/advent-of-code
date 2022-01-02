@@ -102,8 +102,7 @@ private fun String.stepForward(replacements: Map<String, List<String>>): Set<Str
       val regex = source.toRegex()
       val matchResults = regex.findAll(this)
       matchResults.forEach { matchResult ->
-        val newMolecule = "${substring(0, matchResult.range.first)}$destination${substring(matchResult.range.last + 1)}"
-        molecules.add(newMolecule)
+        molecules.add(replace(matchResult.range.first, matchResult.range.last + 1, destination))
       }
     }
   }
