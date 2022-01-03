@@ -46,18 +46,12 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
             play(player, boss)
 
-            when (expectedWinner) {
-              HERO -> {
-                if (boss.remainingHP() <= 0) {
-                  currentBestCost = costComparator(player.equipmentCost(), currentBestCost)
-                }
-              }
-              BOSS -> {
-                if (player.remainingHP() <= 0) {
-                  currentBestCost = costComparator(player.equipmentCost(), currentBestCost)
-                }
-              }
+            val hopefullyDeadPlayer = if (expectedWinner == BOSS) player else boss
+
+            if (hopefullyDeadPlayer.remainingHP() <= 0) {
+              currentBestCost = costComparator(player.equipmentCost(), currentBestCost)
             }
+
             boss.resetHealth()
           }
         }
