@@ -30,18 +30,17 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val armours = Array<Armour?>(Armour.values().size + 1) { null }
     val rings = Array<Ring?>(Ring.values().size + 1) { null }
 
-    Weapon.values().reversed().forEachIndexed { i, w -> weapons[i] = w }
-    Armour.values().reversed().forEachIndexed { i, a -> armours[i] = a }
-    Ring.values().reversed().forEachIndexed { i, r -> rings[i] = r }
+    Weapon.values().forEachIndexed { i, w -> weapons[i] = w }
+    Armour.values().forEachIndexed { i, a -> armours[i] = a }
+    Ring.values().forEachIndexed { i, r -> rings[i] = r }
 
     var currentBestCost = worstCost
     weapons.forEach { weapon ->
       armours.forEach { armour ->
-        rings.forEach { ringOne ->
-          rings.forEach secondRing@ { ringTwo ->
-            // you can't wear the same ring twice
-            if (ringOne == ringTwo) return@secondRing
-
+        rings.indices.forEach { r1 ->
+          val ringOne = rings[r1]
+          (r1 + 1 until rings.size).forEach { r2 ->
+            val ringTwo = rings[r2]
             val player = Player(PLAYER_HP, weapon, armour, ringOne, ringTwo)
 
             play(player, boss)

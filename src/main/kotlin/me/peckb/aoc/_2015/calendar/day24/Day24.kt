@@ -16,14 +16,20 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var bestSixSum = Long.MAX_VALUE
 
     packages.indices.forEach { a ->
+      val pa = packages[a]
       (a + 1 until packages.size).forEach { b ->
+        val pb = packages[b]
         (b + 1 until packages.size).forEach { c ->
+          val pc = packages[c]
           (c + 1 until packages.size).forEach { d ->
-            (d +1 until packages.size).forEach { e ->
+            val pd = packages[d]
+            (d + 1 until packages.size).forEach { e ->
+              val pe = packages[e]
               (e + 1 until packages.size).forEach { f ->
-                val sixSum = packages[a] + packages[b] + packages[c] + packages[d] + packages[e] + packages[f]
+                val pf = packages[f]
+                val sixSum = pa + pb + pc + pd + pe + pf
                 if (sixSum == evenThreePoint) {
-                  bestSixSum = min(bestSixSum, packages[a] * packages[b] * packages[c] * packages[d] * packages[e] * packages[f])
+                  bestSixSum = min(bestSixSum, pa * pb * pc * pd * pe * pf)
                 }
               }
             }
@@ -45,13 +51,18 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var bestFiveSum = Long.MAX_VALUE
 
     packages.indices.forEach { a ->
+      val pa = packages[a]
       (a + 1 until packages.size).forEach { b ->
+        val pb = packages[b]
         (b + 1 until packages.size).forEach { c ->
+          val pc = packages[c]
           (c + 1 until packages.size).forEach { d ->
+            val pd = packages[d]
             (d + 1 until packages.size).forEach { e ->
-              val fiveSum = packages[a] + packages[b] + packages[c] + packages[d] + packages[e]
+              val pe = packages[e]
+              val fiveSum = pa + pb + pc + pd + pe
               if (fiveSum == evenFourPoint) {
-                bestFiveSum = min(bestFiveSum, packages[a] * packages[b] * packages[c] * packages[d] * packages[e])
+                bestFiveSum = min(bestFiveSum, pa * pb * pc * pd * pe)
               }
             }
           }
