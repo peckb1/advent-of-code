@@ -1,5 +1,7 @@
 package me.peckb.aoc._2015.calendar.day22
 
+import me.peckb.aoc._2015.calendar.day22.Day22Try2.Mode.EASY
+import me.peckb.aoc._2015.calendar.day22.Day22Try2.Mode.HARD
 import me.peckb.aoc._2015.calendar.day22.Day22Try2.Move.DR
 import me.peckb.aoc._2015.calendar.day22.Day22Try2.Move.MM
 import me.peckb.aoc._2015.calendar.day22.Day22Try2.Move.PO
@@ -20,7 +22,7 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val boss = loadInput(input.toList())
     val hero = Hero(50, 500, 0, 0, 0)
-    val game = Game(hero, boss, HERO)
+    val game = Game(hero, boss, HERO, EASY)
 
     val dijkstra = GameDijkstra()
     val solution = dijkstra.solve(game)
@@ -31,7 +33,16 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    -1
+    val boss = loadInput(input.toList())
+    val hero = Hero(50, 500, 0, 0, 0)
+    val game = Game(hero, boss, HERO, HARD)
+
+    val dijkstra = GameDijkstra()
+    val solution = dijkstra.solve(game)
+      .filter { it.key.turn == WIN }
+      .minByOrNull { it.value }
+
+    solution?.value
   }
 
   private fun loadInput(input: List<String>): Boss {
@@ -39,6 +50,10 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
     val damage = input.last().substringAfter(": ").toInt()
 
     return Boss(hp, damage, 0)
+  }
+
+  enum class Mode {
+    EASY, HARD
   }
 
   data class Boss(val hitPoints: Int, val damage: Int, val poisonTurns: Int) {
@@ -49,10 +64,11 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
   }
 
   data class Hero(val hitPoints: Int, val mana: Int, val armour: Int, val shieldTurns: Int, val rechargeTurns: Int) {
-    fun advanceTurn(): Hero {
+    fun advanceTurn(mode: Mode): Hero {
+      val turnDamage = if (mode == EASY) 0 else 1
       val armour = if (shieldTurns > 0) SHIELD_BONUS else 0
       val manaRecharging = if (rechargeTurns > 0) RECHARGE_GAIN else 0
-      return Hero(hitPoints, mana + manaRecharging, armour, max(0, shieldTurns - 1), max(0, rechargeTurns - 1))
+      return Hero(hitPoints - turnDamage, mana + manaRecharging, armour, max(0, shieldTurns - 1), max(0, rechargeTurns - 1))
     }
 
     fun takeHit(damage: Int): Hero {
@@ -92,7 +108,7 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
     MM, DR, SH, PO, RE
   }
 
-  data class Game(val hero: Hero, val boss: Boss, val turn: Turn) {
+  data class Game(val hero: Hero, val boss: Boss, val turn: Turn, val mode: Mode) {
     private var movesMade: List<Move> = listOf()
 
     fun neighbors(): List<Pair<Game, Int>> {
@@ -106,10 +122,12 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
 
     private fun playerMoves(): List<Pair<Game, Int>> {
       val bossAfterEvents: Boss = boss.advanceTurn()
-      val heroAfterEvents: Hero = hero.advanceTurn()
+      val heroAfterEvents: Hero = hero.advanceTurn(mode)
 
-      return if (bossAfterEvents.hitPoints <= 0) {
-        listOf(Game(hero, boss, WIN) to 0)
+      return if (heroAfterEvents.hitPoints <= 0) {
+        listOf(Game(hero, boss, LOSS, mode) to 0)
+      } else if (bossAfterEvents.hitPoints <= 0) {
+        listOf(Game(hero, boss, WIN, mode) to 0)
       } else {
         val moves = mutableListOf<Pair<Game, Int>>()
 
@@ -117,7 +135,7 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
         if (heroAfterEvents.mana >= MISSILE_COST) {
           val (newHero, newBoss) = heroAfterEvents.castMagicMissile(bossAfterEvents)
           val turn = if (newBoss.hitPoints <= 0) WIN else BOSS
-          val game = Game(newHero, newBoss, turn).withNewMove(movesMade, MM)
+          val game = Game(newHero, newBoss, turn, mode).withNewMove(movesMade, MM)
           moves.add(game to MISSILE_COST)
         }
 
@@ -125,28 +143,28 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
         if (heroAfterEvents.mana >= DRAIN_COST) {
           val (newHero, newBoss) = heroAfterEvents.castDrain(bossAfterEvents)
           val turn = if (newBoss.hitPoints <= 0) WIN else BOSS
-          val game = Game(newHero, newBoss, turn).withNewMove(movesMade, DR)
+          val game = Game(newHero, newBoss, turn, mode).withNewMove(movesMade, DR)
           moves.add(game to DRAIN_COST)
         }
 
         // cast Shield?
         if (heroAfterEvents.mana >= SHIELD_COST && heroAfterEvents.shieldTurns == 0) {
           val newHero = heroAfterEvents.castShield()
-          val game = Game(newHero, bossAfterEvents, BOSS).withNewMove(movesMade, SH)
+          val game = Game(newHero, bossAfterEvents, BOSS, mode).withNewMove(movesMade, SH)
           moves.add(game to SHIELD_COST)
         }
 
         // cast Poison?
         if (heroAfterEvents.mana >= POISON_COST && bossAfterEvents.poisonTurns == 0) {
           val (newHero, newBoss) = heroAfterEvents.castPoison(bossAfterEvents)
-          val game = Game(newHero, newBoss, BOSS).withNewMove(movesMade, PO)
+          val game = Game(newHero, newBoss, BOSS, mode).withNewMove(movesMade, PO)
           moves.add(game to POISON_COST)
         }
 
         // cast Recharge?
         if (heroAfterEvents.mana >= RECHARGE_COST && heroAfterEvents.rechargeTurns == 0) {
           val newHero = heroAfterEvents.castRecharge()
-          val game = Game(newHero, bossAfterEvents, BOSS).withNewMove(movesMade, RE)
+          val game = Game(newHero, bossAfterEvents, BOSS, mode).withNewMove(movesMade, RE)
           moves.add(game to RECHARGE_COST)
         }
 
@@ -158,14 +176,14 @@ class Day22Try2 @Inject constructor(private val generatorFactory: InputGenerator
 
     private fun bossMoves(): List<Pair<Game, Int>> {
       val bossAfterEvents: Boss = boss.advanceTurn()
-      val heroAfterEvents: Hero = hero.advanceTurn()
+      val heroAfterEvents: Hero = hero.advanceTurn(mode)
 
       return if (bossAfterEvents.hitPoints <= 0) {
-        listOf(Game(heroAfterEvents, bossAfterEvents, WIN) to 0)
+        listOf(Game(heroAfterEvents, bossAfterEvents, WIN, mode) to 0)
       } else {
         val damagedHero = heroAfterEvents.takeHit(bossAfterEvents.damage)
         val turn = if (damagedHero.hitPoints <= 0) LOSS else HERO
-        val game = Game(damagedHero, bossAfterEvents, turn).also { it.movesMade = movesMade }
+        val game = Game(damagedHero, bossAfterEvents, turn, mode).also { it.movesMade = movesMade }
         listOf(game to 0)
       }
     }
