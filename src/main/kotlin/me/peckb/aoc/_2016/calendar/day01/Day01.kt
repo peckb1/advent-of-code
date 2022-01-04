@@ -61,58 +61,30 @@ class Day01 @Inject constructor(private val generatorFactory: InputGeneratorFact
   data class Location(var facingDirection: FacingDirection, var y: Int, var x: Int) {
     fun walk(path: Path): List<Pair<Int, Int>> {
       val locations = mutableListOf<Pair<Int, Int>>()
+
       val walkDistance = (1..path.distance)
+      fun walkY(walker: (Int, Int) -> Int) = walkDistance.forEach { s -> locations.add(Pair(walker(y, s), x)) }
+      fun walkX(walker: (Int, Int) -> Int) = walkDistance.forEach { s -> locations.add(Pair(y, walker(x, s))) }
 
       when (path.turnDirection) {
         LEFT -> {
           when (facingDirection) {
-            NORTH -> {
-              facingDirection = WEST
-              walkDistance.forEach { step -> locations.add(Pair(y, x - step)) }
-              x -= path.distance
-            }
-            WEST -> {
-              facingDirection = SOUTH
-              walkDistance.forEach { step -> locations.add(Pair(y - step, x)) }
-              y -= path.distance
-            }
-            SOUTH -> {
-              facingDirection = EAST
-              walkDistance.forEach { step -> locations.add(Pair(y, x + step)) }
-              x += path.distance
-            }
-            EAST -> {
-              facingDirection = NORTH
-              walkDistance.forEach { step -> locations.add(Pair(y + step, x)) }
-              y += path.distance
-            }
+            NORTH -> { facingDirection = WEST; walkX(Int::minus); x -= path.distance }
+            WEST -> { facingDirection = SOUTH; walkY(Int::minus); y -= path.distance }
+            SOUTH -> { facingDirection = EAST; walkX(Int::plus); x += path.distance }
+            EAST -> { facingDirection = NORTH; walkY(Int::plus); y += path.distance }
           }
         }
         RIGHT -> {
           when (facingDirection) {
-            NORTH -> {
-              facingDirection = EAST
-              walkDistance.forEach { step -> locations.add(Pair(y, x + step)) }
-              x += path.distance
-            }
-            EAST -> {
-              facingDirection = SOUTH
-              walkDistance.forEach { step -> locations.add(Pair(y - step, x)) }
-              y -= path.distance
-            }
-            SOUTH -> {
-              facingDirection = WEST
-              walkDistance.forEach { step -> locations.add(Pair(y, x - step)) }
-              x -= path.distance
-            }
-            WEST -> {
-              facingDirection = NORTH
-              walkDistance.forEach { step -> locations.add(Pair(y + step, x)) }
-              y += path.distance
-            }
+            NORTH -> { facingDirection = EAST; walkX(Int::plus); x += path.distance}
+            EAST -> { facingDirection = SOUTH; walkY(Int::minus); y -= path.distance }
+            SOUTH -> { facingDirection = WEST; walkX(Int::minus); x -= path.distance }
+            WEST -> { facingDirection = NORTH; walkY(Int::plus); y += path.distance }
           }
         }
       }
+
       return locations
     }
   }
