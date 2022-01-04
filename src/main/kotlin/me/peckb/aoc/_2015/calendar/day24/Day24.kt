@@ -16,16 +16,11 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var bestSixSum = Long.MAX_VALUE
 
     packages.indices.forEach { a ->
-      (a until packages.size).forEach loopB@ { b ->
-        if (b == a) return@loopB
-        (b until packages.size).forEach loopC@ { c ->
-          if (c == a || c == b) return@loopC
-          (c until packages.size).forEach loopD@ { d ->
-            if (d == a || d == b || d == c) return@loopD
-            (d until packages.size).forEach loopE@ { e ->
-              if (e == a || e == b || e == c || e == d) return@loopE
-              (e until packages.size).forEach loopF@ { f ->
-                if (f == a || f == b || f == c || f == d || f == e) return@loopF
+      (a + 1 until packages.size).forEach { b ->
+        (b + 1 until packages.size).forEach { c ->
+          (c + 1 until packages.size).forEach { d ->
+            (d +1 until packages.size).forEach { e ->
+              (e + 1 until packages.size).forEach { f ->
                 val sixSum = packages[a] + packages[b] + packages[c] + packages[d] + packages[e] + packages[f]
                 if (sixSum == evenThreePoint) {
                   bestSixSum = min(bestSixSum, packages[a] * packages[b] * packages[c] * packages[d] * packages[e] * packages[f])
@@ -50,16 +45,12 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var bestFiveSum = Long.MAX_VALUE
 
     packages.indices.forEach { a ->
-      (a until packages.size).forEach loopB@ { b ->
-        if (b == a) return@loopB
-        (b until packages.size).forEach loopC@ { c ->
-          if (c == a || c == b) return@loopC
-          (c until packages.size).forEach loopD@ { d ->
-            if (d == a || d == b || d == c) return@loopD
-            (d until packages.size).forEach loopE@ { e ->
-              if (e == a || e == b || e == c || e == d) return@loopE
-              val sixSum = packages[a] + packages[b] + packages[c] + packages[d] + packages[e]
-              if (sixSum == evenFourPoint) {
+      (a + 1 until packages.size).forEach { b ->
+        (b + 1 until packages.size).forEach { c ->
+          (c + 1 until packages.size).forEach { d ->
+            (d + 1 until packages.size).forEach { e ->
+              val fiveSum = packages[a] + packages[b] + packages[c] + packages[d] + packages[e]
+              if (fiveSum == evenFourPoint) {
                 bestFiveSum = min(bestFiveSum, packages[a] * packages[b] * packages[c] * packages[d] * packages[e])
               }
             }
