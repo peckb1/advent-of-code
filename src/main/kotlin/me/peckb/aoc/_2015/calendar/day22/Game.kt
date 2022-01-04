@@ -83,7 +83,6 @@ data class Game(val hero: Hero, val boss: Boss, val turn: Turn, val mode: Mode) 
     }
   }
 
-
   companion object {
     const val POISON_LENGTH = 6
     const val POISON_COST = 173
