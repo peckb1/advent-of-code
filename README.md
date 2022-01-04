@@ -28,6 +28,9 @@ as the value which passed the given day/phase combination
     
 * Day 15
   * The first `lockpicking` type problem to find the max total for ingredients.
+    
+* Day 22
+  * Modeling out the game was nice, and a bit more complex to solve than the similar Day 21
 
 #### 2021
 
@@ -53,6 +56,8 @@ as the value which passed the given day/phase combination
 * Day 14 utilizes coroutines to calculate each reindeer's speed, and at every second. However, since each reindeer's math has no actual slow down involved, and is all just maths, using coroutines actually slows things down.
 
 * Day 15 was the first `lockpicking` problem of AoC it seems. Where you just alter one value at a time from a base, checking that you are getting closer to your goal instead of further away.
+
+* Day 22 Decomposing an existing problem into a known problem and solving the known. Game -> Dijkstra
 
 #### 2021
 
