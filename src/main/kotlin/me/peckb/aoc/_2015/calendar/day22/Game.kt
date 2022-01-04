@@ -23,51 +23,49 @@ data class Game(val hero: Hero, val boss: Boss, val turn: Turn, val mode: Mode) 
     val bossAfterEvents: Boss= boss.advanceTurn()
     val heroAfterEvents: Hero = hero.advanceTurn(mode)
 
-    return if (heroAfterEvents.hitPoints <= 0) {
-      listOf(Game(hero, boss, LOSS, mode) to 0)
-    } else if (bossAfterEvents.hitPoints <= 0) {
-      listOf(Game(hero, boss, WIN, mode) to 0)
-    } else {
-      val moves = mutableListOf<Pair<Game, Int>>()
+    return when {
+      heroAfterEvents.hitPoints <= 0 -> listOf(Game(hero, boss, LOSS, mode) to 0)
+      bossAfterEvents.hitPoints <= 0 -> listOf(Game(hero, boss, WIN, mode) to 0)
+      else -> {
+        mutableListOf<Pair<Game, Int>>().apply {
+          // cast Magic Missile?
+          if (heroAfterEvents.mana >= MISSILE_COST) {
+            val (newHero, newBoss) = heroAfterEvents.castMagicMissile(bossAfterEvents)
+            val turn = if (newBoss.hitPoints <= 0) WIN else BOSS
+            val game = Game(newHero, newBoss, turn, mode)
+            add(game to MISSILE_COST)
+          }
 
-      // cast Magic Missile?
-      if (heroAfterEvents.mana >= MISSILE_COST) {
-        val (newHero, newBoss) = heroAfterEvents.castMagicMissile(bossAfterEvents)
-        val turn = if (newBoss.hitPoints <= 0) WIN else BOSS
-        val game = Game(newHero, newBoss, turn, mode)
-        moves.add(game to MISSILE_COST)
+          // cast Drain?
+          if (heroAfterEvents.mana >= DRAIN_COST) {
+            val (newHero, newBoss) = heroAfterEvents.castDrain(bossAfterEvents)
+            val turn = if (newBoss.hitPoints <= 0) WIN else BOSS
+            val game = Game(newHero, newBoss, turn, mode)
+            add(game to DRAIN_COST)
+          }
+
+          // cast Shield?
+          if (heroAfterEvents.mana >= SHIELD_COST && heroAfterEvents.shieldTurns == 0) {
+            val newHero = heroAfterEvents.castShield()
+            val game = Game(newHero, bossAfterEvents, BOSS, mode)
+            add(game to SHIELD_COST)
+          }
+
+          // cast Poison?
+          if (heroAfterEvents.mana >= POISON_COST && bossAfterEvents.poisonTurns == 0) {
+            val (newHero, newBoss) = heroAfterEvents.castPoison(bossAfterEvents)
+            val game = Game(newHero, newBoss, BOSS, mode)
+            add(game to POISON_COST)
+          }
+
+          // cast Recharge?
+          if (heroAfterEvents.mana >= RECHARGE_COST && heroAfterEvents.rechargeTurns == 0) {
+            val newHero = heroAfterEvents.castRecharge()
+            val game = Game(newHero, bossAfterEvents, BOSS, mode)
+            add(game to RECHARGE_COST)
+          }
+        }
       }
-
-      // cast Drain?
-      if (heroAfterEvents.mana >= DRAIN_COST) {
-        val (newHero, newBoss) = heroAfterEvents.castDrain(bossAfterEvents)
-        val turn = if (newBoss.hitPoints <= 0) WIN else BOSS
-        val game = Game(newHero, newBoss, turn, mode)
-        moves.add(game to DRAIN_COST)
-      }
-
-      // cast Shield?
-      if (heroAfterEvents.mana >= SHIELD_COST && heroAfterEvents.shieldTurns == 0) {
-        val newHero = heroAfterEvents.castShield()
-        val game = Game(newHero, bossAfterEvents, BOSS, mode)
-        moves.add(game to SHIELD_COST)
-      }
-
-      // cast Poison?
-      if (heroAfterEvents.mana >= POISON_COST && bossAfterEvents.poisonTurns == 0) {
-        val (newHero, newBoss) = heroAfterEvents.castPoison(bossAfterEvents)
-        val game = Game(newHero, newBoss, BOSS, mode)
-        moves.add(game to POISON_COST)
-      }
-
-      // cast Recharge?
-      if (heroAfterEvents.mana >= RECHARGE_COST && heroAfterEvents.rechargeTurns == 0) {
-        val newHero = heroAfterEvents.castRecharge()
-        val game = Game(newHero, bossAfterEvents, BOSS, mode)
-        moves.add(game to RECHARGE_COST)
-      }
-
-      moves
     }
   }
 
