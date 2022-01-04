@@ -1,5 +1,6 @@
 package me.peckb.aoc._2021.calendar.day23
 
+import me.peckb.aoc.DijkstraNodeWithCost
 import kotlin.math.abs
 
 data class Layout(val hallway: List<Char>, private val rooms: List<List<Char>>) {

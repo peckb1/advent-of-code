@@ -1,6 +1,6 @@
 package me.peckb.aoc._2015.calendar.day22
 
-import me.peckb.aoc._2021.calendar.day23.Dijkstra
+import me.peckb.aoc.Dijkstra
 
 @Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 class GameDijkstra : Dijkstra<Game, Int, GameWithCost> {

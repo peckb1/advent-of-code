@@ -1,5 +1,6 @@
 package me.peckb.aoc._2021.calendar.day23
 
+import me.peckb.aoc.Dijkstra
 import me.peckb.aoc.generators.InputGenerator
 import javax.inject.Inject
 import kotlin.Int.Companion.MAX_VALUE

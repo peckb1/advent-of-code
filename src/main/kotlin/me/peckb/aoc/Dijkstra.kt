@@ -1,4 +1,4 @@
-package me.peckb.aoc._2021.calendar.day23
+package me.peckb.aoc
 
 import java.util.PriorityQueue
 
