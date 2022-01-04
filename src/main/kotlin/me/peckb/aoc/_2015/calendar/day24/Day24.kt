@@ -16,15 +16,15 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var bestSixSum = Long.MAX_VALUE
 
     packages.indices.forEach { a ->
-      packages.indices.forEach loopB@ { b ->
+      (a until packages.size).forEach loopB@ { b ->
         if (b == a) return@loopB
-        packages.indices.forEach loopC@ { c ->
+        (b until packages.size).forEach loopC@ { c ->
           if (c == a || c == b) return@loopC
-          packages.indices.forEach loopD@ { d ->
+          (c until packages.size).forEach loopD@ { d ->
             if (d == a || d == b || d == c) return@loopD
-            packages.indices.forEach loopE@ { e ->
+            (d until packages.size).forEach loopE@ { e ->
               if (e == a || e == b || e == c || e == d) return@loopE
-              packages.indices.forEach loopF@ { f ->
+              (e until packages.size).forEach loopF@ { f ->
                 if (f == a || f == b || f == c || f == d || f == e) return@loopF
                 val sixSum = packages[a] + packages[b] + packages[c] + packages[d] + packages[e] + packages[f]
                 if (sixSum == evenThreePoint) {
@@ -50,13 +50,13 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var bestFiveSum = Long.MAX_VALUE
 
     packages.indices.forEach { a ->
-      packages.indices.forEach loopB@ { b ->
+      (a until packages.size).forEach loopB@ { b ->
         if (b == a) return@loopB
-        packages.indices.forEach loopC@ { c ->
+        (b until packages.size).forEach loopC@ { c ->
           if (c == a || c == b) return@loopC
-          packages.indices.forEach loopD@ { d ->
+          (c until packages.size).forEach loopD@ { d ->
             if (d == a || d == b || d == c) return@loopD
-            packages.indices.forEach loopE@ { e ->
+            (d until packages.size).forEach loopE@ { e ->
               if (e == a || e == b || e == c || e == d) return@loopE
               val sixSum = packages[a] + packages[b] + packages[c] + packages[d] + packages[e]
               if (sixSum == evenFourPoint) {
