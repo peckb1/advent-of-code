@@ -8,8 +8,8 @@ apply(plugin = "kotlin")
 apply(plugin = "kotlin-kapt")
 
 plugins {
-    kotlin("jvm") version "1.5.10"
-    kotlin("kapt") version "1.6.0"
+    kotlin("jvm") version "1.6.10"
+    kotlin("kapt") version "1.6.10"
     application
     jacoco
 }
