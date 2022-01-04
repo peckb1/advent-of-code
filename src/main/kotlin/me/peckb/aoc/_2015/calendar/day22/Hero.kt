@@ -15,7 +15,13 @@ import me.peckb.aoc._2015.calendar.day22.Game.Mode
 import me.peckb.aoc._2015.calendar.day22.Game.Mode.EASY
 import kotlin.math.max
 
-data class Hero(val hitPoints: Int, val mana: Int, val armour: Int, val shieldTurns: Int, val rechargeTurns: Int) {
+data class Hero(
+  val hitPoints: Int,
+  val mana: Int,
+  val armour: Int,
+  val shieldTurns: Int,
+  val rechargeTurns: Int
+) {
   fun advanceTurn(mode: Mode): Hero {
     val turnDamage = if (mode == EASY) 0 else 1
     val armour = if (shieldTurns > 0) SHIELD_BONUS else 0
@@ -35,13 +41,22 @@ data class Hero(val hitPoints: Int, val mana: Int, val armour: Int, val shieldTu
 
   fun castMagicMissile(bossAfterEvents: Boss): Pair<Hero, Boss> {
     val newHero = Hero(hitPoints, mana - MISSILE_COST, armour, shieldTurns, rechargeTurns)
-    val newBoss = Boss(bossAfterEvents.hitPoints - MISSILE_DAMAGE, bossAfterEvents.damage, bossAfterEvents.poisonTurns)
+    val newBoss = Boss(
+      bossAfterEvents.hitPoints - MISSILE_DAMAGE,
+      bossAfterEvents.damage,
+      bossAfterEvents.poisonTurns
+    )
     return newHero to newBoss
   }
 
   fun castDrain(bossAfterEvents: Boss): Pair<Hero, Boss> {
-    val newHero = Hero(hitPoints + DRAIN_BONUS, mana - DRAIN_COST, armour, shieldTurns, rechargeTurns)
-    val newBoss = Boss(bossAfterEvents.hitPoints - DRAIN_DAMAGE, bossAfterEvents.damage, bossAfterEvents.poisonTurns)
+    val newHero =
+      Hero(hitPoints + DRAIN_BONUS, mana - DRAIN_COST, armour, shieldTurns, rechargeTurns)
+    val newBoss = Boss(
+      bossAfterEvents.hitPoints - DRAIN_DAMAGE,
+      bossAfterEvents.damage,
+      bossAfterEvents.poisonTurns
+    )
     return newHero to newBoss
   }
 

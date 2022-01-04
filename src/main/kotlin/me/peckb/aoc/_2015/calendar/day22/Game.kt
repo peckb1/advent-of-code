@@ -6,10 +6,18 @@ import me.peckb.aoc._2015.calendar.day22.Game.Turn.LOSS
 import me.peckb.aoc._2015.calendar.day22.Game.Turn.WIN
 
 data class Game(val hero: Hero, val boss: Boss, val turn: Turn, val mode: Mode) {
-  enum class Mode { EASY, HARD }
+  enum class Mode {
+    EASY,
+    HARD
+  }
 
-  enum class Turn { HERO, BOSS, WIN, LOSS }
-  
+  enum class Turn {
+    HERO,
+    BOSS,
+    WIN,
+    LOSS
+  }
+
   fun neighbors(): List<Pair<Game, Int>> {
     return when (turn) {
       HERO -> playerMoves()
@@ -20,7 +28,7 @@ data class Game(val hero: Hero, val boss: Boss, val turn: Turn, val mode: Mode) 
   }
 
   private fun playerMoves(): List<Pair<Game, Int>> {
-    val bossAfterEvents: Boss= boss.advanceTurn()
+    val bossAfterEvents: Boss = boss.advanceTurn()
     val heroAfterEvents: Hero = hero.advanceTurn(mode)
 
     return when {
@@ -70,7 +78,7 @@ data class Game(val hero: Hero, val boss: Boss, val turn: Turn, val mode: Mode) 
   }
 
   private fun bossMoves(): List<Pair<Game, Int>> {
-    val bossAfterEvents: Boss= boss.advanceTurn()
+    val bossAfterEvents: Boss = boss.advanceTurn()
     val heroAfterEvents: Hero = hero.advanceTurn(mode)
 
     return if (bossAfterEvents.hitPoints <= 0) {
