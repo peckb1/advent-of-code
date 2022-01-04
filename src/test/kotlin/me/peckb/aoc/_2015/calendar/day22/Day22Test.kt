@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Test
 internal class Day22Test {
   @Inject
   lateinit var day22: Day22
-  @Inject
-  lateinit var day22Try2: Day22Try2
 
   @BeforeEach
   fun setup() {
@@ -21,12 +19,12 @@ internal class Day22Test {
 
   @Test
   fun testDay22PartOne() {
-    assertEquals(1269, day22Try2.partOne(DAY_22))
+    assertEquals(1269, day22.partOne(DAY_22))
   }
 
   @Test
   fun testDay22PartTwo() {
-    assertEquals(-1, day22Try2.partTwo(DAY_22))
+    assertEquals(1309, day22.partTwo(DAY_22))
   }
 
   companion object {
