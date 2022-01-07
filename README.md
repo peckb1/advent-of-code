@@ -31,6 +31,11 @@ as the value which passed the given day/phase combination
     
 * Day 22
   * Modeling out the game was nice, and a bit more complex to solve than the similar Day 21
+    
+#### 2016
+
+* Day 11
+  * Doing the problem manually helped track down the limitations on allowable moves for Dijkstra 
 
 #### 2021
 
@@ -59,6 +64,10 @@ as the value which passed the given day/phase combination
 
 * Day 22 Decomposing an existing problem into a known problem and solving the known. Game -> Dijkstra
 
+#### 2016
+
+* Day 11 Manually solving it first, made creating neighbors for Dijkstra trivial.
+
 #### 2021
 
 * The double window for Day01 part 02
@@ -78,11 +87,15 @@ as the value which passed the given day/phase combination
 
 * Setting up a Kotlin project with Dagger should have more examples than the multitude of Android examples out there
   * And subsequent nice looking test output for the command line.
-    
+
 
 * Coding up a better abstraction in Part one *often* leads to a much simpler part two instead of just hacking together a solution.
-  
+
 
 * Don't try to recreate Dikjstra, or A* from scratch. If you know you need to find a path, just check the pseudocode in Wikipedia
+
+
+* Sometimes manually solving the problem can help limit your neighbor generation for pathing algorithms
+
 
 * Coroutines are a good way to run slow, non pure-maths asynchronously.
