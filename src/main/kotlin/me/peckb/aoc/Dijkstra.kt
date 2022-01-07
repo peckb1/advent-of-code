@@ -27,7 +27,7 @@ interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWith
     return currentCosts
   }
 
-  operator fun Cost.plus(cost: Cost): Cost
+  infix operator fun Cost.plus(cost: Cost): Cost
   fun Node.withCost(cost: Cost): NodeWithCost
   fun minCost(): Cost
   fun maxCost(): Cost

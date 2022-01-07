@@ -24,7 +24,6 @@ class Day23 @Inject constructor(private val generatorFactory: InputGenerator.Inp
   }
 }
 
-@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 class AmphipodDijkstra : Dijkstra<Layout, Int, LayoutWithCost> {
   override fun minCost() = 0
   override fun maxCost() = MAX_VALUE
