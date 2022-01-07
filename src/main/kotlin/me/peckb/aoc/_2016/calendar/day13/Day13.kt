@@ -44,10 +44,10 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
     this.indices.forEach { y ->
       this.indices.forEach { x ->
         val number = (x*x) + (3*x) + (2*x*y) + y + (y*y) + num
-        val binaryString = number.toString(Day13.BINARY_RADIX)
+        val binaryString = number.toString(BINARY_RADIX)
         val bits = binaryString.count { it == '1' }
         if (bits % 2 != 0) {
-          this[y][x] = Day13.WALL
+          this[y][x] = WALL
         }
       }
     }
