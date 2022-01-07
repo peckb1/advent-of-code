@@ -6,13 +6,20 @@ import java.util.PriorityQueue
  * NOTE: whatever class you use for `Node` should be a `data class`
  */
 interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWithCost<Node, Cost>> {
-  fun solve(start: Node): MutableMap<Node, Cost> {
+  fun solve(start: Node, end: Node? = null, comparator: Comparator<Node>? = null): MutableMap<Node, Cost> {
     val toVisit = PriorityQueue<NodeWithCost>().apply { add(start.withCost(minCost())) }
     val visited = mutableSetOf<NodeWithCost>()
     val currentCosts = mutableMapOf<Node, Cost>().withDefault { maxCost() }
 
     while (toVisit.isNotEmpty()) {
       val current = toVisit.poll().also { visited.add(it) }
+
+      val foundEnd = end?.let {
+        comparator?.let { comparator.compare(current.node(), end) == 0 } ?: (current.node() == end)
+      }
+
+      if (foundEnd == true) return currentCosts
+
       current.neighbors().forEach { neighbor ->
         if (!visited.contains(neighbor)) {
           val newCost = current.cost() + neighbor.cost()
