@@ -85,5 +85,4 @@ data class FloorPlan(val floors: List<Floor>, val elevatorIndex: Int) : Dijkstra
       emptyList()
     }
   }
-
 }
