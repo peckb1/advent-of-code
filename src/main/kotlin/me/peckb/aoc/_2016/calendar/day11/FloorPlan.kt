@@ -21,29 +21,8 @@ data class FloorPlan(val floors: List<Floor>, val elevatorIndex: Int) : Dijkstra
   }
 
   /**
-   * Microchips can move down solo iff
-   *  - a stranded microchip is below them
-   *  - their matching generator is below them
+   * Pairs of generators and microchips that want to get to the top floor
    */
-  private fun findRescueMicrochips(elevatorFloor: Floor): Collection<FloorPlan> {
-    val rescueMicrochips = elevatorFloor.microchips.filter { microchip ->
-      floors.slice(0 until elevatorIndex).withIndex().any { indexedFloor ->
-        indexedFloor.value.microchips.any { possiblyStrandedMicrochip -> !indexedFloor.value.generators.contains(possiblyStrandedMicrochip) }
-          || indexedFloor.value.generators.contains(microchip)
-      }
-    }
-    return rescueMicrochips.map { microchip ->
-      val newFloors = floors.mapIndexed { i, f ->
-        when(i) {
-          elevatorIndex -> Floor(f.generators, f.microchips.minus(microchip))
-          elevatorIndex - 1 -> Floor(f.generators, f.microchips.plus(microchip))
-          else -> f
-        }
-      }
-      FloorPlan(newFloors, elevatorIndex - 1)
-    }
-  }
-
   private fun findMovableRTGs(elevatorFloor: Floor): Collection<FloorPlan> {
     val rtgSet = elevatorFloor.generators.intersect(elevatorFloor.microchips)
 
@@ -83,6 +62,30 @@ data class FloorPlan(val floors: List<Floor>, val elevatorIndex: Int) : Dijkstra
       }
     } else {
       emptyList()
+    }
+  }
+
+  /**
+   * Microchips can move down solo iff
+   *  - a stranded microchip is below them
+   *  - their matching generator is below them
+   */
+  private fun findRescueMicrochips(elevatorFloor: Floor): Collection<FloorPlan> {
+    val rescueMicrochips = elevatorFloor.microchips.filter { microchip ->
+      floors.slice(0 until elevatorIndex).withIndex().any { indexedFloor ->
+        indexedFloor.value.microchips.any { possiblyStrandedMicrochip -> !indexedFloor.value.generators.contains(possiblyStrandedMicrochip) }
+          || indexedFloor.value.generators.contains(microchip)
+      }
+    }
+    return rescueMicrochips.map { microchip ->
+      val newFloors = floors.mapIndexed { i, f ->
+        when(i) {
+          elevatorIndex -> Floor(f.generators, f.microchips.minus(microchip))
+          elevatorIndex - 1 -> Floor(f.generators, f.microchips.plus(microchip))
+          else -> f
+        }
+      }
+      FloorPlan(newFloors, elevatorIndex - 1)
     }
   }
 }
