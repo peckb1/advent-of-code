@@ -1,5 +1,6 @@
 package me.peckb.aoc._2016.calendar.day11
 
+import me.peckb.aoc.pathing.GenericIntDijkstra
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 import kotlin.collections.MutableMap.MutableEntry

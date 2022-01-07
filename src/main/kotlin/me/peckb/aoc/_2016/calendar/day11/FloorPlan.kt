@@ -1,6 +1,6 @@
 package me.peckb.aoc._2016.calendar.day11
 
-import me.peckb.aoc._2016.calendar.day11.GenericIntDijkstra.DijkstraNode
+import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
 
 data class FloorPlan(val floors: List<Floor>, val elevatorIndex: Int) : DijkstraNode<FloorPlan> {
   override fun neighbors(): Map<FloorPlan, Int> {

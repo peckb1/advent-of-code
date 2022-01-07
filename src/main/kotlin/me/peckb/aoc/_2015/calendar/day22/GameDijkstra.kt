@@ -1,6 +1,6 @@
 package me.peckb.aoc._2015.calendar.day22
 
-import me.peckb.aoc.Dijkstra
+import me.peckb.aoc.pathing.Dijkstra
 
 class GameDijkstra : Dijkstra<Game, Int, GameWithCost> {
   override fun Game.withCost(cost: Int) = GameWithCost(this, cost)

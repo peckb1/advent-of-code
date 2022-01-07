@@ -1,6 +1,6 @@
 package me.peckb.aoc._2015.calendar.day22
 
-import me.peckb.aoc.DijkstraNodeWithCost
+import me.peckb.aoc.pathing.DijkstraNodeWithCost
 
 class GameWithCost(private val game: Game, val cost: Int) :
   DijkstraNodeWithCost<Game, Int> {

@@ -1,6 +1,6 @@
 package me.peckb.aoc._2021.calendar.day23
 
-import me.peckb.aoc.DijkstraNodeWithCost
+import me.peckb.aoc.pathing.DijkstraNodeWithCost
 import kotlin.math.abs
 
 data class Layout(val hallway: List<Char>, private val rooms: List<List<Char>>) {
@@ -90,7 +90,8 @@ data class Layout(val hallway: List<Char>, private val rooms: List<List<Char>>) 
 
 class Room(val roomOwner: Char, val roomIndex: Int, val roomSpaces: List<Char>)
 
-class LayoutWithCost(private val layout: Layout, private val cost: Int) : DijkstraNodeWithCost<Layout, Int> {
+class LayoutWithCost(private val layout: Layout, private val cost: Int) :
+  DijkstraNodeWithCost<Layout, Int> {
   override fun cost() = cost
   override fun node() = layout
   override fun compareTo(other: DijkstraNodeWithCost<Layout, Int>) = cost.compareTo(other.cost())

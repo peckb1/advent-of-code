@@ -1,9 +1,7 @@
-package me.peckb.aoc._2016.calendar.day11
+package me.peckb.aoc.pathing
 
-import me.peckb.aoc.Dijkstra
-import me.peckb.aoc.DijkstraNodeWithCost
-import me.peckb.aoc._2016.calendar.day11.GenericIntDijkstra.DijkstraNode
-import me.peckb.aoc._2016.calendar.day11.GenericIntDijkstra.GenericNodeWithCost
+import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
+import me.peckb.aoc.pathing.GenericIntDijkstra.GenericNodeWithCost
 
 /**
  * Similarly to `DijkstraNode` objects, anything used for `Node` here should be a data class

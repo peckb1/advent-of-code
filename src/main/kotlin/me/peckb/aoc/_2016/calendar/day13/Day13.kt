@@ -1,7 +1,7 @@
 package me.peckb.aoc._2016.calendar.day13
 
-import me.peckb.aoc._2016.calendar.day11.GenericIntDijkstra
-import me.peckb.aoc._2016.calendar.day11.GenericIntDijkstra.DijkstraNode
+import me.peckb.aoc.pathing.GenericIntDijkstra
+import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory

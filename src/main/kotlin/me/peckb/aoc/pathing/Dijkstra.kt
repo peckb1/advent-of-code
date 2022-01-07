@@ -1,4 +1,4 @@
-package me.peckb.aoc
+package me.peckb.aoc.pathing
 
 import java.util.PriorityQueue
 
