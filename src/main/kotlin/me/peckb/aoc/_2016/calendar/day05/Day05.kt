@@ -1,12 +1,14 @@
 package me.peckb.aoc._2016.calendar.day05
 
+import me.peckb.aoc.MD5
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import java.math.BigInteger
-import java.security.MessageDigest
 
-class Day05 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
+class Day05 @Inject constructor(
+  private val generatorFactory: InputGeneratorFactory,
+  private val md5: MD5
+) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { input ->
     var counter = 0L
     var password = ""
@@ -41,17 +43,13 @@ class Day05 @Inject constructor(private val generatorFactory: InputGeneratorFact
     do {
       counter++
       val input = "$key${counter}"
-      md5HexString = BigInteger(1, MD.digest(input.toByteArray())).toHexString()
+      md5HexString = md5.hash(input)
     } while (!md5HexString.startsWith(PREFIX))
 
     return counter to md5HexString
   }
 
-
-  private fun BigInteger.toHexString() = toString(16).padStart(32, '0')
-
   companion object {
     const val PREFIX = "00000"
-    private val MD = MessageDigest.getInstance("MD5")
   }
 }

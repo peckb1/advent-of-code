@@ -1,12 +1,14 @@
 package me.peckb.aoc._2016.calendar.day14
 
+import me.peckb.aoc.MD5
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import java.math.BigInteger
-import java.security.MessageDigest
 
-class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
+class Day14 @Inject constructor(
+  private val generatorFactory: InputGeneratorFactory,
+  private val mD5: MD5
+) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { salt ->
     val superHashes = generatePads(salt, PART_ONE_REPEATS)
     superHashes.last()
@@ -41,18 +43,15 @@ class Day14 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun md5(key: String, repeats: Int): String {
-    var hash = BigInteger(1, MD.digest(key.toByteArray())).toHexString()
+    var hash = mD5.hash(key)
     repeat(repeats) {
-      hash = BigInteger(1, MD.digest(hash.toByteArray())).toHexString()
+      hash = mD5.hash(hash)
     }
     return hash
   }
 
-  private fun BigInteger.toHexString() = toString(16).padStart(32, '0')
-
   companion object {
     const val PART_ONE_REPEATS = 0
     const val PART_TWO_REPEATS = 2016
-    private val MD = MessageDigest.getInstance("MD5")
   }
 }
