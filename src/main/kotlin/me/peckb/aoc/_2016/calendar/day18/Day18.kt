@@ -27,18 +27,14 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var row = input
     var total = row.count { it == OPEN }.toLong()
     repeat(PART_TWO_ROWS - 1) {
-      val nextRow = "$OPEN$row$OPEN".windowed(3).map { data ->
-        val left = data[0] == TRAP
-        val center = data[1] == TRAP
-        val right = data[2] == TRAP
-        if (left && center && !right || !left && center && right || left && !center && !right || !left && !center && right) {
+      row = "$OPEN$row$OPEN".windowed(3).map { data ->
+        if (data == "^^." || data == ".^^" || data == "^.." || data == "..^") {
           TRAP
         } else {
+          total++
           OPEN
         }
-      }
-      row = nextRow.joinToString("")
-      total += row.count { it == OPEN }
+      }.joinToString("")
     }
     total
   }
