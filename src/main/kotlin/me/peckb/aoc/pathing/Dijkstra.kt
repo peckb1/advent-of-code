@@ -12,10 +12,10 @@ interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWith
     val currentCosts = mutableMapOf<Node, Cost>().withDefault { maxCost() }
 
     while (toVisit.isNotEmpty()) {
-      val current = toVisit.poll().also { visited.add(it) }
+      val current: NodeWithCost = toVisit.poll().also { visited.add(it) }
 
-      val foundEnd = end?.let {
-        comparator?.let { comparator.compare(current.node(), end) == 0 } ?: (current.node() == end)
+      val foundEnd: Boolean? = end?.let { node: Node ->
+        comparator?.let { it.compare(current.node(), end) == 0 } ?: (current.node() == node)
       }
 
       if (foundEnd == true) return currentCosts
