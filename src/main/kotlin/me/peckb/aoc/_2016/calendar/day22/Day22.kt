@@ -99,6 +99,5 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   companion object {
     private val WHITESPACE_REGEX = "\\s+".toRegex()
-    private val NO_NODE = Node(-1, -1, 0, 0, 0)
   }
 }
