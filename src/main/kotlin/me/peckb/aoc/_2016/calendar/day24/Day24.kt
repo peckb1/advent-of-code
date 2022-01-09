@@ -10,97 +10,78 @@ import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
 
 class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val HVACLayout = mutableListOf<List<Duct>>()
+    val (idByDuct, ductById) = parseInput(input)
+    val routes = generateRoutes(idByDuct)
 
-    val idbyDuct = mutableMapOf<Duct, Int>()
-    val ductById = mutableMapOf<Int, Duct>()
+    val locationIds = idByDuct.values.toTypedArray()
+    val permutations = generatePermutations(locationIds, 0, locationIds.size - 1)
+      .filter { it[0] == 0 }
+      .map { it.toList() }
 
-    input.forEachIndexed { y, row ->
-      HVACLayout.add(row.mapIndexed { x, c ->
-        val type = if (c == '#') WALL else OPEN
-        Duct(y, x, type).also {
-          if (c.isDigit()) {
-            idbyDuct[it] = Character.getNumericValue(c)
-            ductById[Character.getNumericValue(c)] = it
-          }
-        }
-      }.toList())
-    }
-    HVACLayout.forEach { row -> row.forEach { it.withHVACLayout(HVACLayout) } }
-
-    val solver = HVACDijkstra()
-
-    val routes = idbyDuct.mapValues { (start, _) ->
-      idbyDuct.map { (end, _) ->
-        if (end == start) start to 0 else {
-          solver.solve(start, end)
-            .filter { it.key.x == end.x && it.key.y == end.y }
-            .minByOrNull { it.value }
-            ?.let { it.key to it.value }!!
-        }
-      }.toMap()
-    }
-
-    val locationIds = idbyDuct.values.toTypedArray()
-    val permutations = generatePermutations(locationIds, 0, locationIds.size - 1).filter { it[0] == 0 }
-
-    val minCost = permutations.minOf { permutation ->
-      permutation.toList().windowed(2).sumOf {
-        val source = ductById[it.first()]!!
-        val destination = ductById[it.last()]!!
-        routes[source]!![destination]!!
-      }
-    }
-
-    minCost
+    findMinCost(routes, ductById, permutations)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val HVACLayout = mutableListOf<List<Duct>>()
+    val (idByDuct, ductById) = parseInput(input)
+    val routes = generateRoutes(idByDuct)
 
-    val idbyDuct = mutableMapOf<Duct, Int>()
-    val ductById = mutableMapOf<Int, Duct>()
-
-    input.forEachIndexed { y, row ->
-      HVACLayout.add(row.mapIndexed { x, c ->
-        val type = if (c == '#') WALL else OPEN
-        Duct(y, x, type).also {
-          if (c.isDigit()) {
-            idbyDuct[it] = Character.getNumericValue(c)
-            ductById[Character.getNumericValue(c)] = it
-          }
-        }
-      }.toList())
-    }
-    HVACLayout.forEach { row -> row.forEach { it.withHVACLayout(HVACLayout) } }
-
-    val solver = HVACDijkstra()
-
-    val routes = idbyDuct.mapValues { (start, _) ->
-      idbyDuct.map { (end, _) ->
-        if (end == start) start to 0 else {
-          solver.solve(start, end)
-            .filter { it.key.x == end.x && it.key.y == end.y }
-            .minByOrNull { it.value }
-            ?.let { it.key to it.value }!!
-        }
-      }.toMap()
-    }
-
-    val locationIds = idbyDuct.values.toTypedArray()
+    val locationIds = idByDuct.values.toTypedArray()
     val permutations = generatePermutations(locationIds, 0, locationIds.size - 1)
       .filter { it[0] == 0 }
       .map { it.toList().plus(0) }
 
-    val minCost = permutations.minOf { permutation ->
+    findMinCost(routes, ductById, permutations)
+  }
+
+  private fun parseInput(input: Sequence<String>): Pair<Map<Duct, Int>, Map<Int, Duct>> {
+    val HVACLayout = mutableListOf<List<Duct>>()
+
+    val idByDuct = mutableMapOf<Duct, Int>()
+    val ductById = mutableMapOf<Int, Duct>()
+
+    input.forEachIndexed { y, row ->
+      HVACLayout.add(row.mapIndexed { x, c ->
+        val type = if (c == '#') WALL else OPEN
+        Duct(y, x, type).also {
+          if (c.isDigit()) {
+            idByDuct[it] = Character.getNumericValue(c)
+            ductById[Character.getNumericValue(c)] = it
+          }
+        }
+      }.toList())
+    }
+    HVACLayout.forEach { row -> row.forEach { it.withHVACLayout(HVACLayout) } }
+
+    return idByDuct to ductById
+  }
+
+  private fun generateRoutes(idByDuct: Map<Duct, Int>): Map<Duct, Map<Duct, Int>> {
+    val solver = HVACDijkstra()
+
+    return idByDuct.mapValues { (start, _) ->
+      idByDuct.map { (end, _) ->
+        if (end == start) start to 0 else {
+          solver.solve(start, end)
+            .filter { it.key.x == end.x && it.key.y == end.y }
+            .minByOrNull { it.value }
+            ?.let { it.key to it.value }!!
+        }
+      }.toMap()
+    }
+  }
+
+  private fun findMinCost(
+    routes: Map<Duct, Map<Duct, Int>>,
+    ductById: Map<Int, Duct>,
+    permutations: List<List<Int>>
+  ): Int {
+    return permutations.minOf { permutation ->
       permutation.toList().windowed(2).sumOf {
         val source = ductById[it.first()]!!
         val destination = ductById[it.last()]!!
         routes[source]!![destination]!!
       }
     }
-
-    minCost
   }
 
   class HVACDijkstra : GenericIntDijkstra<Duct>()
