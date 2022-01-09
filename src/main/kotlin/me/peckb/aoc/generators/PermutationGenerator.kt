@@ -1,11 +1,11 @@
 package me.peckb.aoc.generators
 
 class PermutationGenerator {
-  fun <T> generatePermutations(data: Array<T>): MutableList<Array<T>> {
+  fun <T> generatePermutations(data: Array<T>): List<Array<T>> {
     return generatePermutations(data, 0, data.size - 1)
   }
 
-  private fun <T> generatePermutations(data: Array<T>, l: Int, r: Int): MutableList<Array<T>> {
+  private fun <T> generatePermutations(data: Array<T>, l: Int, r: Int): List<Array<T>> {
     val permutations = mutableListOf<Array<T>>()
 
     if (l == r) {
