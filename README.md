@@ -35,7 +35,10 @@ as the value which passed the given day/phase combination
 #### 2016
 
 * Day 11
-  * Doing the problem manually helped track down the limitations on allowable moves for Dijkstra 
+  * Doing the problem manually helped track down the limitations on allowable moves for Dijkstra
+    
+* Day 21
+  * By doing the forwards steps one at a time, you have a perfect set of steps for checking your going backwards algorithm
 
 #### 2021
 
