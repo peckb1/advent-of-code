@@ -17,17 +17,12 @@ typealias Value = Int
 
 class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::instruction) { input ->
-    // val registers = mutableMapOf('a' to 7, 'b' to 0, 'c' to 0, 'd' to 0)
-    // registers.followInstructions(input.toMutableList())
-    // registers['a']
-    // DEV NOTE: printing out the values by hand shows us what the calculations are doing
-    factorial(7) + (90 * 73)
+    val registers = mutableMapOf('a' to 7, 'b' to 0, 'c' to 0, 'd' to 0)
+    registers.followInstructions(input.toMutableList())
+    registers['a']
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::instruction) { input ->
-    // val registers = mutableMapOf('a' to 12, 'b' to 0, 'c' to 0, 'd' to 0)
-    // registers.followInstructions(input.toMutableList())
-    // registers['a']
     // DEV NOTE: printing out the values by hand shows us what the calculations are doing
     factorial(12) + (90 * 73)
   }
@@ -40,7 +35,6 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return factorial
   }
 
-  @Suppress("unused")
   private fun MutableMap<Register, Value>.followInstructions(instructions: MutableList<Instruction>) {
     var index = 0
     while (index < instructions.size) {
