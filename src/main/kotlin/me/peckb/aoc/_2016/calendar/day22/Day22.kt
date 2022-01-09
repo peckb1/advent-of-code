@@ -62,10 +62,6 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    grid.forEach {
-      println(it.joinToString(""))
-    }
-
     // find the wall
     val wall = grid.withIndex().maxByOrNull { it.value.count { space -> space == '#' } }!!
     val xValueOfHold = wall.value.indexOf('-')
