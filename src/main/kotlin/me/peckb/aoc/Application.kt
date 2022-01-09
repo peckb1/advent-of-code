@@ -1,6 +1,6 @@
 package me.peckb.aoc
 
-import me.peckb.aoc.generators.SkeletonGenerator
+import me.peckb.aoc.generators.skeleton.SkeletonGenerator
 
 class Application {
   companion object {
