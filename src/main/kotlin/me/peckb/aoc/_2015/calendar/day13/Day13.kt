@@ -3,14 +3,18 @@ package me.peckb.aoc._2015.calendar.day13
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.PermutationGenerator
 import kotlin.math.max
 
-class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
+class Day13 @Inject constructor(
+  private val permutationGenerator: PermutationGenerator,
+  private val generatorFactory: InputGeneratorFactory
+) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::happinessMeasurement) { input ->
     val seatingOptions = generateSeatingOptions(input)
 
     val people = seatingOptions.keys.toTypedArray()
-    val peoplePermutations = generatePermutations(people)
+    val peoplePermutations = permutationGenerator.generatePermutations(people)
 
     findBestArrangement(peoplePermutations, seatingOptions)
   }
@@ -26,7 +30,7 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       seatingOptions[neighbor]!!["me"] = 0
     }
     people = seatingOptions.keys.toTypedArray()
-    val peoplePermutations = generatePermutations(people)
+    val peoplePermutations = permutationGenerator.generatePermutations(people)
 
     findBestArrangement(peoplePermutations, seatingOptions)
   }
@@ -52,29 +56,6 @@ class Day13 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
     return seatingOptions
-  }
-
-  // "borrowed" from 2015 day 09, extract out if we use it a third time
-  private fun <T> generatePermutations(data: Array<T>, l: Int = 0, r: Int = data.size - 1): MutableList<Array<T>> {
-    val permutations = mutableListOf<Array<T>>()
-
-    if (l == r) {
-      permutations.add(data.clone())
-    } else {
-      (l..r).map { i ->
-        swap(data, l, i)
-        permutations.addAll(generatePermutations(data, l + 1, r))
-        swap(data, l, i)
-      }
-    }
-
-    return permutations
-  }
-
-  private fun <T> swap(data: Array<T>, i: Int, j: Int) {
-    val t = data[i]
-    data[i] = data[j]
-    data[j] = t
   }
 
   // "borrowed" from 2015 day 09, extract out if we use it a third time
