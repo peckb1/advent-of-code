@@ -22,7 +22,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     registers['a']
   }
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::instruction) { input ->
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { _ ->
     // DEV NOTE: printing out the values by hand shows us what the calculations are doing
     factorial(12) + (90 * 73)
   }
