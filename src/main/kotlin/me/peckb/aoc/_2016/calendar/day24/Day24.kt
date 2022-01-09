@@ -5,16 +5,20 @@ import me.peckb.aoc._2016.calendar.day24.Day24.DuctType.WALL
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.PermutationGenerator
 import me.peckb.aoc.pathing.GenericIntDijkstra
 import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
 
-class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
+class Day24 @Inject constructor(
+  private val permutationGenerator: PermutationGenerator,
+  private val generatorFactory: InputGeneratorFactory
+  ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val (idByDuct, ductById) = parseInput(input)
     val routes = generateRoutes(idByDuct)
 
     val locationIds = idByDuct.values.toTypedArray()
-    val permutations = generatePermutations(locationIds, 0, locationIds.size - 1)
+    val permutations = permutationGenerator.generatePermutations(locationIds)
       .filter { it[0] == 0 }
       .map { it.toList() }
 
@@ -26,7 +30,7 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val routes = generateRoutes(idByDuct)
 
     val locationIds = idByDuct.values.toTypedArray()
-    val permutations = generatePermutations(locationIds, 0, locationIds.size - 1)
+    val permutations = permutationGenerator.generatePermutations(locationIds)
       .filter { it[0] == 0 }
       .map { it.toList().plus(0) }
 
@@ -103,28 +107,5 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     fun withHVACLayout(layout: List<List<Duct>>) = apply { this.layout = layout }
-  }
-
-  // this is the third time we've done this:  extract out permutation generation
-  private fun generatePermutations(data: Array<Int>, l: Int, r: Int): MutableList<Array<Int>> {
-    val permutations = mutableListOf<Array<Int>>()
-
-    if (l == r) {
-      permutations.add(data.clone())
-    } else {
-      (l..r).map { i ->
-        swap(data, l, i)
-        permutations.addAll(generatePermutations(data, l + 1, r))
-        swap(data, l, i)
-      }
-    }
-
-    return permutations
-  }
-
-  private fun swap(data: Array<Int>, i: Int, j: Int) {
-    val t = data[i]
-    data[i] = data[j]
-    data[j] = t
   }
 }

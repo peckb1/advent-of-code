@@ -1,12 +1,16 @@
 package me.peckb.aoc._2015.calendar.day09
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import me.peckb.aoc.generators.PermutationGenerator
 import javax.inject.Inject
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.math.max
 import kotlin.math.min
 
-class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
+class Day09 @Inject constructor(
+  private val permutationGenerator: PermutationGenerator,
+  private val generatorFactory: InputGeneratorFactory,
+) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     generateDistances(input.toList(), ::min)
   }
@@ -44,7 +48,7 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val mutatingData = Array(distances.size) { MAX_VALUE }.apply {
       (0 until size).forEach { this[it] = it }
     }
-    val permutations = generatePermutations(mutatingData, 0, distances.size - 1)
+    val permutations = permutationGenerator.generatePermutations(mutatingData)
 
     var bestCost = permutations.first().toList().windowed(2).sumOf { (s, d) -> distances[s][d] }
     permutations.drop(1).map { permutation ->
@@ -52,27 +56,5 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
       bestCost = comparator(bestCost, cost)
     }
     return bestCost
-  }
-
-  private fun generatePermutations(data: Array<Int>, l: Int, r: Int): MutableList<Array<Int>> {
-    val permutations = mutableListOf<Array<Int>>()
-
-    if (l == r) {
-      permutations.add(data.clone())
-    } else {
-      (l..r).map { i ->
-        swap(data, l, i)
-        permutations.addAll(generatePermutations(data, l + 1, r))
-        swap(data, l, i)
-      }
-    }
-
-    return permutations
-  }
-
-  private fun swap(data: Array<Int>, i: Int, j: Int) {
-    val t = data[i]
-    data[i] = data[j]
-    data[j] = t
   }
 }
