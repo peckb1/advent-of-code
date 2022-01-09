@@ -13,10 +13,12 @@ class Day02 @Inject constructor(private val generatorFactory: InputGeneratorFact
     input.sumOf { line ->
       var max = MIN_VALUE
       var min = MAX_VALUE
+
       line.split(WHITESPACE_REGEX).map { it.toInt() }.forEach {
         max = max(it, max)
         min = min(it, min)
       }
+
       max - min
     }
   }
@@ -26,11 +28,8 @@ class Day02 @Inject constructor(private val generatorFactory: InputGeneratorFact
       val numbers = line.split(WHITESPACE_REGEX).map { it.toInt() }
       var value = 0
 
-      numbers.indices.forEach { aIndex ->
-        (aIndex + 1 until numbers.size).forEach { bIndex ->
-          val a = numbers[aIndex]
-          val b = numbers[bIndex]
-
+      numbers.forEachIndexed { aIndex, a ->
+        numbers.slice(aIndex + 1 until numbers.size).forEach { b ->
           if (a % b == 0) {
             value = a / b
           } else if (b % a == 0) {
