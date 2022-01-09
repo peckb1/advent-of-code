@@ -3,9 +3,13 @@ package me.peckb.aoc.generators.skeleton
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.KModifier.CONST
+import com.squareup.kotlinpoet.KModifier.INTERNAL
+import com.squareup.kotlinpoet.KModifier.LATEINIT
+import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import me.peckb.aoc.generators.skeleton.SkeletonGenerator.Companion.TEST_DIRECTORY
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -18,13 +22,13 @@ object TestClass {
       .addImport(ClassName("org.junit.jupiter.api", "Assertions"), "assertEquals")
       .addType(
         TypeSpec.classBuilder("Day${day}Test")
-          .addModifiers(KModifier.INTERNAL)
+          .addModifiers(INTERNAL)
           .addType(
             TypeSpec.companionObjectBuilder()
               .addProperty(
                 PropertySpec.builder("DAY_$day", String::class)
-                  .initializer("%S", "${SkeletonGenerator.TEST_DIRECTORY}/resources/$year/day$day.input")
-                  .addModifiers(KModifier.PRIVATE, KModifier.CONST)
+                  .initializer("%S", "$TEST_DIRECTORY/resources/$year/day$day.input")
+                  .addModifiers(PRIVATE, CONST)
                   .build()
               )
               .build()
@@ -38,7 +42,7 @@ object TestClass {
           .addProperty(
             PropertySpec.builder("day$day", ClassName("me.peckb.aoc._$year.calendar.day$day", "Day$day"))
               .addAnnotation(Inject::class)
-              .addModifiers(KModifier.LATEINIT)
+              .addModifiers(LATEINIT)
               .mutable(true)
               .build()
           ).addFunction(
@@ -56,11 +60,11 @@ object TestClass {
       )
       .build()
 
-    file.writeTo(File("${SkeletonGenerator.TEST_DIRECTORY}/kotlin"))
+    file.writeTo(File("$TEST_DIRECTORY/kotlin"))
 
     // remove all the extraneous `public` and `:Unit` modifiers
     // and the safety imports of `kotlin.String` and `kotlin.Unit`
-    val path = Paths.get("${SkeletonGenerator.TEST_DIRECTORY}/kotlin/me/peckb/aoc/_$year/calendar/day$day/Day${day}Test.kt")
+    val path = Paths.get("$TEST_DIRECTORY/kotlin/me/peckb/aoc/_$year/calendar/day$day/Day${day}Test.kt")
     val content = String(Files.readAllBytes(path))
       .replace("public ".toRegex(), "")
       .replace(": Unit".toRegex(), "")
