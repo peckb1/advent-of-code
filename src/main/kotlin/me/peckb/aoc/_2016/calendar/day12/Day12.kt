@@ -15,13 +15,13 @@ typealias Register = Char
 typealias Value = Int
 
 class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
-  fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::day12) { input ->
+  fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::instruction) { input ->
     val registers = mutableMapOf('a' to 0, 'b' to 0, 'c' to 0, 'd' to 0)
     registers.followInstructions(input.toList())
     registers['a']
   }
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day12) { input ->
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::instruction) { input ->
     val registers = mutableMapOf('a' to 0, 'b' to 0, 'c' to 1, 'd' to 0)
     registers.followInstructions(input.toList())
     registers['a']
@@ -56,7 +56,7 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
-  private fun day12(line: String) : Instruction {
+  private fun instruction(line: String) : Instruction {
     val parts = line.split(" ")
 
     return when (parts[0]) {
