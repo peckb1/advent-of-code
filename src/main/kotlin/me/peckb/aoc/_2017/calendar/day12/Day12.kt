@@ -8,55 +8,40 @@ import java.util.ArrayDeque
 class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::house) { input ->
     val neighborhood = input.toList()
-    val zeroGroup = mutableSetOf<Int>()
-    val toExplore = ArrayDeque<Int>()
+    val house = neighborhood[0]
 
-    val origin = neighborhood[0]
-    zeroGroup.add(origin.id)
-    toExplore.addAll(origin.connections)
-
-    while(toExplore.isNotEmpty()) {
-      val next = toExplore.pop()
-      zeroGroup.add(next)
-      neighborhood[next].connections.forEach {
-        if (!zeroGroup.contains(it)) {
-          toExplore.push(it)
-        }
-      }
-    }
-
-    zeroGroup.size
+    val group = makeGroup(house, neighborhood)
+    group.size
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::house) { input ->
     val neighborhood = input.toList()
-    // val zeroGroup = mutableSetOf<Int>()
-    val groups = mutableListOf<MutableSet<Int>>()
+    val groups = mutableListOf<Set<Int>>()
 
-
-    var index = 0
-    while(index < neighborhood.size) {
+    var index = -1
+    while(++index < neighborhood.size) {
       val house = neighborhood[index]
-      if (groups.none { it.contains(house.id) }) {
-        val newGroup = mutableSetOf<Int>()
-        val toExplore = ArrayDeque<Int>()
-
-        newGroup.add(house.id)
-        toExplore.addAll(house.connections)
-
-        while(toExplore.isNotEmpty()) {
-          val next = toExplore.pop()
-          newGroup.add(next)
-          neighborhood[next].connections.forEach {
-            if (!newGroup.contains(it)) toExplore.push(it)
-          }
-        }
-        groups.add(newGroup)
-      }
-      index ++
+      if (groups.none { it.contains(house.id) }) groups.add(makeGroup(house, neighborhood))
     }
 
     groups.size
+  }
+
+  private fun makeGroup(house: House, neighborhood: List<House>): Set<Int> {
+    val newGroup = mutableSetOf<Int>()
+    val toExplore = ArrayDeque<Int>()
+
+    newGroup.add(house.id)
+    toExplore.addAll(house.connections)
+
+    while(toExplore.isNotEmpty()) {
+      val next = toExplore.pop()
+      newGroup.add(next)
+      neighborhood[next].connections.forEach {
+        if (!newGroup.contains(it)) toExplore.push(it)
+      }
+    }
+    return newGroup
   }
 
   private fun house(line: String): House {
