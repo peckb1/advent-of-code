@@ -35,6 +35,13 @@ as the value which passed the given day/phase combination
   * Doing the problem manually helped track down the limitations on allowable moves for Dijkstra
 * Day 21
   * By doing the forwards steps one at a time, you have a perfect set of steps for checking your going backwards algorithm
+* Day 25
+  * Continuously building on the assembunny code was nice through the year 
+
+#### 2017
+
+* Day 07
+ * Building up the tree without going over the list multiple times was a decent experiment
 
 #### 2021
 
@@ -60,6 +67,10 @@ as the value which passed the given day/phase combination
 #### 2016
 
 * Day 11 Manually solving it first, made creating neighbors for Dijkstra trivial.
+
+#### 2017
+
+* Day 07 Building up the tree piece meal, having a secondary list of nodes that needed to be filled out as we came across them during traversal
 
 #### 2021
 
