@@ -23,7 +23,7 @@ jobs:
               run: ./gradlew --no-daemon build test
 
             - name: Publish Unit Test Results
-              uses: EnricoMi/publish-unit-test-result-action@v1
+              uses: EnricoMi/publish-unit-test-result-action@v1.26
               if: always()
               with:
                 files: build/test-results/**/*.xml
