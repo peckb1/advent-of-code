@@ -72,4 +72,3 @@ class Day16 @Inject constructor(private val generatorFactory: InputGeneratorFact
     const val NUM_DANCES = 1_000_000_000
   }
 }
-
