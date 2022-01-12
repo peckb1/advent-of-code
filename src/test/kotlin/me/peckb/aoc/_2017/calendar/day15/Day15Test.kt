@@ -19,12 +19,12 @@ internal class Day15Test {
 
   @Test
   fun testDay15PartOne() {
-    assertEquals(-1, day15.partOne(DAY_15))
+    assertEquals(592, day15.partOne(DAY_15))
   }
 
   @Test
   fun testDay15PartTwo() {
-    assertEquals(-1, day15.partTwo(DAY_15))
+    assertEquals(320, day15.partTwo(DAY_15))
   }
 
   companion object {
