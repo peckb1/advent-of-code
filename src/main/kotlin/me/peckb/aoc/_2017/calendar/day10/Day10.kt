@@ -25,7 +25,7 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
   }
 
-  private fun runInput(lengths: List<Int>, times: Int): List<Int> {
+  fun runInput(lengths: List<Int>, times: Int): List<Int> {
     val data = (0..255).map { it }.toMutableList()
 
     var currentPosition = 0
