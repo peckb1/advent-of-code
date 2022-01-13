@@ -10,6 +10,16 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 
 class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val sewer = createSewer(input)
+    followPipes(sewer).first
+  }
+
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val sewer = createSewer(input)
+    followPipes(sewer).second
+  }
+
+  private fun createSewer(input: Sequence<String>): Array<Array<Char>> {
     val pipes = input.toList()
     val maxY = pipes.size
     val maxX = pipes.maxOf { it.length }
@@ -17,6 +27,10 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val sewer = Array(maxY + 1) { Array(maxX + 1) { ' ' } }
     pipes.forEachIndexed { y, row -> row.forEachIndexed { x, c -> sewer[y][x] = c } }
 
+    return sewer
+  }
+
+  private fun followPipes(sewer: Array<Array<Char>>): Pair<String, Int> {
     val lettersFound = mutableListOf<Char>()
 
     var y = 0
@@ -24,7 +38,10 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var done = false
     var direction = DOWN
 
+    var moves = 0
+
     while(!done) {
+      moves++
       when (direction) {
         DOWN -> {
           y++
@@ -109,11 +126,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    lettersFound.joinToString("")
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    -1
+    return lettersFound.joinToString("") to moves
   }
 
   enum class Direction { DOWN, RIGHT, LEFT, UP }
