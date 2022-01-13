@@ -2,6 +2,7 @@ package me.peckb.aoc._2017.calendar.day19
 
 import me.peckb.aoc._2017.calendar.day19.Day19.Direction.DOWN
 import me.peckb.aoc._2017.calendar.day19.Day19.Direction.LEFT
+import me.peckb.aoc._2017.calendar.day19.Day19.Direction.LOST
 import me.peckb.aoc._2017.calendar.day19.Day19.Direction.RIGHT
 import me.peckb.aoc._2017.calendar.day19.Day19.Direction.UP
 import javax.inject.Inject
@@ -40,94 +41,47 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     var moves = 0
 
+    fun checkIfDone(c: Char) {
+      if (c == ' ') {
+        done = true
+      } else {
+        lettersFound.add(c)
+      }
+    }
+
     while(!done) {
       moves++
       when (direction) {
-        DOWN -> {
-          y++
+        DOWN, UP -> {
+          if (direction == DOWN) y++ else y--
           when (val c = sewer[y][x]) {
             '|', '-' -> { /* ignore and keep going */ }
             '+' -> {
               val l = sewer[y][x - 1]
               val r = sewer[y][x + 1]
-              direction = if (l == ' ') { RIGHT } else if (r == ' ') { LEFT } else {
-                throw IllegalStateException("Unknown turn $c ($y, $x)")
-              }
+              direction = if (l == ' ') { RIGHT } else if (r == ' ') { LEFT } else { LOST }
             }
-            else -> {
-              if (c == ' ') {
-                done = true
-              } else {
-                lettersFound.add(c)
-              }
-            }
+            else -> checkIfDone(c)
           }
         }
-        RIGHT -> {
-          x++
+        RIGHT, LEFT -> {
+          if (direction == RIGHT) x++ else x--
           when (val c = sewer[y][x]) {
             '|', '-' -> { /* ignore and keep going */ }
             '+' -> {
               val u = sewer[y - 1][x]
               val d = sewer[y + 1][x]
-              direction = if (u == ' ') { DOWN } else if (d == ' ') { UP } else {
-                throw IllegalStateException("Unknown turn $c ($y, $x)")
-              }
+              direction = if (u == ' ') { DOWN } else if (d == ' ') { UP } else { LOST }
             }
-            else -> {
-              if (c == ' ') {
-                done = true
-              } else {
-                lettersFound.add(c)
-              }
-            }
+            else -> checkIfDone(c)
           }
         }
-        LEFT -> {
-          x--
-          when (val c = sewer[y][x]) {
-            '|', '-' -> { /* ignore and keep going */ }
-            '+' -> {
-              val u = sewer[y - 1][x]
-              val d = sewer[y + 1][x]
-              direction = if (u == ' ') { DOWN } else if (d == ' ') { UP } else {
-                throw IllegalStateException("Unknown turn $c ($y, $x)")
-              }
-            }
-            else -> {
-              if (c == ' ') {
-                done = true
-              } else {
-                lettersFound.add(c)
-              }
-            }
-          }
-        }
-        UP -> {
-          y--
-          when (val c = sewer[y][x]) {
-            '|', '-' -> { /* ignore and keep going */ }
-            '+' -> {
-              val l = sewer[y][x - 1]
-              val r = sewer[y][x + 1]
-              direction = if (l == ' ') { RIGHT } else if (r == ' ') { LEFT } else {
-                throw IllegalStateException("Unknown turn $c ($y, $x)")
-              }
-            }
-            else -> {
-              if (c == ' ') {
-                done = true
-              } else {
-                lettersFound.add(c)
-              }
-            }
-          }
-        }
+        LOST -> throw IllegalStateException("Help, we got lost!")
       }
     }
 
     return lettersFound.joinToString("") to moves
   }
 
-  enum class Direction { DOWN, RIGHT, LEFT, UP }
+  enum class Direction { DOWN, RIGHT, LEFT, UP, LOST }
 }
