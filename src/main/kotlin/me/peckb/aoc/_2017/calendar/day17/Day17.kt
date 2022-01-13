@@ -20,6 +20,17 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { input ->
-    -1
+    val stepSize = input.toInt()
+
+    var currentIndex = 0
+    var secondIndex = -1
+
+    (1 .. 50_000_000).forEach { n ->
+      val indexToInsertAfter = (currentIndex + stepSize) % n
+      currentIndex = indexToInsertAfter + 1
+      if (currentIndex == 1) secondIndex = n
+    }
+
+    secondIndex
   }
 }
