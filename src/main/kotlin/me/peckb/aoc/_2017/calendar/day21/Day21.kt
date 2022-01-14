@@ -35,9 +35,11 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val newImages = (0 until size step chunkSize).map { yStart ->
       (0 until size step chunkSize).map { xStart ->
         val imageChunk = (yStart until (yStart + chunkSize)).map { y ->
-          (xStart until (xStart + chunkSize)).map { x ->
-            image[y][x]
-          }.joinToString("")
+          buildString {
+            (xStart until (xStart + chunkSize)).map { x ->
+              append(image[y][x])
+            }
+          }
         }
         translate(imageChunk)
       }
@@ -71,10 +73,14 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
   data class Translation(val size: Int, val source: String, val destination: String)
 
   private fun List<String>.rotate90(): List<String> {
+    val parent = this
+
     return indices.map { x ->
-      ((size - 1) downTo 0).map { y ->
-        this[y][x]
-      }.joinToString("")
+      buildString {
+        ((size - 1) downTo 0).forEach { y ->
+          append(parent[y][x])
+        }
+      }
     }
   }
 
