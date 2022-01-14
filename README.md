@@ -41,7 +41,9 @@ as the value which passed the given day/phase combination
 #### 2017
 
 * Day 07
- * Building up the tree without going over the list multiple times was a decent experiment
+  * Building up the tree without going over the list multiple times was a decent experiment
+* Day 14
+  * A proper "call the method you wrote in a previous day" build a solution
 
 #### 2021
 
