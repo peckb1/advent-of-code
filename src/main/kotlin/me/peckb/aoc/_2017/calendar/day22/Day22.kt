@@ -10,37 +10,20 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 
 class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val growth = 100
+    val start = input.toList()
+    val map = setupMap(start)
+    val bursts = PART_ONE_BURSTS
 
-    val center = input.toList()
-    val newWorldSize = (center.size * growth) + 1
-    val map = Array(newWorldSize) { Array(newWorldSize) { '.' } }
-
-    center.indices.forEach { y ->
-      center.indices.forEach { x ->
-        if (center[y][x] == '#') {
-          val yy = (newWorldSize / 2) - (center.size / 2) + y
-          val xx = (newWorldSize / 2) - (center.size / 2) + x
-          map[yy][xx] = '#'
-        }
-      }
-    }
-
-    val bursts = 10_000
-    var wormX = newWorldSize / 2
-    var wormY = newWorldSize / 2
+    var wormX = INFINITE / 2
+    var wormY = INFINITE / 2
     var direction = UP
-
     var infectionsCount = 0
 
     repeat(bursts) {
-      if (map[wormY][wormX] == '.') {
-        direction = direction.turnLeft()
-        map[wormY][wormX] = '#'
-        infectionsCount++
-      } else {
-        direction = direction.turnRight()
-        map[wormY][wormX] = '.'
+      map[wormY][wormX] = when(map[wormY][wormX]) {
+        '.' -> { direction = direction.turnLeft(); infectionsCount++; '#' }
+        '#' -> { direction = direction.turnRight(); '.' }
+        else -> throw IllegalStateException("Unknown state: ${map[wormY][wormX]}")
       }
       when (direction) {
         UP -> wormY--
@@ -54,44 +37,22 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val growth = 100
+    val start = input.toList()
+    val map = setupMap(start)
+    val bursts = PART_TWO_BURSTS
 
-    val center = input.toList()
-    val newWorldSize = (center.size * growth) + 1
-    val map = Array(newWorldSize) { Array(newWorldSize) { '.' } }
-
-    center.indices.forEach { y ->
-      center.indices.forEach { x ->
-        if (center[y][x] == '#') {
-          val yy = (newWorldSize / 2) - (center.size / 2) + y
-          val xx = (newWorldSize / 2) - (center.size / 2) + x
-          map[yy][xx] = '#'
-        }
-      }
-    }
-
-    val bursts = 10_000_000
-    var wormX = newWorldSize / 2
-    var wormY = newWorldSize / 2
+    var wormX = INFINITE / 2
+    var wormY = INFINITE / 2
     var direction = UP
-
     var infectionsCount = 0
 
     repeat(bursts) {
-      if (map[wormY][wormX] == '.') {
-        direction = direction.turnLeft()
-        map[wormY][wormX] = 'W'
-      } else if (map[wormY][wormX] == 'W') {
-        map[wormY][wormX] = '#'
-        infectionsCount++
-      } else if (map[wormY][wormX] == '#') {
-        direction = direction.turnRight()
-        map[wormY][wormX] = 'F'
-      } else if (map[wormY][wormX] == 'F') {
-        direction = direction.reverse()
-        map[wormY][wormX] = '.'
-      } else {
-        throw IllegalStateException("Unknown state: ${map[wormY][wormX]}")
+      map[wormY][wormX] = when(map[wormY][wormX]) {
+        '.' -> { direction = direction.turnLeft(); 'W' }
+        'W' -> { infectionsCount++; '#' }
+        '#' -> { direction = direction.turnRight(); 'F' }
+        'F' -> { direction = direction.reverse(); '.' }
+        else -> throw IllegalStateException("Unknown state: ${map[wormY][wormX]}")
       }
       when (direction) {
         UP -> wormY--
@@ -102,6 +63,23 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     infectionsCount
+  }
+
+  private fun setupMap(start: List<String>): Array<Array<Char>> {
+    val newWorldSize = INFINITE
+    val map = Array(newWorldSize) { Array(newWorldSize) { '.' } }
+
+    start.indices.forEach { y ->
+      start.indices.forEach { x ->
+        if (start[y][x] == '#') {
+          val yy = (newWorldSize / 2) - (start.size / 2) + y
+          val xx = (newWorldSize / 2) - (start.size / 2) + x
+          map[yy][xx] = '#'
+        }
+      }
+    }
+
+    return map
   }
 
   enum class Direction { UP, RIGHT, DOWN, LEFT;
@@ -131,5 +109,11 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
         LEFT -> RIGHT
       }
     }
+  }
+
+  companion object {
+    const val INFINITE = 501
+    const val PART_ONE_BURSTS = 10_000
+    const val PART_TWO_BURSTS = 10_000_000
   }
 }
