@@ -31,15 +31,9 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun day20(line: String): Particle {
     val (locationString, velocityString, accelerationString) = line.split(", ")
 
-    val location = locationString.substringAfter("<").dropLast(1).split(",").let {
-      Vector(it[0].toLong(), it[1].toLong(), it[2].toLong())
-    }
-    val velocity = velocityString.substringAfter("<").dropLast(1).split(",").let {
-      Vector(it[0].toLong(), it[1].toLong(), it[2].toLong())
-    }
-    val acceleration = accelerationString.substringAfter("<").dropLast(1).split(",").let {
-      Vector(it[0].toLong(), it[1].toLong(), it[2].toLong())
-    }
+    val location = locationString.toVector()
+    val velocity = velocityString.toVector()
+    val acceleration = accelerationString.toVector()
 
     return Particle(location, velocity, acceleration)
   }
@@ -61,9 +55,14 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun MutableList<Particle>.removeItemsAtSameLocation() {
     val groupedParticles = this.groupBy { it.location }
     groupedParticles.forEach { (_, data) ->
-      if (data.size > 1) {
-        data.forEach { remove(it) }
-      }
+      if (data.size > 1) removeAll(data)
     }
   }
+
+  private fun String.toVector() =
+    substringAfter("<")
+      .dropLast(1)
+      .split(",")
+      .map { it.toLong() }
+      .let { Vector(it[0], it[1], it[2]) }
 }
