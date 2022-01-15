@@ -8,17 +8,23 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::day24) { input ->
     val components = input.mapIndexed { index, component -> component.apply { id = index } }.toList()
 
-    buildBridges(components).maxOf { it }
+    buildBridges(components).maxOf { it.second }
   }
 
-  private fun buildBridges(components: List<Component>): List<Int> {
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day24) { input ->
+    val components = input.mapIndexed { index, component -> component.apply { id = index } }.toList()
+
+    buildBridges(components).groupBy { it.first }.maxByOrNull { it.key }?.value?.maxOf { it.second }
+  }
+
+  private fun buildBridges(components: List<Component>): List<Pair<Int, Int>> {
     return buildBridges(0, mutableSetOf(), components)
   }
 
-  private fun buildBridges(endValue: Int, currentBridgeComponents: MutableSet<Component>, allComponents: List<Component>): List<Int> {
+  private fun buildBridges(endValue: Int, currentBridgeComponents: MutableSet<Component>, allComponents: List<Component>): List<Pair<Int, Int>> {
     val nextPieces = allComponents.filter { (it.a == endValue || it.b == endValue) && !currentBridgeComponents.contains(it) }
 
-    if (nextPieces.isEmpty()) return listOf(currentBridgeComponents.strength())
+    if (nextPieces.isEmpty()) return listOf(currentBridgeComponents.size to currentBridgeComponents.strength())
 
     return nextPieces.flatMap { component ->
       currentBridgeComponents.add(component)
@@ -30,10 +36,6 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
         currentBridgeComponents.remove(component)
       }
     }
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day24) { input ->
-    -1
   }
 
   private fun day24(line: String): Component {
