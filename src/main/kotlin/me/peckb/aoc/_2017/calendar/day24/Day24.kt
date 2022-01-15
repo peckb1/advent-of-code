@@ -43,9 +43,9 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return Component(null, a, b)
   }
 
-  data class Component(var id: Int?, val a: Int, val b: Int)
-
-  private fun Set<Component>.strength(): Int {
-    return fold(0) { acc, component -> acc + component.a + component.b }
+  data class Component(var id: Int?, val a: Int, val b: Int) {
+    val strength = a + b
   }
+
+  private fun Set<Component>.strength() = sumOf { it.strength }
 }
