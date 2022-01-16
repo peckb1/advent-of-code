@@ -80,6 +80,6 @@ class Day04 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   companion object {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
   }
 }
