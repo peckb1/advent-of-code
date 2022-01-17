@@ -35,19 +35,19 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var workers = 5
     val completed = mutableSetOf<StepId>()
     val processing = mutableSetOf<StepId>()
-    val jobs = mutableListOf<(Int) -> StepId?>()
+    val jobs = mutableMapOf<StepId, (Int) -> Boolean>()
+
+    fun Step.notBeingProcessed() = !processing.contains(id)
+    fun Step.notCompleted() = !completed.contains(id)
+    fun Step.notBlocked() = blockedBy.all { completed.contains(it.id) }
+
+    fun createJob(timeToStop: Int) = { currentTime: Int -> currentTime == timeToStop }
 
     while (completed.size != steps.size) {
-      fun Step.notBeingProcessed() = !processing.contains(id)
-      fun Step.notCompleted() = !completed.contains(id)
-      fun Step.notBlocked() = blockedBy.all { completed.contains(it.id) }
-
       // we also need to check if a step is being processed, to not do double work
       val nextSteps = steps.values
         .filter { it.notCompleted() && it.notBeingProcessed() && it.notBlocked() }
         .sortedBy { it.id }
-
-      fun Step.createJob(timeToStop: Int) = { currentTime: Int -> id.takeIf { currentTime == timeToStop } }
 
       // for part two - we need to do many at a time, so instead of just taking the first
       // iterate over the entire list, and make a job that will finish after processing
@@ -55,7 +55,7 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
         workers--
         processing.add(step.id)
         val timeToStop = time + 60 + (step.id[0].code - 64)
-        jobs.add(step.createJob(timeToStop))
+        jobs[step.id] = createJob(timeToStop)
       }
 
       // once all available items are being worked on (or we ran out of workers) increment the time
@@ -63,11 +63,10 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
       // at every time interval, check to see if we have any workers finished, and ready to
       // mark their jbo as done, and then go back into the worker pool
-      val finishedJobs = jobs.mapNotNull { job -> job(time)?.let { it to job } }
-      finishedJobs.forEach { (finishedStepId, finishedJob) ->
-        workers++;
-        jobs.remove(finishedJob)
-        completed.add(finishedStepId)
+      jobs.filter { (_, job) -> job(time) }.forEach { (stepId, _) ->
+        workers++
+        jobs.remove(stepId)
+        completed.add(stepId)
       }
     }
 
