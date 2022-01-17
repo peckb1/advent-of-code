@@ -10,110 +10,68 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val steps = generateSteps(input)
 
-    val stepsReadyToComplete = sortedSetOf<StepId>()
-    val stepsNeedingHelp = sortedSetOf<StepId>()
-    val completedSteps = linkedSetOf<StepId>()
-    steps.values.filter { it.blockedBy.isEmpty() }.forEach { stepsReadyToComplete.add(it.id) }
+    val completed = linkedSetOf<StepId>()
 
-    while (stepsReadyToComplete.isNotEmpty() || stepsNeedingHelp.isNotEmpty()) {
-      if (stepsReadyToComplete.isNotEmpty()) {
-        val stepId = stepsReadyToComplete.first().also {
-          completedSteps.add(it)
-          stepsReadyToComplete.remove(it)
-        }
-        steps[stepId]?.blocks?.forEach { step ->
-          if (step.blockedBy.all { completedSteps.contains(it.id) }) {
-            stepsReadyToComplete.add(step.id)
-            stepsNeedingHelp.remove(step.id)
-          } else {
-            stepsNeedingHelp.add(step.id)
-          }
-        }
-      } else { // stepsNeedingHelp.isNotEmpty()
-        val stepId = stepsNeedingHelp.first().also {
-          stepsNeedingHelp.remove(it)
-        }
-        steps[stepId]?.blockedBy?.forEach { step ->
-          if (step.blockedBy.all { completedSteps.contains(it.id) }) {
-            stepsReadyToComplete.add(step.id)
-            stepsNeedingHelp.remove(step.id)
-          } else {
-            stepsNeedingHelp.add(step.id)
-          }
-        }
-      }
+    while (completed.size != steps.size) {
+      fun Step.notCompleted() = !completed.contains(id)
+      fun Step.notBlocked() = blockedBy.all { completed.contains(it.id) }
+
+      val nextSteps = steps.values
+        .filter { it.notCompleted() && it.notBlocked() }
+        .sortedBy { it.id }
+
+      // for part one - we do one at a time
+      val nextStep = nextSteps.first()
+      completed.add(nextStep.id)
     }
 
-    completedSteps.joinToString("")
+    completed.joinToString("")
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     val steps = generateSteps(input)
 
-    val stepsReadyToComplete = sortedSetOf<StepId>()
-    val stepsNeedingHelp = sortedSetOf<StepId>()
-    val completedSteps = linkedSetOf<StepId>()
-    val stepsBeingProcessed = mutableSetOf<StepId>()
-    steps.values.filter { it.blockedBy.isEmpty() }.forEach { stepsReadyToComplete.add(it.id) }
-
     var time = 0
     var workers = 5
-    val jobs = mutableListOf<(Int) -> Boolean>()
+    val completed = mutableSetOf<StepId>()
+    val processing = mutableSetOf<StepId>()
+    val jobs = mutableListOf<(Int) -> StepId?>()
 
-    while (stepsReadyToComplete.isNotEmpty() || stepsNeedingHelp.isNotEmpty() || completedSteps.size != steps.size) {
-      val jobsToClean = jobs.filter { it(time) }
-      jobs.removeAll(jobsToClean)
+    while (completed.size != steps.size) {
+      fun Step.notBeingProcessed() = !processing.contains(id)
+      fun Step.notCompleted() = !completed.contains(id)
+      fun Step.notBlocked() = blockedBy.all { completed.contains(it.id) }
 
-      while (stepsReadyToComplete.isNotEmpty() && workers > 0) {
-        val stepId = stepsReadyToComplete.first()
-        stepsReadyToComplete.remove(stepId)
-        stepsBeingProcessed.add(stepId)
-        val timeToEnd = time + 60 + (stepId[0].code - 64)
+      // we also need to check if a step is being processed, to not do double work
+      val nextSteps = steps.values
+        .filter { it.notCompleted() && it.notBeingProcessed() && it.notBlocked() }
+        .sortedBy { it.id }
+
+      fun Step.createJob(timeToStop: Int) = { currentTime: Int -> id.takeIf { currentTime == timeToStop } }
+
+      // for part two - we need to do many at a time, so instead of just taking the first
+      // iterate over the entire list, and make a job that will finish after processing
+      nextSteps.take(workers).forEach { step ->
         workers--
-        val job: (Int) -> Boolean = { t ->
-          val allDone = t == timeToEnd
-          if (allDone) {
-            workers++
-            completedSteps.add(stepId)
-            stepsReadyToComplete.remove(stepId)
-            steps[stepId]?.blocks?.forEach { step ->
-              if (step.blockedBy.all { completedSteps.contains(it.id) }) {
-                if (!completedSteps.contains(step.id) && !stepsBeingProcessed.contains(step.id)) {
-                  stepsReadyToComplete.add(step.id)
-                }
-                stepsNeedingHelp.remove(step.id)
-              } else {
-                stepsNeedingHelp.add(step.id)
-              }
-            }
-          }
-          allDone
-        }
-        jobs.add(job)
+        processing.add(step.id)
+        val timeToStop = time + 60 + (step.id[0].code - 64)
+        jobs.add(step.createJob(timeToStop))
       }
 
-      if(stepsNeedingHelp.isNotEmpty() && workers > 0) {
-        val ids = stepsNeedingHelp.toList()
-        ids.forEach { stepId ->
-          stepsNeedingHelp.remove(stepId)
-          steps[stepId]?.blockedBy?.forEach { step ->
-            if (step.blockedBy.all { completedSteps.contains(it.id) }) {
-              if (!completedSteps.contains(step.id) && !stepsBeingProcessed.contains(step.id)) {
-                stepsReadyToComplete.add(step.id)
-              }
-              stepsNeedingHelp.remove(step.id)
-            } else {
-              stepsNeedingHelp.add(step.id)
-            }
-          }
-        }
-      }
-
+      // once all available items are being worked on (or we ran out of workers) increment the time
       time++
+
+      // at every time interval, check to see if we have any workers finished, and ready to
+      // mark their jbo as done, and then go back into the worker pool
+      val finishedJobs = jobs.mapNotNull { job -> job(time)?.let { it to job } }
+      finishedJobs.forEach { (finishedStepId, finishedJob) ->
+        workers++;
+        jobs.remove(finishedJob)
+        completed.add(finishedStepId)
+      }
     }
 
-    // one over - since we always increment time, even the last loop which finished
-    time - 1
+    time
   }
 
   private fun generateSteps(input: Sequence<String>): MutableMap<StepId, Step> {
@@ -138,6 +96,6 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
   data class Step(
     val id: StepId,
     val blockedBy: MutableList<Step> = mutableListOf(),
-    val blocks: MutableList<Step> = mutableListOf(),
+    val blocks: MutableList<Step> = mutableListOf()
   )
 }
