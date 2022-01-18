@@ -49,26 +49,10 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
     (1..totalMarbles * 100).forEach { marbleValue ->
       if (marbleValue % MARBLE_INTERVAL == 0) {
         repeat(JUMP_BACK_COUNT) { currentNode = currentNode.parent }
-        val score = (marbleValue + currentNode.value).toLong()
-        scores.merge(currentPlayer, score, Long::plus)
-
-        val parent = currentNode.parent
-        val child = currentNode.child
-        parent.child = child
-        child.parent = parent
-        currentNode = child
+        (marbleValue + currentNode.value).toLong().also { scores.merge(currentPlayer, it, Long::plus) }
+        currentNode = currentNode.removeSelf()
       } else {
-        val left = currentNode.child
-        val right = left.child
-
-        val newNode = Node(marbleValue)
-
-        newNode.parent = left
-        newNode.child = right
-        right.parent = newNode
-        left.child = newNode
-
-        currentNode = newNode
+        currentNode = Node(marbleValue).insertAfter(currentNode.child)
       }
 
       currentPlayer++
@@ -89,6 +73,19 @@ class Day09 @Inject constructor(private val generatorFactory: InputGeneratorFact
   data class Node(val value: Int) {
     lateinit var parent: Node
     lateinit var child: Node
+
+    fun removeSelf(): Node {
+      parent.child = child
+      child.parent = parent
+      return child
+    }
+
+    fun insertAfter(newParent: Node) = apply {
+      parent = newParent
+      child = newParent.child
+      newParent.child = this
+      child.parent = this
+    }
   }
 
   companion object {
