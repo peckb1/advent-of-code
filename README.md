@@ -45,6 +45,11 @@ as the value which passed the given day/phase combination
 * Day 14
   * A proper "call the method you wrote in a previous day" build a solution
 
+#### 2018
+
+* Day 09
+  * Implementing a new data structure ([CircularList](https://en.wikipedia.org/wiki/Linked_list#Circular_linked_list)) to solve a problem trivially is always nice learning experience 
+
 #### 2021
 
 * Day 07
@@ -74,6 +79,10 @@ as the value which passed the given day/phase combination
 
 * Day 07 Building up the tree piece meal, having a secondary list of nodes that needed to be filled out as we came across them during traversal
 
+#### 2018
+
+* Day 09 Creating a circular linked was trivial, and simplified the problem immensely.  
+
 #### 2021
 
 * The double window for Day01 part 02
@@ -89,5 +98,6 @@ as the value which passed the given day/phase combination
   * And subsequent nice looking test output for the command line.
 * Coding up a better abstraction in Part one *often* leads to a much simpler part two instead of just hacking together a solution.
 * Don't try to recreate Dikjstra, or A* from scratch. If you know you need to find a path, just check the pseudocode in Wikipedia
+  * Similarly, check for common "weird" data structures on wikipedia, like circular lists
 * Sometimes manually solving the problem can help limit your neighbor generation for pathing algorithms
 * Coroutines are a good way to run slow, non pure-maths asynchronously.
