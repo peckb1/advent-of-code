@@ -45,6 +45,8 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
     //
     // But this would take a while to implement,
     // and use up a lot of memory storing each individual grid as we went along
+    //
+    // or if you are aware of the Summed-area table data structure, you can just use that :facepalm:
     (14..16).forEach { gridSize ->
       (0 until 300 - gridSize).forEach { y ->
         (0 until 300 - gridSize).forEach { x ->
