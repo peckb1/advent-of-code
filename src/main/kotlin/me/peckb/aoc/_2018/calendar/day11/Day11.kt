@@ -43,7 +43,8 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
     // those squares of size 93 would have been calculated using 3 squares of 31 (its factors are 3, 31)
     // and those squares of size 31 would have originally been calculated individually as 31 is prime
     //
-    // But this would take a while to implement :P
+    // But this would take a while to implement,
+    // and use up a lot of memory storing each individual grid as we went along
     (14..16).forEach { gridSize ->
       (0 until 300 - gridSize).forEach { y ->
         (0 until 300 - gridSize).forEach { x ->
