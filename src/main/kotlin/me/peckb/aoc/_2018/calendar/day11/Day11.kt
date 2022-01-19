@@ -8,7 +8,12 @@ import kotlin.Int.Companion.MIN_VALUE
 class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { input ->
     val serialNumber = input.toInt()
-    val fuelCells = createFuelCells(serialNumber)
+    val fuelCells = Array(300) { Array(300) { 0 } }
+    repeat(300) { y ->
+      repeat(300) { x ->
+        fuelCells[y][x] = calculatePowerLevel(x, y, serialNumber)
+      }
+    }
 
     var maxFuelCellArea: Pair<Pair<Int, Int>, Int> = (-1 to -1) to MIN_VALUE
     (1 until 299).forEach { y ->
@@ -18,7 +23,7 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
             fuelCells[yy][xx]
           }
         }
-        if (sum > maxFuelCellArea.second) maxFuelCellArea = (x - 1 to y - 1) to sum.toInt()
+        if (sum > maxFuelCellArea.second) maxFuelCellArea = (x - 1 to y - 1) to sum
       }
     }
 
@@ -27,35 +32,30 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { input ->
     val serialNumber = input.toInt()
-    val fuelCells = createFuelCells(serialNumber)
+    val summedAreaFuelCells = Array(300) { Array(300) { 0 } }
+    repeat(300) { y ->
+      repeat(300) { x ->
+        val ul = summedAreaFuelCells.get(y - 1, x - 1) ?: 0
+        val ur = summedAreaFuelCells.get(y - 1, x) ?: 0
+        val ll = summedAreaFuelCells.get(y, x - 1) ?: 0
+        val lr = calculatePowerLevel(x, y, serialNumber)
 
-    var maxFuelCellArea: Triple<Pair<Int, Int>, Long, Int> = Triple((-1 to -1), MIN_VALUE.toLong(), 0)
-    // the original search in (3 .. 300) took about six minutes
-    // in theory we could keep track of every m.n grid up to 1/2 the grid
-    // and then use the sums of smaller squares to make larger squares.
-    //
-    // for example 159 has a prime factorization of (3, 53)
-    // so if we take the smallest prime (3) we know we can use 3 squares of 53 (159 / 3)
-    // those size 53 squares would have been calculated individually though as it is a prime number
-    //
-    // or 273 has a prime factorization of (3, 3, 31)
-    // so if we take the smallest prime (3) we know we can use 3 squares of 93 (273 / 3)
-    // those squares of size 93 would have been calculated using 3 squares of 31 (its factors are 3, 31)
-    // and those squares of size 31 would have originally been calculated individually as 31 is prime
-    //
-    // But this would take a while to implement,
-    // and use up a lot of memory storing each individual grid as we went along
-    //
-    // or if you are aware of the Summed-area table data structure, you can just use that :facepalm:
-    (14..16).forEach { gridSize ->
+        summedAreaFuelCells[y][x] = lr + ll + ur - ul
+      }
+    }
+
+    var maxFuelCellArea = Triple((-1 to -1), MIN_VALUE, 0)
+
+    (1..300).forEach { gridSize ->
       (0 until 300 - gridSize).forEach { y ->
         (0 until 300 - gridSize).forEach { x ->
-          val sum = (y..y + (gridSize - 1)).sumOf { yy ->
-            (x..x + (gridSize - 1)).sumOf { xx ->
-              fuelCells[yy][xx]
-            }
-          }
-          if (sum > maxFuelCellArea.second) maxFuelCellArea = Triple(x to y, sum, gridSize)
+          val ul = summedAreaFuelCells[y][x]
+          val ur = summedAreaFuelCells[y][x + gridSize]
+          val ll = summedAreaFuelCells[y + gridSize][x]
+          val lr = summedAreaFuelCells[y + gridSize][x + gridSize]
+
+          val sum = lr + ul - ur - ll
+          if (sum > maxFuelCellArea.second) maxFuelCellArea = Triple(x + 1 to y + 1, sum, gridSize)
         }
       }
     }
@@ -63,18 +63,20 @@ class Day11 @Inject constructor(private val generatorFactory: InputGeneratorFact
     Triple(maxFuelCellArea.first.first, maxFuelCellArea.first.second, maxFuelCellArea.third)
   }
 
-  private fun createFuelCells(serialNumber: Int): Array<Array<Long>> {
-    val fuelCells = Array(300) { Array(300) { 0L } }
-    repeat(300) { y ->
-      repeat(300) { x ->
-        val rackID = (x + 10).toLong()
-        var powerLevel = rackID * y
-        powerLevel += serialNumber
-        powerLevel *= rackID
-        val hundredsDigit = (powerLevel % 1000) / 100
-        fuelCells[y][x] = hundredsDigit - 5
-      }
+  private fun calculatePowerLevel(x: Int, y: Int, serialNumber: Int): Int {
+    val rackID = (x + 10)
+    var powerLevel = rackID * y
+    powerLevel += serialNumber
+    powerLevel *= rackID
+    val hundredsDigit = (powerLevel % 1000) / 100
+    return hundredsDigit - 5
+  }
+
+  private fun <T> Array<Array<T>>.get(y: Int, x: Int): T? {
+    return if (y in (indices) && x in (this[y].indices)) {
+      this[y][x]
+    } else {
+      null
     }
-    return fuelCells
   }
 }
