@@ -19,21 +19,30 @@ class Day12 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    //
     val data = input.toList()
     var state = data.first().substringAfter("initial state: ")
     val instructions = data.drop(2).associate { it.toInstruction() }
 
-    // DEV NOTE: looking at the output, we get to a steady state after 111 iterations
-    val iterations = 111
-    repeat(iterations) { i ->
-      state = "...$state...".windowed(5).joinToString("") { key -> instructions[key] ?: "." }
-    }
-    val count = count(state, iterations)
+    var iterations = 0
+    var lastCount = 0L
+    var delta = 0L
+    var foundSteadyState = false
 
-    // once we have our steady state, each iteration just adds 23 points
-    // so find out how many iterations are between us and the target, and add 23 for each
-    (50_000_000_000 - iterations) * 23 + count
+    while(!foundSteadyState) {
+      iterations++
+      state = "...$state...".windowed(5).joinToString("") { key -> instructions[key] ?: "." }
+      val count = count(state, iterations)
+      if (count - lastCount == delta) {
+        foundSteadyState = true
+      }
+      delta = count - lastCount
+      lastCount = count
+    }
+
+    // once we have our steady state, each iteration just adds `delta` points
+    // so find out how many iterations are between us and the target
+    // and add a `delta for each one
+    (50_000_000_000 - iterations) * delta + lastCount
   }
 
   private fun count(state: String, iterations: Int): Long {
