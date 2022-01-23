@@ -90,10 +90,11 @@ class Day16 @Inject constructor(private val generatorFactory: InputGeneratorFact
         inputIndex ++
       }
     }
+
+    registers[0]
   }
 
   private fun String.toRegisters(): List<Int> {
     return substringAfter("[").dropLast(1).split(", ").map { it.toInt() }
   }
 }
-
