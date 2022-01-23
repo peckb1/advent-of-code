@@ -34,7 +34,12 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     gameMap.forEach { println(it.joinToString("")) }
     while(!oneTeamLeft) {
       // grab the players in "reading order"
-      val players = gameMap.findPlayers()
+      val players = gameMap.findPlayers().sortedWith { p1, p2 ->
+        when (val yComp = p1.y.compareTo(p2.y)){
+          0 -> p1.x.compareTo(p2.x)
+          else -> yComp
+        }
+      }
       val (goblins, elves) = players.partition { it is Goblin }
 
       players.forEach playerLoop@ { player ->
@@ -44,28 +49,40 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         oneTeamLeft = when (player) {
           is Goblin -> {
             player.takeTurn(gameMap, elves) { maybeElves ->
-              maybeElves.filterIsInstance<Elf>().minByOrNull { elf -> elf.hitPoints }.also { maybeElf ->
-                if (maybeElf != null && maybeElves.count { (it as? Elf)?.hitPoints == maybeElf.hitPoints } > 1) {
-                  -1
+              maybeElves.filterIsInstance<Elf>().sortedWith { p1, p2 ->
+                when (val hitPointComp = p1.hitPoints.compareTo(p2.hitPoints)) {
+                  0 -> {
+                    when (val yComp = p1.y.compareTo(p2.y)) {
+                      0 -> p1.x.compareTo(p2.x)
+                      else -> yComp
+                    }
+                  }
+                  else -> hitPointComp
                 }
-              }
+              }.firstOrNull()
             }
           }
           is Elf -> {
             player.takeTurn(gameMap, goblins) { maybeGoblins ->
-              maybeGoblins.filterIsInstance<Goblin>().minByOrNull { goblin -> goblin.hitPoints }.also { maybeGoblin ->
-                if (maybeGoblin != null && maybeGoblins.count { (it as? Goblin)?.hitPoints == maybeGoblin.hitPoints } > 1) {
-                  -1
+              maybeGoblins.filterIsInstance<Goblin>().sortedWith { p1, p2 ->
+                when (val hitPointComp = p1.hitPoints.compareTo(p2.hitPoints)) {
+                  0 -> {
+                    when (val yComp = p1.y.compareTo(p2.y)) {
+                      0 -> p1.x.compareTo(p2.x)
+                      else -> yComp
+                    }
+                  }
+                  else -> hitPointComp
                 }
-              }
+              }.firstOrNull()
             }
           }
         }
       }
 
       turns ++
-      println(turns)
-      gameMap.forEach { println(it.joinToString("")) }
+      // println(turns)
+      // gameMap.forEach { println(it.joinToString("")) }
     }
 
     println(turns)
@@ -76,6 +93,8 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     // 232680 too high
     // 225746 too high
+    // 217840 NOPE???
+    // 215512 too low
     val remainingHP = gameMap.findPlayers().sumOf { it.hitPoints }
     val completedTurns = turns - 1
     remainingHP * completedTurns
@@ -112,11 +131,13 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         if (adjacentEnemy == null) {
           val paths = GameDijkstra(gameMap).solve(this)
-          val closestPaths = remainingEnemies.flatMap { elf ->
-            val u = gameMap[elf.y - 1][elf.x]
-            val l = gameMap[elf.y][elf.x - 1]
-            val r = gameMap[elf.y][elf.x + 1]
-            val d = gameMap[elf.y + 1][elf.x]
+          val closestPaths = remainingEnemies.flatMap enemyMap@ { enemy ->
+            if (enemy.hitPoints <= 0) throw IllegalStateException("Why am I looking at an alive enemy?")
+
+            val u = gameMap[enemy.y - 1][enemy.x]
+            val l = gameMap[enemy.y][enemy.x - 1]
+            val r = gameMap[enemy.y][enemy.x + 1]
+            val d = gameMap[enemy.y + 1][enemy.x]
 
             listOf(u, l, r, d).filterIsInstance<Empty>().map { paths[it] }
           }.filterNotNull().sortedBy { it.cost }
@@ -124,7 +145,16 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
           if (closestPaths.isNotEmpty()) {
             val options = closestPaths.takeWhile { it.cost == closestPaths.first().cost }
 
-            val (newX, newY) = options.sortedBy { it.steps.first().first }.minByOrNull { it.steps.first().second }!!.steps.first()
+            // val (newX, newY) = options.sortedBy { it.steps.first().first }.minByOrNull { it.steps.first().second }!!.steps.first()
+            val (newX, newY) = options.sortedWith { p1, p2 ->
+              val p1Step = p1.steps.first()
+              val p2Step = p2.steps.first()
+              when (val yComparison = p1Step.y.compareTo(p2Step.y)) {
+                0 -> p1Step.x.compareTo(p2Step.x)
+                else -> yComparison
+              }
+            }.first().steps.first()
+
             // println("Moving from $x, $y to $newX, $newY")
             gameMap[y][x] = Empty(x, y)
             gameMap[newY][newX] = this.also { x = newX; y = newY; }
@@ -142,11 +172,15 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
 
         adjacentEnemy?.let {
+          if (it.hitPoints <= 0) {
+            throw IllegalStateException("Why am I attacking a dead player?")
+          }
           // println("$this ($x, $y) Attacking $it (${it.x}, ${it.y}) ${it.hitPoints} -> ${it.hitPoints - attackPower}")
           it.hitPoints -= attackPower
           if (it.hitPoints <= 0) {
-            println("DEATH")
+            // println("DEATH")
             gameMap[it.y][it.x] = Empty(it.x, it.y)
+            it.attackPower = 0
           }
         }
 
@@ -155,7 +189,7 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
-  data class Path(val steps: List<Pair<Int, Int>>, val cost: Int = steps.size) : Comparable<Path> {
+  data class Path(val steps: List<Point>, val cost: Int = steps.size) : Comparable<Path> {
     override fun compareTo(other: Path): Int {
       return cost.compareTo(other.cost)
     }
@@ -179,7 +213,7 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         val emptySpaces = listOf(u, l, r, d).filterIsInstance<Empty>()
         return emptySpaces.map { emptySpace ->
           val (x, y) = emptySpace.x to emptySpace.y
-          SpaceWithPath(emptySpace, Path(path.steps.plus(x to y)))
+          SpaceWithPath(emptySpace, Path(path.steps.plus(Point(x, y))))
         }
       }
 
@@ -187,7 +221,17 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
       override fun cost() = path
 
-      override fun compareTo(other: DijkstraNodeWithCost<Space, Path>) = path.compareTo(other.cost())
+      override fun compareTo(other: DijkstraNodeWithCost<Space, Path>): Int {
+        return when (val pathComp = path.compareTo(other.cost())) {
+          0 -> {
+            when (val yComp = path.steps.first().y.compareTo(other.cost().steps.first().y)) {
+              0 -> path.steps.first().x.compareTo(other.cost().steps.first().x)
+              else -> yComp
+            }
+          }
+          else -> pathComp
+        }
+      }
     }
   }
 
@@ -201,4 +245,6 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
   }
+
+  data class Point(val x: Int, val y: Int)
 }
