@@ -30,9 +30,18 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     var oneTeamLeft = false
     var turns = 0
-    println(turns)
-    gameMap.forEach { println(it.joinToString("")) }
+    // println(turns)
+    // gameMap.forEach { println(it.joinToString("")) }
     while(!oneTeamLeft) {
+      var lastY = 0
+      // gameMap.findPlayers().forEach {
+      //   if (it.y != lastY) println()
+      //   print("$it (${it.x}, ${it.y}) ${it.hitPoints} ")
+      //   lastY = it.y
+      // }
+      gameMap.forEach { println(it.joinToString("")) }
+      println(turns)
+      println()
       // grab the players in "reading order"
       val players = gameMap.findPlayers().sortedWith { p1, p2 ->
         when (val yComp = p1.y.compareTo(p2.y)){
@@ -85,8 +94,8 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
       // gameMap.forEach { println(it.joinToString("")) }
     }
 
-    println(turns)
-    gameMap.forEach { println(it.joinToString("")) }
+    // println(turns)
+    // gameMap.forEach { println(it.joinToString("")) }
     println(gameMap.findPlayers().map {
       "$it (${it.x}, ${it.y}) ${it.hitPoints}"
     })
@@ -97,6 +106,8 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     // 215512 too low
     val remainingHP = gameMap.findPlayers().sumOf { it.hitPoints }
     val completedTurns = turns - 1
+    println(completedTurns)
+    println(remainingHP)
     remainingHP * completedTurns
   }
 
@@ -147,8 +158,8 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
             // val (newX, newY) = options.sortedBy { it.steps.first().first }.minByOrNull { it.steps.first().second }!!.steps.first()
             val (newX, newY) = options.sortedWith { p1, p2 ->
-              val p1Step = p1.steps.first()
-              val p2Step = p2.steps.first()
+              val p1Step = p1.steps.last()
+              val p2Step = p2.steps.last()
               when (val yComparison = p1Step.y.compareTo(p2Step.y)) {
                 0 -> p1Step.x.compareTo(p2Step.x)
                 else -> yComparison
