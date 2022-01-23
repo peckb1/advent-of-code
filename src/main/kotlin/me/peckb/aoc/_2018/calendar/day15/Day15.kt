@@ -16,7 +16,7 @@ import kotlin.Int.Companion.MIN_VALUE
 
 class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val gameMap = input.toMutableList().mapIndexed { y, row ->
+    val gameMap = input.mapIndexed { y, row ->
       row.mapIndexed { x, spaceChar ->
         when (spaceChar) {
           '#' -> Wall(x, y)
@@ -28,6 +28,40 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }.toMutableList()
     }
 
+    runGame(gameMap.toList())
+  }
+
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val inputList = input.toMutableList()
+    var someElvesDied = true
+    var result = 0
+    var power = 4
+    
+    while(someElvesDied) {
+      val originalElves = mutableListOf<Elf>()
+      val gameMap = inputList.mapIndexed { y, row ->
+        row.mapIndexed { x, spaceChar ->
+          when (spaceChar) {
+            '#' -> Wall(x, y)
+            '.' -> Empty(x, y)
+            'E' -> Elf(x, y, power).also { originalElves.add(it) }
+            'G' -> Goblin(x, y)
+            else -> throw IllegalStateException("Invalid space $spaceChar")
+          }
+        }.toMutableList()
+      }
+
+      result = runGame(gameMap.toList())
+      val afterElfCount = gameMap.findPlayers().filterIsInstance<Elf>().size
+
+      someElvesDied = afterElfCount != originalElves.size
+      if (someElvesDied) power++
+    }
+
+    result
+  }
+
+  private fun runGame(gameMap: List<MutableList<Space>>): Int {
     var oneTeamLeft = false
     var turns = 0
     while(!oneTeamLeft) {
@@ -40,36 +74,8 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
         if (player.hitPoints < 0) return@playerLoop
 
         oneTeamLeft = when (player) {
-          is Goblin -> {
-            player.takeTurn(gameMap, elves) { maybeElves ->
-              maybeElves.filterIsInstance<Elf>().sortedWith { p1, p2 ->
-                when (val hitPointComp = p1.hitPoints.compareTo(p2.hitPoints)) {
-                  0 -> {
-                    when (val yComp = p1.y.compareTo(p2.y)) {
-                      0 -> p1.x.compareTo(p2.x)
-                      else -> yComp
-                    }
-                  }
-                  else -> hitPointComp
-                }
-              }.firstOrNull()
-            }
-          }
-          is Elf -> {
-            player.takeTurn(gameMap, goblins) { maybeGoblins ->
-              maybeGoblins.filterIsInstance<Goblin>().sortedWith { p1, p2 ->
-                when (val hitPointComp = p1.hitPoints.compareTo(p2.hitPoints)) {
-                  0 -> {
-                    when (val yComp = p1.y.compareTo(p2.y)) {
-                      0 -> p1.x.compareTo(p2.x)
-                      else -> yComp
-                    }
-                  }
-                  else -> hitPointComp
-                }
-              }.firstOrNull()
-            }
-          }
+          is Goblin -> player.takeTurn(gameMap, elves) { it.filterIsInstance<Elf>().sortedWith(playerComparator).firstOrNull() }
+          is Elf -> player.takeTurn(gameMap, goblins) { it.filterIsInstance<Goblin>().sortedWith(playerComparator).firstOrNull() }
         }
       }
 
@@ -78,102 +84,15 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     val remainingHP = gameMap.findPlayers().sumOf { it.hitPoints }
     val completedTurns = turns - 1
-    remainingHP * completedTurns
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val inputList = input.toMutableList()
-    var someElvesDied = true
-    var result = 0
-    var power = 4
-    while(someElvesDied) {
-      val gameMap = inputList.mapIndexed { y, row ->
-        row.mapIndexed { x, spaceChar ->
-          when (spaceChar) {
-            '#' -> Wall(x, y)
-            '.' -> Empty(x, y)
-            'E' -> Elf(x, y, power)
-            'G' -> Goblin(x, y)
-            else -> throw IllegalStateException("Invalid space $spaceChar")
-          }
-        }.toMutableList()
-      }
-      val originalElfCount = gameMap.findPlayers().filterIsInstance<Elf>().size
-
-      var oneTeamLeft = false
-      var turns = 0
-      while(!oneTeamLeft) {
-        // grab the players in "reading order"
-        val players = gameMap.findPlayers()
-        val (goblins, elves) = players.partition { it is Goblin }
-
-        players.forEach playerLoop@ { player ->
-          if (oneTeamLeft) return@playerLoop
-          if (player.hitPoints < 0) return@playerLoop
-
-          oneTeamLeft = when (player) {
-            is Goblin -> {
-              player.takeTurn(gameMap, elves) { maybeElves ->
-                maybeElves.filterIsInstance<Elf>().sortedWith { p1, p2 ->
-                  when (val hitPointComp = p1.hitPoints.compareTo(p2.hitPoints)) {
-                    0 -> {
-                      when (val yComp = p1.y.compareTo(p2.y)) {
-                        0 -> p1.x.compareTo(p2.x)
-                        else -> yComp
-                      }
-                    }
-                    else -> hitPointComp
-                  }
-                }.firstOrNull()
-              }
-            }
-            is Elf -> {
-              player.takeTurn(gameMap, goblins) { maybeGoblins ->
-                maybeGoblins.filterIsInstance<Goblin>().sortedWith { p1, p2 ->
-                  when (val hitPointComp = p1.hitPoints.compareTo(p2.hitPoints)) {
-                    0 -> {
-                      when (val yComp = p1.y.compareTo(p2.y)) {
-                        0 -> p1.x.compareTo(p2.x)
-                        else -> yComp
-                      }
-                    }
-                    else -> hitPointComp
-                  }
-                }.firstOrNull()
-              }
-            }
-          }
-        }
-
-        turns ++
-      }
-
-
-      val remainingHP = gameMap.findPlayers().sumOf { it.hitPoints }
-      val completedTurns = turns - 1
-      result = remainingHP * completedTurns
-      val elfCount = gameMap.findPlayers().filterIsInstance<Elf>().size
-      someElvesDied = elfCount != originalElfCount
-      if (someElvesDied) power++
-    }
-
-    result
+    return remainingHP * completedTurns
   }
 
   sealed class Space(var x: Int, var y: Int) {
-    class Wall(_x: Int, _y: Int) : Space(_x, _y) {
-      override fun toString() = "#"
-    }
-    class Empty(_x: Int, _y: Int): Space(_x, _y) {
-      override fun toString() = "."
-    }
-    sealed class Player(_x: Int, _y: Int, var attackPower: Int = 3, var hitPoints: Int = 200): Space(_x, _y) {
-      class Elf(_x: Int, _y: Int, _attackPower: Int = 3) : Player(_x, _y, _attackPower) {
-        override fun toString() = "E"
-      }
-      class Goblin(_x: Int, _y: Int) : Player(_x, _y) {
-        override fun toString() = "G"
-      }
+    class Wall(_x: Int, _y: Int) : Space(_x, _y)
+    class Empty(_x: Int, _y: Int): Space(_x, _y)
+    sealed class Player(_x: Int, _y: Int, var attackPower: Int = DEFAULT_POWER, var hitPoints: Int = 200): Space(_x, _y) {
+      class Elf(_x: Int, _y: Int, _attackPower: Int = DEFAULT_POWER) : Player(_x, _y, _attackPower)
+      class Goblin(_x: Int, _y: Int) : Player(_x, _y)
 
       fun takeTurn(gameMap: List<MutableList<Space>>, enemies: List<Player>, findEnemy: (List<Space>) -> Player?) : Boolean {
         val remainingEnemies = enemies.filter { it.hitPoints > 0 }
@@ -200,15 +119,7 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
           if (closestPaths.isNotEmpty()) {
             val options = closestPaths.takeWhile { it.cost == closestPaths.first().cost }
-
-            val (newX, newY) = options.sortedWith { p1, p2 ->
-              val p1Step = p1.steps.last()
-              val p2Step = p2.steps.last()
-              when (val yComparison = p1Step.y.compareTo(p2Step.y)) {
-                0 -> p1Step.x.compareTo(p2Step.x)
-                else -> yComparison
-              }
-            }.first().steps.first()
+            val (newX, newY) = options.sortedWith(pathComparator).first().steps.first()
 
             gameMap[y][x] = Empty(x, y)
             gameMap[newY][newX] = this.also { x = newX; y = newY; }
@@ -225,9 +136,7 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
         adjacentEnemy?.let {
           it.hitPoints -= attackPower
-          if (it.hitPoints <= 0) {
-            gameMap[it.y][it.x] = Empty(it.x, it.y)
-          }
+          if (it.hitPoints <= 0) gameMap[it.y][it.x] = Empty(it.x, it.y)
         }
 
         return false
@@ -268,10 +177,12 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
       override fun cost() = path
 
       override fun compareTo(other: DijkstraNodeWithCost<Space, Path>): Int {
+        // DEV NOTE: referencing the parent classes path comparator doubles our runtime,
+        // compared to creating it ourself
         return when (val pathComp = path.compareTo(other.cost())) {
           0 -> {
-            when (val yComp = path.steps.first().y.compareTo(other.cost().steps.first().y)) {
-              0 -> path.steps.first().x.compareTo(other.cost().steps.first().x)
+            when (val yComp = path.steps.last().y.compareTo(other.cost().steps.last().y)) {
+              0 -> path.steps.last().x.compareTo(other.cost().steps.last().x)
               else -> yComp
             }
           }
@@ -293,4 +204,31 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   data class Point(val x: Int, val y: Int)
+
+  companion object {
+    const val DEFAULT_POWER = 3
+
+    val playerComparator = Comparator<Player> { p1, p2 ->
+      when (val hitPointComp = p1.hitPoints.compareTo(p2.hitPoints)) {
+        0 -> {
+          when (val yComp = p1.y.compareTo(p2.y)) {
+            0 -> p1.x.compareTo(p2.x)
+            else -> yComp
+          }
+        }
+        else -> hitPointComp
+      }
+    }
+
+    val pathComparator = object : Comparator<Path> {
+      override fun compare(p1: Path, p2: Path): Int {
+        val p1Step = p1.steps.last()
+        val p2Step = p2.steps.last()
+        return when (val yComparison = p1Step.y.compareTo(p2Step.y)) {
+          0 -> p1Step.x.compareTo(p2Step.x)
+          else -> yComparison
+        }
+      }
+    }
+  }
 }
