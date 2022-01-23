@@ -29,62 +29,56 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     var oneTeamLeft = false
+    var turns = 0
+    println(turns)
+    gameMap.forEach { println(it.joinToString("")) }
     while(!oneTeamLeft) {
       // grab the players in "reading order"
       val players = gameMap.findPlayers()
       val (goblins, elves) = players.partition { it is Goblin }
 
-      // each player needs to find the "reading order" path to all enemies still alive
       players.forEach playerLoop@ { player ->
         if (oneTeamLeft) return@playerLoop
-        when (player) {
+        if (player.hitPoints < 0) return@playerLoop
+
+        oneTeamLeft = when (player) {
           is Goblin -> {
-            val remainingElves = elves.filter { it.hitPoints > 0 }
-            if (remainingElves.isEmpty()) { oneTeamLeft = true; return@playerLoop }
-            val myUp = gameMap[player.y - 1][player.x]
-            val myLeft = gameMap[player.y][player.x - 1]
-            val myRight = gameMap[player.y][player.x + 1]
-            val myDown = gameMap[player.y + 1][player.x]
-            var adjacentElf = listOf(myUp, myLeft, myRight, myDown).filterIsInstance<Elf>().firstOrNull()
-
-            if (adjacentElf == null) {
-              val paths = GameDijkstra(gameMap).solve(player)
-              val closestPaths = remainingElves.flatMap { elf ->
-                val u = gameMap[elf.y - 1][elf.x]
-                val l = gameMap[elf.y][elf.x - 1]
-                val r = gameMap[elf.y][elf.x + 1]
-                val d = gameMap[elf.y + 1][elf.x]
-
-                listOf(u, l, r, d).filterIsInstance<Empty>().map { paths[it] }
-              }.filterNotNull().sortedBy { it.cost }
-
-              if (closestPaths.isNotEmpty()) {
-                val options = closestPaths.takeWhile { it.cost == closestPaths.first().cost }
-
-                val (x, y) = options.sortedBy { it.steps.first().first }.sortedBy { it.steps.first().second }.first().steps.first()
-                gameMap[y][x] = player
-                gameMap[player.y][player.x] = Empty(player.x, player.y)
+            player.takeTurn(gameMap, elves) { maybeElves ->
+              maybeElves.filterIsInstance<Elf>().minByOrNull { elf -> elf.hitPoints }.also { maybeElf ->
+                if (maybeElf != null && maybeElves.count { (it as? Elf)?.hitPoints == maybeElf.hitPoints } > 1) {
+                  -1
+                }
               }
             }
-
-            adjacentElf = adjacentElf ?: run {
-              val u = gameMap[player.y - 1][player.x]
-              val l = gameMap[player.y][player.x - 1]
-              val r = gameMap[player.y][player.x + 1]
-              val D = gameMap[player.y + 1][player.x]
-              listOf(u, l, r, D).filterIsInstance<Elf>().firstOrNull()
-            }
-
-            adjacentElf?.let { it.hitPoints -= player.attackPower }
           }
-          is Elf -> {  }
+          is Elf -> {
+            player.takeTurn(gameMap, goblins) { maybeGoblins ->
+              maybeGoblins.filterIsInstance<Goblin>().minByOrNull { goblin -> goblin.hitPoints }.also { maybeGoblin ->
+                if (maybeGoblin != null && maybeGoblins.count { (it as? Goblin)?.hitPoints == maybeGoblin.hitPoints } > 1) {
+                  -1
+                }
+              }
+            }
+          }
         }
       }
 
-      // take the shorted path to the closest space next to an enemy
-
-      // if we are close to an enemy attack them
+      turns ++
+      println(turns)
+      gameMap.forEach { println(it.joinToString("")) }
     }
+
+    println(turns)
+    gameMap.forEach { println(it.joinToString("")) }
+    println(gameMap.findPlayers().map {
+      "$it (${it.x}, ${it.y}) ${it.hitPoints}"
+    })
+
+    // 232680 too high
+    // 225746 too high
+    val remainingHP = gameMap.findPlayers().sumOf { it.hitPoints }
+    val completedTurns = turns - 1
+    remainingHP * completedTurns
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
@@ -92,11 +86,72 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   sealed class Space(var x: Int, var y: Int) {
-    class Wall(_x: Int, _y: Int) : Space(_x, _y)
-    class Empty(_x: Int, _y: Int): Space(_x, _y)
+    class Wall(_x: Int, _y: Int) : Space(_x, _y) {
+      override fun toString() = "#"
+    }
+    class Empty(_x: Int, _y: Int): Space(_x, _y) {
+      override fun toString() = "."
+    }
     sealed class Player(_x: Int, _y: Int, var attackPower: Int = 3, var hitPoints: Int = 200): Space(_x, _y) {
-      class Elf(_x: Int, _y: Int) : Player(_x, _y)
-      class Goblin(_x: Int, _y: Int) : Player(_x, _y)
+      class Elf(_x: Int, _y: Int) : Player(_x, _y) {
+        override fun toString() = "E"
+      }
+      class Goblin(_x: Int, _y: Int) : Player(_x, _y) {
+        override fun toString() = "G"
+      }
+
+      fun takeTurn(gameMap: List<MutableList<Space>>, enemies: List<Player>, findEnemy: (List<Space>) -> Player?) : Boolean {
+        val remainingEnemies = enemies.filter { it.hitPoints > 0 }
+        if (remainingEnemies.isEmpty()) return true
+
+        val myUp = gameMap[y - 1][x]
+        val myLeft = gameMap[y][x - 1]
+        val myRight = gameMap[y][x + 1]
+        val myDown = gameMap[y + 1][x]
+        var adjacentEnemy = findEnemy(listOf(myUp, myLeft, myRight, myDown))
+
+        if (adjacentEnemy == null) {
+          val paths = GameDijkstra(gameMap).solve(this)
+          val closestPaths = remainingEnemies.flatMap { elf ->
+            val u = gameMap[elf.y - 1][elf.x]
+            val l = gameMap[elf.y][elf.x - 1]
+            val r = gameMap[elf.y][elf.x + 1]
+            val d = gameMap[elf.y + 1][elf.x]
+
+            listOf(u, l, r, d).filterIsInstance<Empty>().map { paths[it] }
+          }.filterNotNull().sortedBy { it.cost }
+
+          if (closestPaths.isNotEmpty()) {
+            val options = closestPaths.takeWhile { it.cost == closestPaths.first().cost }
+
+            val (newX, newY) = options.sortedBy { it.steps.first().first }.minByOrNull { it.steps.first().second }!!.steps.first()
+            // println("Moving from $x, $y to $newX, $newY")
+            gameMap[y][x] = Empty(x, y)
+            gameMap[newY][newX] = this.also { x = newX; y = newY; }
+          } else {
+            // println("$this ($x, $y) Unable to Move")
+          }
+        }
+
+        adjacentEnemy = adjacentEnemy ?: run {
+          val u = gameMap[y - 1][x]
+          val l = gameMap[y][x - 1]
+          val r = gameMap[y][x + 1]
+          val d = gameMap[y + 1][x]
+          findEnemy(listOf(u, l, r, d))
+        }
+
+        adjacentEnemy?.let {
+          // println("$this ($x, $y) Attacking $it (${it.x}, ${it.y}) ${it.hitPoints} -> ${it.hitPoints - attackPower}")
+          it.hitPoints -= attackPower
+          if (it.hitPoints <= 0) {
+            println("DEATH")
+            gameMap[it.y][it.x] = Empty(it.x, it.y)
+          }
+        }
+
+        return false
+      }
     }
   }
 
