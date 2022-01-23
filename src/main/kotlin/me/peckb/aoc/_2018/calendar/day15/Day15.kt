@@ -108,14 +108,12 @@ class Day15 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val pathComparator = object : Comparator<Path> {
-      override fun compare(p1: Path, p2: Path): Int {
-        val p1Step = p1.steps.last()
-        val p2Step = p2.steps.last()
-        return when (val yComparison = p1Step.y.compareTo(p2Step.y)) {
-          0 -> p1Step.x.compareTo(p2Step.x)
-          else -> yComparison
-        }
+    val pathComparator = Comparator<Path> { p1, p2 ->
+      val p1Step = p1.steps.last()
+      val p2Step = p2.steps.last()
+      when (val yComparison = p1Step.y.compareTo(p2Step.y)) {
+        0 -> p1Step.x.compareTo(p2Step.x)
+        else -> yComparison
       }
     }
   }

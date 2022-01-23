@@ -8,9 +8,7 @@ class GameDijkstra(val gameMap: List<List<Space>>) : Dijkstra<Space, Path, Space
   override fun Space.withCost(cost: Path) = SpaceWithPath(this, cost)
   override fun minCost() = Path(emptyList(), Int.MIN_VALUE)
   override fun maxCost() = Path(emptyList(), Int.MAX_VALUE)
-  override fun Path.plus(cost: Path): Path {
-    return cost
-  }
+  override fun Path.plus(cost: Path) = cost
 
   inner class SpaceWithPath(private val space: Space, private val path: Path) :
     DijkstraNodeWithCost<Space, Path> {
@@ -48,7 +46,5 @@ class GameDijkstra(val gameMap: List<List<Space>>) : Dijkstra<Space, Path, Space
 }
 
 data class Path(val steps: List<Point>, val cost: Int = steps.size) : Comparable<Path> {
-  override fun compareTo(other: Path): Int {
-    return cost.compareTo(other.cost)
-  }
+  override fun compareTo(other: Path) = cost.compareTo(other.cost)
 }
