@@ -49,10 +49,21 @@ sealed class Space(var x: Int, var y: Int) {
 
       if (closestPaths.isNotEmpty()) {
         val options = closestPaths.takeWhile { it.cost == closestPaths.first().cost }
-        val (newX, newY) = options.sortedWith(Day15.pathComparator).first().steps.first()
+        val (newX, newY) = options.sortedWith(pathComparator).first().steps.first()
 
         gameMap[y][x] = Empty(x, y)
         gameMap[newY][newX] = this.also { x = newX; y = newY; }
+      }
+    }
+
+    companion object {
+      private val pathComparator = Comparator<Path> { p1, p2 ->
+        val p1Step = p1.steps.last()
+        val p2Step = p2.steps.last()
+        when (val yComparison = p1Step.y.compareTo(p2Step.y)) {
+          0 -> p1Step.x.compareTo(p2Step.x)
+          else -> yComparison
+        }
       }
     }
   }
