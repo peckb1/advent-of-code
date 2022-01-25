@@ -40,98 +40,105 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     while(downspouts.isNotEmpty()) {
       val downSpout = downspouts.first()
-      var bottom = area.maxY
-      var current = downSpout.y + 1
-      while(current < bottom) {
-        val nextSpace = underground[current][downSpout.x]
-        if (nextSpace == '~' || nextSpace == '|' || nextSpace == '#') {
-          bottom = current
-        } else {
-          underground[current][downSpout.x] = '|'
-          current++
-        }
-      }
-
+      var bottom = fallDown(downSpout, area, underground)
       val stoppingValue = underground[bottom][downSpout.x]
+
       if (stoppingValue != '.') {
-        if (stoppingValue == '~') {
-          // we found someone else's water, but we should upfill and overflow
-          upfillAndOverflow(bottom, underground, downSpout, downspouts)
-        } else if (stoppingValue == '|') {
-          // we found the overflow of someone elses water, so we only need to fall, and can just
-          // ignore this downspout
-        } else if (stoppingValue == '#') {
-          // we found clay, first ones here, upfill and overflow
+        if (stoppingValue == '|') { // we found the overflow of someone else's water
+          // we only need to fall, and can just ignore this downspout
+        } else if (stoppingValue == '~') { // we found someone else's water, upFill and overflow
+          upFillAndOverflow(bottom, underground, downSpout, downspouts)
+        } else if (stoppingValue == '#') { // we found clay, first ones here, upFill and overflow
+          // We have three clay landing spaces
           if (underground[bottom][downSpout.x - 1] == '.' && underground[bottom][downSpout.x + 1] == '.') {
-            if (underground[bottom][downSpout.x - 1] == '.') {
-              underground[bottom - 1][downSpout.x - 1] = '|'
-              downspouts.add(Source(bottom - 1, downSpout.x - 1))
-            }
-            if (underground[bottom][downSpout.x + 1] == '.') {
-              underground[bottom - 1][downSpout.x + 1] = '|'
-              downspouts.add(Source(bottom - 1, downSpout.x + 1))
-            }
+            // * the edge of a bucket
+            handleBucketEdge(bottom, underground, downSpout, downspouts)
           } else {
             bottom--
 
-            var left = downSpout.x
-            var right = downSpout.x
-            var dropOffBeforeLeft: Int? = null
-            var dropOffBeforeRight: Int? = null
+            // * an inner part of an outer bucket
+            val (dropOffBeforeLeftWall, dropOffBeforeRightWall) = checkForWalls(bottom, underground, downSpout)
 
-            while(underground[bottom][left] != '#') {
-              if (underground[bottom + 1][left] == '.') dropOffBeforeLeft = left
-              left--
-            }
-            while(underground[bottom][right] != '#') {
-              if (underground[bottom + 1][right] == '.') dropOffBeforeRight = right
-              right++
-            }
-            if (dropOffBeforeLeft != null || dropOffBeforeRight != null) {
-              (left + 1 .. downSpout.x).forEach { x -> underground[bottom][x] = '|' }
-              dropOffBeforeLeft?.let { downspouts.add(Source(bottom, it + 1)) }
-              (downSpout.x until right).forEach { x -> underground[bottom][x] = '|' }
-              dropOffBeforeRight?.let { downspouts.add(Source(bottom, it - 1)) }
+            if (dropOffBeforeLeftWall != null || dropOffBeforeRightWall != null) {
+              dropOffBeforeLeftWall?.let {
+                (it .. downSpout.x).forEach { x -> underground[bottom][x] = '|' }
+                downspouts.add(Source(bottom, it + 1))
+              }
+              dropOffBeforeRightWall?.let {
+                (downSpout.x .. it).forEach { x -> underground[bottom][x] = '|' }
+                downspouts.add(Source(bottom, it - 1)) 
+              }
             } else {
-              upfillAndOverflow(bottom, underground, downSpout, downspouts)
+              // the bottom of a bucket
+              upFillAndOverflow(bottom, underground, downSpout, downspouts)
             }
           }
         } else {
           throw IllegalStateException("Unknown stopping value $stoppingValue")
         }
       } else {
-        underground[current][downSpout.x] = '|'
+        underground[bottom][downSpout.x] = '|'
       }
       downspouts.remove(downSpout)
     }
   }
 
-  private fun upfillAndOverflow(
+  private fun checkForWalls(bottom: Int, underground: Array<Array<Char>>, downSpout: Source): Pair<Int?, Int?> {
+    var left = downSpout.x
+    var right = downSpout.x
+    var dropOffBeforeLeft: Int? = null
+    var dropOffBeforeRight: Int? = null
+
+    while(underground[bottom][left] != '#') {
+      if (underground[bottom + 1][left] == '.') dropOffBeforeLeft = left
+      left--
+    }
+    while(underground[bottom][right] != '#') {
+      if (underground[bottom + 1][right] == '.') dropOffBeforeRight = right
+      right++
+    }
+
+    return dropOffBeforeLeft to dropOffBeforeRight
+  }
+
+  private fun handleBucketEdge(
+    bottom: Int,
+    underground: Array<Array<Char>>,
+    downSpout: Source,
+    downspouts: MutableList<Source>
+  ) {
+    if (underground[bottom][downSpout.x - 1] == '.') {
+      underground[bottom - 1][downSpout.x - 1] = '|'
+      downspouts.add(Source(bottom - 1, downSpout.x - 1))
+    }
+    if (underground[bottom][downSpout.x + 1] == '.') {
+      underground[bottom - 1][downSpout.x + 1] = '|'
+      downspouts.add(Source(bottom - 1, downSpout.x + 1))
+    }
+  }
+
+  private fun fallDown(downSpout: Source, area: Area, underground: Array<Array<Char>>): Int {
+    var bottom = area.maxY
+    var current = downSpout.y + 1
+    while(current < bottom) {
+      val nextSpace = underground[current][downSpout.x]
+      if (nextSpace == '~' || nextSpace == '|' || nextSpace == '#') {
+        bottom = current
+      } else {
+        underground[current][downSpout.x] = '|'
+        current++
+      }
+    }
+    return bottom
+  }
+
+  private fun upFillAndOverflow(
     floor: Int,
     underground: Array<Array<Char>>,
     downSpout: Source,
     downspouts: MutableList<Source>
   ) {
-    var bottom = floor
-
-    var minLeft = 0
-    var maxRight = 2000
-
-    var overflowing = false
-    while(!overflowing) {
-      var leftWall = downSpout.x
-      var rightWall = downSpout.x
-      while(leftWall >= minLeft && underground[bottom][leftWall] != '#') { leftWall-- }
-      while(rightWall <= maxRight && underground[bottom][rightWall] != '#') { rightWall++ }
-
-      if (leftWall >= minLeft) { minLeft = leftWall } else { overflowing = true }
-      if (rightWall <= maxRight) { maxRight = rightWall } else { overflowing = true }
-
-      if (!overflowing) {
-        (leftWall + 1 until rightWall).forEach { underground[bottom][it] = '~' }
-        bottom--
-      }
-    }
+    val (bottom, minLeft, maxRight) = upFill(floor, downSpout, underground)
 
     // we are now overflowing!
     underground[bottom][downSpout.x] = '|'
@@ -212,6 +219,30 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
       if (overflowRight > maxRight + 1) downspouts.add(Source(bottom, overflowRight - 1))
     }
+  }
+
+  private fun upFill(floor: Int, downSpout: Source, underground: Array<Array<Char>>): Triple<Int, Int, Int> {
+    var bottom = floor
+    var minLeft = 0
+    var maxRight = 2000
+
+    var overflowing = false
+    while(!overflowing) {
+      var leftWall = downSpout.x
+      var rightWall = downSpout.x
+      while(leftWall >= minLeft && underground[bottom][leftWall] != '#') { leftWall-- }
+      while(rightWall <= maxRight && underground[bottom][rightWall] != '#') { rightWall++ }
+
+      if (leftWall >= minLeft) { minLeft = leftWall } else { overflowing = true }
+      if (rightWall <= maxRight) { maxRight = rightWall } else { overflowing = true }
+
+      if (!overflowing) {
+        (leftWall + 1 until rightWall).forEach { underground[bottom][it] = '~' }
+        bottom--
+      }
+    }
+
+    return Triple(bottom, minLeft, maxRight)
   }
 
   private fun scan(input: Sequence<Clay>): Pair<Array<Array<Char>>, Area> {
