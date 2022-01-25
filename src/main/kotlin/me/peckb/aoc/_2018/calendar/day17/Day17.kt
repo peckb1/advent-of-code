@@ -94,19 +94,18 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun checkForWalls(bottom: Int, underground: Array<Array<Char>>, downspout: Source): Pair<Int?, Int?> {
-    var left = downspout.x
-    var right = downspout.x
-    var dropOffBeforeLeft: Int? = null
-    var dropOffBeforeRight: Int? = null
+    fun checkForWall(advance: (Int, Int) -> Int): Int? {
+      var edge = downspout.x
+      var dropOff: Int? = null
+      while(underground[bottom][edge] != '#') {
+        if (underground[bottom + 1][edge] == '.') dropOff = edge
+        edge = advance(edge, 1)
+      }
+      return dropOff
+    }
 
-    while(underground[bottom][left] != '#') {
-      if (underground[bottom + 1][left] == '.') dropOffBeforeLeft = left
-      left--
-    }
-    while(underground[bottom][right] != '#') {
-      if (underground[bottom + 1][right] == '.') dropOffBeforeRight = right
-      right++
-    }
+    val dropOffBeforeLeft = checkForWall(Int::minus)
+    val dropOffBeforeRight = checkForWall(Int::plus)
 
     return dropOffBeforeLeft to dropOffBeforeRight
   }
