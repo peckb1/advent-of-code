@@ -39,53 +39,63 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     val downspouts = mutableListOf(Source(0, 500))
 
     while(downspouts.isNotEmpty()) {
-      val downSpout = downspouts.first()
-      var bottom = fallDown(downSpout, area, underground)
-      val stoppingValue = underground[bottom][downSpout.x]
+      val downspout = downspouts.first()
+      val bottom = fallDown(downspout, area, underground)
+      val stoppingValue = underground[bottom][downspout.x]
 
       if (stoppingValue != '.') {
-        if (stoppingValue == '|') { // we found the overflow of someone else's water
-          // we only need to fall, and can just ignore this downspout
-        } else if (stoppingValue == '~') { // we found someone else's water, upFill and overflow
-          upFillAndOverflow(bottom, underground, downSpout, downspouts)
-        } else if (stoppingValue == '#') { // we found clay, first ones here, upFill and overflow
-          // We have three clay landing spaces
-          if (underground[bottom][downSpout.x - 1] == '.' && underground[bottom][downSpout.x + 1] == '.') {
+        when (stoppingValue) {
+          '|' -> { } // we found the overflow of someone else's water we only need to fall, and can just ignore this downspout
+          '~' -> upFillAndOverflow(bottom, underground, downspout, downspouts) // we found someone else's water, upFill and overflow
+          '#' -> { // we found clay, first ones here, upFill and overflow
+            // We have three clay landing scenarios
             // * the edge of a bucket
-            handleBucketEdge(bottom, underground, downSpout, downspouts)
-          } else {
-            bottom--
-
             // * an inner part of an outer bucket
-            val (dropOffBeforeLeftWall, dropOffBeforeRightWall) = checkForWalls(bottom, underground, downSpout)
-
-            if (dropOffBeforeLeftWall != null || dropOffBeforeRightWall != null) {
-              dropOffBeforeLeftWall?.let {
-                (it .. downSpout.x).forEach { x -> underground[bottom][x] = '|' }
-                downspouts.add(Source(bottom, it + 1))
-              }
-              dropOffBeforeRightWall?.let {
-                (downSpout.x .. it).forEach { x -> underground[bottom][x] = '|' }
-                downspouts.add(Source(bottom, it - 1)) 
-              }
+            // * the bottom of a bucket
+            if (underground[bottom][downspout.x - 1] == '.' && underground[bottom][downspout.x + 1] == '.') {
+              handleBucketEdge(bottom, underground, downspout, downspouts)
             } else {
-              // the bottom of a bucket
-              upFillAndOverflow(bottom, underground, downSpout, downspouts)
+              val (leftDropOff, rightDropOff) = checkForWalls(bottom - 1, underground, downspout)
+              if (leftDropOff != null || rightDropOff != null) {
+                handleDropOffs(leftDropOff, rightDropOff, bottom - 1, underground, downspout, downspouts)
+              } else {
+                upFillAndOverflow(bottom - 1, underground, downspout, downspouts)
+              }
             }
           }
-        } else {
-          throw IllegalStateException("Unknown stopping value $stoppingValue")
+          else -> {
+            throw IllegalStateException("Unknown stopping value $stoppingValue")
+          }
         }
       } else {
-        underground[bottom][downSpout.x] = '|'
+        // the stopping point was the end of the map, just add one more water line
+        underground[bottom][downspout.x] = '|'
       }
-      downspouts.remove(downSpout)
+      // remove the current downspout
+      downspouts.remove(downspout)
     }
   }
 
-  private fun checkForWalls(bottom: Int, underground: Array<Array<Char>>, downSpout: Source): Pair<Int?, Int?> {
-    var left = downSpout.x
-    var right = downSpout.x
+  private fun handleDropOffs(
+    leftDropOff: Int?,
+    rightDropOff: Int?,
+    bottom: Int,
+    underground: Array<Array<Char>>,
+    downspout: Source,
+    downspouts: MutableList<Source>
+  ) {
+    fun fillToDropOff(dropOff: Int, direction: IntRange) {
+      direction.forEach { x -> underground[bottom][x] = '|' }
+      downspouts.add(Source(bottom, dropOff))
+    }
+
+    leftDropOff?.let { fillToDropOff(it + 1, it..downspout.x) }
+    rightDropOff?.let { fillToDropOff(it - 1, downspout.x..it) }
+  }
+
+  private fun checkForWalls(bottom: Int, underground: Array<Array<Char>>, downspout: Source): Pair<Int?, Int?> {
+    var left = downspout.x
+    var right = downspout.x
     var dropOffBeforeLeft: Int? = null
     var dropOffBeforeRight: Int? = null
 
@@ -104,28 +114,29 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun handleBucketEdge(
     bottom: Int,
     underground: Array<Array<Char>>,
-    downSpout: Source,
+    downspout: Source,
     downspouts: MutableList<Source>
   ) {
-    if (underground[bottom][downSpout.x - 1] == '.') {
-      underground[bottom - 1][downSpout.x - 1] = '|'
-      downspouts.add(Source(bottom - 1, downSpout.x - 1))
+    fun handleEdge(advance: (Int, Int) -> Int) {
+      val next = advance(downspout.x, 1)
+      if (underground[bottom][next] == '.') {
+        underground[bottom - 1][next] = '|'
+        downspouts.add(Source(bottom - 1, next))
+      }
     }
-    if (underground[bottom][downSpout.x + 1] == '.') {
-      underground[bottom - 1][downSpout.x + 1] = '|'
-      downspouts.add(Source(bottom - 1, downSpout.x + 1))
-    }
+    handleEdge(Int::plus)
+    handleEdge(Int::minus)
   }
 
-  private fun fallDown(downSpout: Source, area: Area, underground: Array<Array<Char>>): Int {
+  private fun fallDown(downspout: Source, area: Area, underground: Array<Array<Char>>): Int {
     var bottom = area.maxY
-    var current = downSpout.y + 1
+    var current = downspout.y + 1
     while(current < bottom) {
-      val nextSpace = underground[current][downSpout.x]
+      val nextSpace = underground[current][downspout.x]
       if (nextSpace == '~' || nextSpace == '|' || nextSpace == '#') {
         bottom = current
       } else {
-        underground[current][downSpout.x] = '|'
+        underground[current][downspout.x] = '|'
         current++
       }
     }
@@ -135,16 +146,16 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun upFillAndOverflow(
     floor: Int,
     underground: Array<Array<Char>>,
-    downSpout: Source,
+    downspout: Source,
     downspouts: MutableList<Source>
   ) {
-    val (bottom, minLeft, maxRight) = upFill(floor, downSpout, underground)
+    val (bottom, minLeft, maxRight) = upFill(floor, downspout, underground)
 
     // we are now overflowing!
-    underground[bottom][downSpout.x] = '|'
+    underground[bottom][downspout.x] = '|'
 
-    var overflowLeft = downSpout.x - 1
-    var overflowRight = downSpout.x + 1
+    var overflowLeft = downspout.x - 1
+    var overflowRight = downspout.x + 1
     if (underground[bottom][overflowLeft] == '|' || underground[bottom][overflowRight] == '|') {
       var foundLeftWall = false
       var foundRightWall = false
@@ -160,17 +171,17 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
           foundLeftWall = true
         }
       } else {
-        var foundWallOrDownspoutOrEdge = false
-        while(!foundWallOrDownspoutOrEdge) {
+        var foundWallOrdownspoutOrEdge = false
+        while(!foundWallOrdownspoutOrEdge) {
           overflowLeft--
           if (underground[bottom][overflowLeft] == '#') {
             // we found an overflow wall
-            foundWallOrDownspoutOrEdge = true
+            foundWallOrdownspoutOrEdge = true
             foundLeftWall = true
           } else if (downspouts.contains(Source(bottom, overflowLeft))) {
-            foundWallOrDownspoutOrEdge = true
+            foundWallOrdownspoutOrEdge = true
           } else if (underground[bottom + 1][overflowLeft] == '.') {
-            foundWallOrDownspoutOrEdge = true
+            foundWallOrdownspoutOrEdge = true
           }
         }
       }
@@ -185,17 +196,17 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
           foundRightWall = true
         }
       } else {
-        var foundWallOrDownspoutOrEdge = false
-        while(!foundWallOrDownspoutOrEdge) {
+        var foundWallOrdownspoutOrEdge = false
+        while(!foundWallOrdownspoutOrEdge) {
           overflowRight++
           if (underground[bottom][overflowRight] == '#') {
             // we found an overflow wall
-            foundWallOrDownspoutOrEdge = true
+            foundWallOrdownspoutOrEdge = true
             foundRightWall = true
           } else if (downspouts.contains(Source(bottom, overflowRight))) {
-            foundWallOrDownspoutOrEdge = true
+            foundWallOrdownspoutOrEdge = true
           } else if (underground[bottom + 1][overflowRight] == '.') {
-            foundWallOrDownspoutOrEdge = true
+            foundWallOrdownspoutOrEdge = true
           }
         }
       }
@@ -204,7 +215,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
         (overflowLeft + 1 until overflowRight).forEach { x ->
           underground[bottom][x] = '~'
         }
-        downspouts.add(Source(bottom - 2, downSpout.x))
+        downspouts.add(Source(bottom - 2, downspout.x))
       }
     } else {
       while(overflowLeft >= minLeft - 1 && underground[bottom][overflowLeft] != '#') {
@@ -221,15 +232,15 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
-  private fun upFill(floor: Int, downSpout: Source, underground: Array<Array<Char>>): Triple<Int, Int, Int> {
+  private fun upFill(floor: Int, downspout: Source, underground: Array<Array<Char>>): Triple<Int, Int, Int> {
     var bottom = floor
     var minLeft = 0
     var maxRight = 2000
 
     var overflowing = false
     while(!overflowing) {
-      var leftWall = downSpout.x
-      var rightWall = downSpout.x
+      var leftWall = downspout.x
+      var rightWall = downspout.x
       while(leftWall >= minLeft && underground[bottom][leftWall] != '#') { leftWall-- }
       while(rightWall <= maxRight && underground[bottom][rightWall] != '#') { rightWall++ }
 
