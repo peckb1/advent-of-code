@@ -9,9 +9,33 @@ import kotlin.math.min
 class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFactory) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::clay) { input ->
     val (underground, area) = scan(input)
+    fillUnderground(underground, area)
 
-    // print(underground, area); println()
+    var water = 0
+    underground.forEachIndexed { y, row ->
+      if (y in (area.minY..area.maxY + 1)) {
+        val trimmedRow = row.slice(area.minX-1..area.maxX + 1)
+        trimmedRow.forEach { c -> if (c == '|' || c == '~') water++ }
+      }
+    }
+    water
+  }
 
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::clay) { input ->
+    val (underground, area) = scan(input)
+    fillUnderground(underground, area)
+
+    var water = 0
+    underground.forEachIndexed { y, row ->
+      if (y in (area.minY..area.maxY + 1)) {
+        val trimmedRow = row.slice(area.minX-1..area.maxX + 1)
+        trimmedRow.forEach { c -> if (c == '~') water++ }
+      }
+    }
+    water
+  }
+
+  private fun fillUnderground(underground: Array<Array<Char>>, area: Area) {
     val downspouts = mutableListOf(Source(0, 500))
 
     while(downspouts.isNotEmpty()) {
@@ -28,13 +52,11 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
       }
 
-      // print(underground, area); println()
-
       val stoppingValue = underground[bottom][downSpout.x]
       if (stoppingValue != '.') {
         if (stoppingValue == '~') {
           // we found someone else's water, but we should upfill and overflow
-          upfillAndOverflow(bottom, underground, downSpout, downspouts, area)
+          upfillAndOverflow(bottom, underground, downSpout, downspouts)
         } else if (stoppingValue == '|') {
           // we found the overflow of someone elses water, so we only need to fall, and can just
           // ignore this downspout
@@ -71,7 +93,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
               (downSpout.x until right).forEach { x -> underground[bottom][x] = '|' }
               dropOffBeforeRight?.let { downspouts.add(Source(bottom, it - 1)) }
             } else {
-              upfillAndOverflow(bottom, underground, downSpout, downspouts, area)
+              upfillAndOverflow(bottom, underground, downSpout, downspouts)
             }
           }
         } else {
@@ -82,36 +104,13 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
       downspouts.remove(downSpout)
     }
-
-    var water = 0
-    var wavy = 0
-    underground.forEachIndexed { y, row ->
-      if (y in (area.minY..area.maxY + 1)) {
-        val trimmedRow = row.slice(area.minX-1..area.maxX + 1)
-        trimmedRow.forEach { c ->
-          if (c == '|') {
-            water++
-          } else if (c == '~') {
-            water++; wavy++
-          }
-        }
-      }
-    }
-
-    // print(underground, area); println()
-
-    // 49430 too low
-    // 50842 too high
-    // 50838
-    water to wavy
   }
 
   private fun upfillAndOverflow(
     floor: Int,
     underground: Array<Array<Char>>,
     downSpout: Source,
-    downspouts: MutableList<Source>,
-    area: Area
+    downspouts: MutableList<Source>
   ) {
     var bottom = floor
 
@@ -131,7 +130,6 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
       if (!overflowing) {
         (leftWall + 1 until rightWall).forEach { underground[bottom][it] = '~' }
         bottom--
-        // print(underground, area); println()
       }
     }
 
@@ -141,8 +139,6 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var overflowLeft = downSpout.x - 1
     var overflowRight = downSpout.x + 1
     if (underground[bottom][overflowLeft] == '|' || underground[bottom][overflowRight] == '|') {
-      var addedLeftDownspout = false
-      var addedRightDownspout = false
       var foundLeftWall = false
       var foundRightWall = false
 
@@ -153,7 +149,6 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
         if (overflowLeft < minLeft - 1) {
           downspouts.add(Source(bottom, overflowLeft + 1))
-          addedLeftDownspout = true
         } else {
           foundLeftWall = true
         }
@@ -161,9 +156,6 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
         var foundWallOrDownspoutOrEdge = false
         while(!foundWallOrDownspoutOrEdge) {
           overflowLeft--
-          // if (overflowLeft == -1) {
-          //   print(underground, area); println(downSpout)
-          // }
           if (underground[bottom][overflowLeft] == '#') {
             // we found an overflow wall
             foundWallOrDownspoutOrEdge = true
@@ -171,10 +163,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
           } else if (downspouts.contains(Source(bottom, overflowLeft))) {
             foundWallOrDownspoutOrEdge = true
           } else if (underground[bottom + 1][overflowLeft] == '.') {
-            // underground[bottom + 1][overflowLeft] = '*'
-            // print(underground, area); println(downSpout)
             foundWallOrDownspoutOrEdge = true
-            -1
           }
         }
       }
@@ -185,7 +174,6 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
         }
         if (overflowRight > maxRight + 1) {
           downspouts.add(Source(bottom, overflowRight - 1))
-          addedRightDownspout = true
         } else {
           foundRightWall = true
         }
@@ -200,10 +188,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
           } else if (downspouts.contains(Source(bottom, overflowRight))) {
             foundWallOrDownspoutOrEdge = true
           } else if (underground[bottom + 1][overflowRight] == '.') {
-            // underground[bottom + 1][overflowRight] = '*'
-            // print(underground, area); println(downSpout)
             foundWallOrDownspoutOrEdge = true
-            -1
           }
         }
       }
@@ -212,7 +197,6 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
         (overflowLeft + 1 until overflowRight).forEach { x ->
           underground[bottom][x] = '~'
         }
-        // print(underground, area); println()
         downspouts.add(Source(bottom - 2, downSpout.x))
       }
     } else {
@@ -254,10 +238,6 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return underground to Area(minY, maxY, minX, maxX)
   }
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::clay) { input ->
-    -1
-  }
-
   private fun clay(line: String): Clay {
     // x=495, y=2..7
     // y=7, x=495..501
@@ -274,6 +254,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
+  @Suppress("unused")
   private fun print(water: Array<Array<Char>>, area: Area) {
     water.forEachIndexed { y, row ->
       if (y in (area.minY - 1..area.maxY + 1)) {
