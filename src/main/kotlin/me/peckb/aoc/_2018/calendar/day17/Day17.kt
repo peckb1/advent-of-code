@@ -76,14 +76,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
   }
 
-  private fun handleDropOffs(
-    leftDropOff: Int?,
-    rightDropOff: Int?,
-    bottom: Int,
-    underground: Array<Array<Char>>,
-    downspout: Source,
-    downspouts: MutableList<Source>
-  ) {
+  private fun handleDropOffs(leftDropOff: Int?, rightDropOff: Int?, bottom: Int, underground: Array<Array<Char>>, downspout: Source, downspouts: MutableList<Source>) {
     fun fillToDropOff(dropOff: Int, direction: IntRange) {
       direction.forEach { x -> underground[bottom][x] = '|' }
       downspouts.add(Source(bottom, dropOff))
@@ -110,12 +103,7 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     return dropOffBeforeLeft to dropOffBeforeRight
   }
 
-  private fun handleBucketEdge(
-    bottom: Int,
-    underground: Array<Array<Char>>,
-    downspout: Source,
-    downspouts: MutableList<Source>
-  ) {
+  private fun handleBucketEdge(bottom: Int, underground: Array<Array<Char>>, downspout: Source, downspouts: MutableList<Source>) {
     fun handleEdge(advance: (Int, Int) -> Int) {
       val next = advance(downspout.x, 1)
       if (underground[bottom][next] == '.') {
@@ -148,86 +136,118 @@ class Day17 @Inject constructor(private val generatorFactory: InputGeneratorFact
     downspout: Source,
     downspouts: MutableList<Source>
   ) {
+    // first upfill
     val (bottom, minLeft, maxRight) = upFill(floor, downspout, underground)
-
-    // we are now overflowing!
     underground[bottom][downspout.x] = '|'
 
-    var overflowLeft = downspout.x - 1
-    var overflowRight = downspout.x + 1
+    // and then deal with the overflow
+    val overflowLeft = downspout.x - 1
+    val overflowRight = downspout.x + 1
+
     if (underground[bottom][overflowLeft] == '|' || underground[bottom][overflowRight] == '|') {
-      var foundLeftWall = false
-      var foundRightWall = false
-
-      if (underground[bottom][overflowLeft] == '.') {
-        while(overflowLeft >= minLeft - 1 && underground[bottom][overflowLeft] != '#') {
-          underground[bottom][overflowLeft] = '|'
-          overflowLeft--
-        }
-        if (overflowLeft < minLeft - 1) {
-          downspouts.add(Source(bottom, overflowLeft + 1))
-        } else {
-          foundLeftWall = true
-        }
-      } else {
-        var foundWallOrdownspoutOrEdge = false
-        while(!foundWallOrdownspoutOrEdge) {
-          overflowLeft--
-          if (underground[bottom][overflowLeft] == '#') {
-            // we found an overflow wall
-            foundWallOrdownspoutOrEdge = true
-            foundLeftWall = true
-          } else if (downspouts.contains(Source(bottom, overflowLeft))) {
-            foundWallOrdownspoutOrEdge = true
-          } else if (underground[bottom + 1][overflowLeft] == '.') {
-            foundWallOrdownspoutOrEdge = true
-          }
-        }
-      }
-      if (underground[bottom][overflowRight] == '.') {
-        while(overflowRight <= maxRight + 1 && underground[bottom][overflowRight] != '#') {
-          underground[bottom][overflowRight] = '|'
-          overflowRight++
-        }
-        if (overflowRight > maxRight + 1) {
-          downspouts.add(Source(bottom, overflowRight - 1))
-        } else {
-          foundRightWall = true
-        }
-      } else {
-        var foundWallOrdownspoutOrEdge = false
-        while(!foundWallOrdownspoutOrEdge) {
-          overflowRight++
-          if (underground[bottom][overflowRight] == '#') {
-            // we found an overflow wall
-            foundWallOrdownspoutOrEdge = true
-            foundRightWall = true
-          } else if (downspouts.contains(Source(bottom, overflowRight))) {
-            foundWallOrdownspoutOrEdge = true
-          } else if (underground[bottom + 1][overflowRight] == '.') {
-            foundWallOrdownspoutOrEdge = true
-          }
-        }
-      }
-
-      if (foundRightWall && foundLeftWall) {
-        (overflowLeft + 1 until overflowRight).forEach { x ->
-          underground[bottom][x] = '~'
-        }
-        downspouts.add(Source(bottom - 2, downspout.x))
-      }
+      mergeOverflows(overflowLeft, overflowRight, bottom, underground, downspouts, downspout, minLeft, maxRight)
     } else {
+      overflow(overflowLeft, overflowRight, bottom, underground, downspouts, minLeft, maxRight)
+    }
+  }
+
+  private fun overflow(
+    left: Int,
+    right: Int,
+    bottom: Int,
+    underground: Array<Array<Char>>,
+    downspouts: MutableList<Source>,
+    minLeft: Int,
+    maxRight: Int
+  ) {
+    var overflowLeft = left
+    var overflowRight = right
+
+    while(overflowLeft >= minLeft - 1 && underground[bottom][overflowLeft] != '#') {
+      underground[bottom][overflowLeft] = '|'
+      overflowLeft--
+    }
+    if (overflowLeft < minLeft - 1) downspouts.add(Source(bottom, overflowLeft + 1))
+
+    while(overflowRight <= maxRight + 1 && underground[bottom][overflowRight] != '#') {
+      underground[bottom][overflowRight] = '|'
+      overflowRight++
+    }
+    if (overflowRight > maxRight + 1) downspouts.add(Source(bottom, overflowRight - 1))
+  }
+
+  private fun mergeOverflows(
+    left: Int,
+    right: Int,
+    bottom: Int,
+    underground: Array<Array<Char>>,
+    downspouts: MutableList<Source>,
+    downspout: Source,
+    minLeft: Int,
+    maxRight: Int
+  ) {
+    var overflowLeft = left
+    var overflowRight = right
+    var foundLeftWall = false
+    var foundRightWall = false
+
+    if (underground[bottom][overflowLeft] == '.') {
       while(overflowLeft >= minLeft - 1 && underground[bottom][overflowLeft] != '#') {
         underground[bottom][overflowLeft] = '|'
         overflowLeft--
       }
-      if (overflowLeft < minLeft - 1) downspouts.add(Source(bottom, overflowLeft + 1))
+      if (overflowLeft < minLeft - 1) {
+        downspouts.add(Source(bottom, overflowLeft + 1))
+      } else {
+        foundLeftWall = true
+      }
+    } else {
+      var foundWallOrdownspoutOrEdge = false
+      while(!foundWallOrdownspoutOrEdge) {
+        overflowLeft--
+        if (underground[bottom][overflowLeft] == '#') {
+          // we found an overflow wall
+          foundWallOrdownspoutOrEdge = true
+          foundLeftWall = true
+        } else if (downspouts.contains(Source(bottom, overflowLeft))) {
+          foundWallOrdownspoutOrEdge = true
+        } else if (underground[bottom + 1][overflowLeft] == '.') {
+          foundWallOrdownspoutOrEdge = true
+        }
+      }
+    }
 
+    if (underground[bottom][overflowRight] == '.') {
       while(overflowRight <= maxRight + 1 && underground[bottom][overflowRight] != '#') {
         underground[bottom][overflowRight] = '|'
         overflowRight++
       }
-      if (overflowRight > maxRight + 1) downspouts.add(Source(bottom, overflowRight - 1))
+      if (overflowRight > maxRight + 1) {
+        downspouts.add(Source(bottom, overflowRight - 1))
+      } else {
+        foundRightWall = true
+      }
+    } else {
+      var foundWallOrdownspoutOrEdge = false
+      while(!foundWallOrdownspoutOrEdge) {
+        overflowRight++
+        if (underground[bottom][overflowRight] == '#') {
+          // we found an overflow wall
+          foundWallOrdownspoutOrEdge = true
+          foundRightWall = true
+        } else if (downspouts.contains(Source(bottom, overflowRight))) {
+          foundWallOrdownspoutOrEdge = true
+        } else if (underground[bottom + 1][overflowRight] == '.') {
+          foundWallOrdownspoutOrEdge = true
+        }
+      }
+    }
+
+    if (foundRightWall && foundLeftWall) {
+      (overflowLeft + 1 until overflowRight).forEach { x ->
+        underground[bottom][x] = '~'
+      }
+      downspouts.add(Source(bottom - 2, downspout.x))
     }
   }
 
