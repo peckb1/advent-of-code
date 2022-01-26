@@ -13,19 +13,19 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     var forest = input.map { it.toList() }.toList()
+
     // our pattern starts its repeat on step 574
-    repeat(573) {
-      forest = forest.evolve()
-    }
+    repeat(PATTERN_START_TIME) { forest = forest.evolve() }
+
     // our pattern is 28 steps long before we hit the first value again
-    val pattern = (0 until 28).map {
+    val pattern = (0 until PATTERN_LENGTH).map {
       forest = forest.evolve()
       forest.woodCount()
     }
 
-    // find out how far into the pattern "FORVER" will be
+    // find out how far into the pattern "FOREVER" will be
     // then remove one to get our pattern index
-    val indexInPattern = ((FOREVER - 573) % 28) - 1
+    val indexInPattern = ((FOREVER - PATTERN_START_TIME) % PATTERN_LENGTH) - 1
     pattern[indexInPattern]
   }
 
@@ -74,8 +74,9 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun List<List<Char>>.woodCount(): Int {
-    var treesCount = 0;
+    var treesCount = 0
     var lumberCount = 0
+
     forEach { row ->
       row.forEach { c ->
         if (c == TREES) {
@@ -96,6 +97,8 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     const val TIME = 10
     const val FOREVER = 1000000000
+    const val PATTERN_START_TIME = 573
+    const val PATTERN_LENGTH = 28
   }
 }
 
