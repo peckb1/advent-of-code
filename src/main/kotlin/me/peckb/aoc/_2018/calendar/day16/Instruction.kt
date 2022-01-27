@@ -1,6 +1,5 @@
 package me.peckb.aoc._2018.calendar.day16
 
-@Suppress("unused")
 sealed class Instruction(protected val a: Int, protected val b: Int, val c: Int) {
   abstract fun performAction(registers: List<Int>): Int
 
