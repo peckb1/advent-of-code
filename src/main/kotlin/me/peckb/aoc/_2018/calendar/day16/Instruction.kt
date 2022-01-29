@@ -1,6 +1,6 @@
 package me.peckb.aoc._2018.calendar.day16
 
-sealed class Instruction(protected val a: Int, protected val b: Int, val c: Int) {
+sealed class Instruction(val a: Int, val b: Int, val c: Int) {
   abstract fun performAction(registers: List<Int>): Int
 
   fun possibility(before: List<Int>, after: List<Int>) = after[c] == performAction(before)
