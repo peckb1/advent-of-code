@@ -51,6 +51,8 @@ as the value which passed the given day/phase combination
   * Implementing a new data structure ([CircularList](https://en.wikipedia.org/wiki/Linked_list#Circular_linked_list)) to solve a problem trivially is always nice learning experience
 * Day 11
   * Just like Day 09, learning about new data structures! A [Summed-area table](https://en.wikipedia.org/wiki/Summed-area_table) this time.
+* Day 21
+  * This has been one of the more enjoyable "look at input" items when determining the stopping point(s) and finding the first/last
 
 #### 2021
 
