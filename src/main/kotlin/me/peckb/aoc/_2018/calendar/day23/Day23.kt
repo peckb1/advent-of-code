@@ -32,7 +32,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
         neighborsWithinRange.map { point ->
           // for each of those 27 new cubes, we create a new nanobot at that point
           val cubeNanobot = Nanobot(point, currentRadius)
-          // find out how many "real" nanobots this new nanobot have intersecting cubes
+          // find out how many "real" nanobots this new nanobot have intersecting spheres
           val intersections = nanobots.count { cubeNanobot.intersects(it) }
           // keep track of it and the count
           cubeNanobot to intersections
@@ -41,7 +41,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
       // find out which of the cube areas has the most intersecting cubes
       val maxIntersections = newGeneration.maxOfOrNull { it.second } ?: 0
 
-      // any cube which matches that intersection number gets to be in the next set of people
+      // any nanobot which matches that max intersection number gets to be in the next set of people
       // essentially making smaller and smaller radius nanobots until we've hit 0, finding nanobots
       // which, when their radius is 0, they are still maximally touching other nanobots
       currentBots = newGeneration.asSequence()
@@ -51,8 +51,8 @@ class Day23 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
     // then for any point which has the maximum number of intersections
-    // pick the one we're the closest to, and then return the distance from us to it
-    currentBots.minByOrNull { ORIGIN.point.distanceTo(it.point) }
+    // grab one, and then return the distance from us to it
+    currentBots.firstOrNull()
       ?.point
       ?.distanceTo(ORIGIN.point)
   }
