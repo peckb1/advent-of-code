@@ -11,7 +11,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGenerator.Inp
     val dijkstra = AmphipodDijkstra()
     val costs = dijkstra.solve(startLayout)
 
-    costs.entries.first { (layout, _) -> layout.hallway.all { it == '.' } }.value
+    costs.entries.first { (layout, cost) -> layout.hallway.all { it == '.' } && cost != 0 }.value
   }
 
   fun partTwo(fileName: String) = generatorFactory.forFile(fileName).read { input ->
@@ -20,7 +20,7 @@ class Day23 @Inject constructor(private val generatorFactory: InputGenerator.Inp
     val dijkstra = AmphipodDijkstra()
     val costs = dijkstra.solve(startLayout)
 
-    costs.entries.first { (layout, _) -> layout.hallway.all { it == '.' } }.value
+    costs.entries.first { (layout, cost) -> layout.hallway.all { it == '.' } && cost != 0 }.value
   }
 }
 
