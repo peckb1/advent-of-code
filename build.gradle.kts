@@ -4,6 +4,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 apply(plugin = "kotlin")
 apply(plugin = "kotlin-kapt")
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_9
+    targetCompatibility = JavaVersion.VERSION_1_9
+}
+
 plugins {
     kotlin("jvm") version "1.6.10"
     kotlin("kapt") version "1.6.10"
@@ -20,20 +25,20 @@ repositories {
 
 dependencies {
     // main dependencies
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
-    implementation("io.arrow-kt:arrow-core:1.0.1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
+    implementation("io.arrow-kt:arrow-core:1.1.2")
     implementation("org.apache.commons:commons-text:1.9")
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
     // used for generating skeletons
-    implementation("com.squareup:kotlinpoet:1.10.2")
+    implementation("com.squareup:kotlinpoet:1.11.0")
 
     // dependency injection library and annotation procressing
-    implementation("com.google.dagger:dagger:2.40.5")
-    kapt("com.google.dagger:dagger-compiler:2.40.5")
-    kaptTest("com.google.dagger:dagger-compiler:2.40.5")
+    implementation("com.google.dagger:dagger:2.42")
+    kapt("com.google.dagger:dagger-compiler:2.42")
+    kaptTest("com.google.dagger:dagger-compiler:2.42")
 
     // test libraries
     testImplementation(kotlin("test"))
