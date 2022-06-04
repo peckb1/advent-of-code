@@ -9,17 +9,13 @@ class Day03 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::directions) { input ->
-    val coveredPaths = getConnectionPoints(input)
-
-    coveredPaths
+    getConnectionPoints(input)
       .map { abs(it.key.x) + abs(it.key.y) }
       .minOrNull()
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::directions) { input ->
-    val coveredPaths = getConnectionPoints(input)
-
-    coveredPaths
+    getConnectionPoints(input)
       .map { it.value.sumOf { owner -> owner.stepsTaken } }
       .minOrNull()
   }
