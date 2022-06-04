@@ -3,6 +3,7 @@ package me.peckb.aoc._2019.calendar.day01
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import kotlin.math.max
 
 class Day01 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory
@@ -15,10 +16,12 @@ class Day01 @Inject constructor(
     input.map { originalMass ->
       var totalFuelNeeded = 0L
       var fuelToAdd = calculateFuelNeeded(originalMass)
+
       while(fuelToAdd > 0) {
         totalFuelNeeded += fuelToAdd
         fuelToAdd = calculateFuelNeeded(fuelToAdd)
       }
+
       totalFuelNeeded
     }.sum()
   }
