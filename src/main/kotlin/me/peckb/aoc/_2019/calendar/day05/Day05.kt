@@ -7,10 +7,10 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 class Day05 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-  fun partOne(filename: String, userInput: () -> Int, handleOutput: (Int) -> Unit) = generatorFactory.forFile(filename).readOne { input ->
+  fun partOne(filename: String, userInput: () -> Int, outputHandler: (Int) -> Unit) = generatorFactory.forFile(filename).readOne { input ->
     val operations = operations(input).toMutableList()
 
-    runProgram(operations, userInput, handleOutput)
+    runProgram(operations, userInput, outputHandler)
   }
 
   fun partTwo(filename: String, userInput: () -> Int, handleOutput: (Int) -> Unit) = generatorFactory.forFile(filename).readOne { input ->

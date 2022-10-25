@@ -21,14 +21,22 @@ internal class Day05Test {
   @Test
   fun testDay05PartOne() {
     var lastOutput: Int? = null
-    day05.partOne(DAY_05,{ 1 }, { lastOutput = it })
+    day05.partOne(
+      filename = DAY_05,
+      userInput = { 1 },
+      outputHandler = { lastOutput = it }
+    )
     assertEquals(12896948, lastOutput)
   }
 
   @Test
   fun testDay05PartTwo() {
     var lastOutput: Int? = null
-    day05.partTwo(DAY_05,{ 5 }, { lastOutput = it })
+    day05.partOne(
+      filename = DAY_05,
+      userInput = { 5 },
+      outputHandler = { lastOutput = it }
+    )
     assertEquals(7704130, lastOutput)
   }
 
