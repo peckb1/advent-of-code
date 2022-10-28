@@ -20,24 +20,24 @@ internal class Day05Test {
 
   @Test
   fun testDay05PartOne() {
-    var lastOutput: Int? = null
+    var lastOutput: Long? = null
     day05.partOne(
       filename = DAY_05,
       userInput = { 1 },
       outputHandler = { lastOutput = it }
     )
-    assertEquals(12896948, lastOutput)
+    assertEquals(12896948L, lastOutput)
   }
 
   @Test
   fun testDay05PartTwo() {
-    var lastOutput: Int? = null
+    var lastOutput: Long? = null
     day05.partOne(
       filename = DAY_05,
       userInput = { 5 },
       outputHandler = { lastOutput = it }
     )
-    assertEquals(7704130, lastOutput)
+    assertEquals(7704130L, lastOutput)
   }
 
   companion object {

@@ -54,6 +54,11 @@ as the value which passed the given day/phase combination
 * Day 21
   * This has been one of the more enjoyable "look at input" items when determining the stopping point(s) and finding the first/last
 
+#### 2019
+
+* Day 07
+  * This one took me a hot minute to figure out how I wanted to have the amplifiers talk to each other constantly.  
+
 #### 2021
 
 * Day 07
@@ -86,6 +91,11 @@ as the value which passed the given day/phase combination
 #### 2018
 
 * Day 09 Creating a circular linked was trivial, and simplified the problem immensely.  
+
+
+#### 2019
+
+* Day 07 Using BlockingQueue(s) with my async coroutines simplified the communication between amplifiers. 
 
 #### 2021
 
