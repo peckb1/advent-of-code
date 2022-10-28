@@ -15,20 +15,22 @@ class Day07 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { input ->
-    val phaseSettings = arrayOf(0, 1, 2, 3, 4)
+    val phaseSettings = arrayOf(0L, 1L, 2L, 3L, 4L)
     val permutations = PermutationGenerator().generatePermutations(phaseSettings)
     val ampSoftware = operations(input)
 
     val computer = Day05.IntcodeComputer()
 
-    permutations.maxOf { permutation ->
-      val head = permutation.first()
-      val tail = permutation.drop(1)
-      val aOutput = computer.generateAmpOutputSingleRun(ampSoftware.toMutableList(), head, 0)
-      tail.fold(aOutput) { previousOutput, phaseSetting ->
-        computer.generateAmpOutputSingleRun(ampSoftware.toMutableList(),
-          phaseSetting,
-          previousOutput)
+    runBlocking {
+      permutations.maxOf { permutation ->
+        val head = permutation.first()
+        val tail = permutation.drop(1)
+        val aOutput = computer.generateAmpOutputSingleRun(ampSoftware.toMutableList(), head, 0)
+        tail.fold(aOutput) { previousOutput, phaseSetting ->
+          computer.generateAmpOutputSingleRun(ampSoftware.toMutableList(),
+            phaseSetting,
+            previousOutput)
+        }
       }
     }
   }
@@ -41,12 +43,6 @@ class Day07 @Inject constructor(
     val computer = Day05.IntcodeComputer()
 
     permutations.maxOf { (aPhase, bPhase, cPhase, dPhase, ePhase) ->
-      val ampA = ampSoftware.toMutableList()
-      val ampB = ampSoftware.toMutableList()
-      val ampC = ampSoftware.toMutableList()
-      val ampD = ampSoftware.toMutableList()
-      val ampE = ampSoftware.toMutableList()
-
       val aInput = LinkedBlockingQueue<Long>().apply { add(aPhase); add(0) }
       val bInput = LinkedBlockingQueue<Long>().apply { add(bPhase) }
       val cInput = LinkedBlockingQueue<Long>().apply { add(cPhase) }
@@ -54,64 +50,24 @@ class Day07 @Inject constructor(
       val eInput = LinkedBlockingQueue<Long>().apply { add(ePhase) }
 
       runBlocking {
-        var lastEOutput = 0L
         listOf(
-          async {
-            computer.runProgramAsync(
-              ampA,
-              { withContext(Dispatchers.IO) { aInput.take().also { logIn("A", it) } } },
-              { bInput.add(it); logOut("A", it) }
-            )
-          },
-          async {
-            computer.runProgramAsync(
-              ampB,
-              { withContext(Dispatchers.IO) { bInput.take().also { logIn("B", it) } } },
-              { cInput.add(it); logOut("B", it) }
-            )
-          },
-          async {
-            computer.runProgramAsync(
-              ampC,
-              { withContext(Dispatchers.IO) { cInput.take().also { logIn("C", it) } } },
-              { dInput.add(it); logOut("C", it) }
-            )
-          },
-          async {
-            computer.runProgramAsync(
-              ampD,
-              { withContext(Dispatchers.IO) { dInput.take().also { logIn("D", it) } } },
-              { eInput.add(it); logOut("D", it) }
-            )
-          },
-          async {
-            computer.runProgramAsync(
-              ampE,
-              { withContext(Dispatchers.IO) { eInput.take().also { logIn("E", it) } } },
-              { lastEOutput = it; logOut("E", it); aInput.add(it) }
-            )
-          }
-        ).awaitAll()
-        lastEOutput
+          async { computer.runAmplification(ampSoftware.toMutableList(), aInput, bInput) },
+          async { computer.runAmplification(ampSoftware.toMutableList(), bInput, cInput) },
+          async { computer.runAmplification(ampSoftware.toMutableList(), cInput, dInput) },
+          async { computer.runAmplification(ampSoftware.toMutableList(), dInput, eInput) },
+          async { computer.runAmplification(ampSoftware.toMutableList(), eInput, aInput) },
+        ).awaitAll().last()
       }
     }
   }
 
-  private fun logIn(ampId: String, input: Long) {
-    // println("$ampId getting $input for processing")
-  }
-
-  private fun logOut(ampId: String, output: Long) {
-    // println("$ampId pushing out $output")
-  }
-
-  private fun Day05.IntcodeComputer.generateAmpOutputSingleRun(
+  private suspend fun Day05.IntcodeComputer.generateAmpOutputSingleRun(
     operations: MutableList<String>,
-    phaseSetting: Int,
-    input: Int,
-  ): Int {
+    phaseSetting: Long,
+    input: Long,
+  ): Long {
     var counter = 0
-    var amplifierAOutput = 0
+    var amplifierAOutput = 0L
     runProgram(operations,
       {
         if (counter == 0) {
@@ -121,6 +77,20 @@ class Day07 @Inject constructor(
       { amplifierAOutput = it }
     )
     return amplifierAOutput
+  }
+
+  private suspend fun Day05.IntcodeComputer.runAmplification(
+    ampSoftware: MutableList<String>,
+    input: LinkedBlockingQueue<Long>,
+    output: LinkedBlockingQueue<Long>,
+  ): Long {
+    var lastOutput = 0L
+    runProgram(
+      ampSoftware,
+      { withContext(Dispatchers.IO) { input.take() } },
+      { output.add(it); lastOutput = it }
+    )
+    return lastOutput
   }
 
   private fun operations(line: String) = line.split(",")
