@@ -3,7 +3,6 @@ package me.peckb.aoc._2019.calendar.day01
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import kotlin.math.max
 
 class Day01 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory
