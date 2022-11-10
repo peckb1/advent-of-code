@@ -6,6 +6,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import me.peckb.aoc._2019.calendar.day05.Day05
+import me.peckb.aoc._2019.calendar.day05.Day05.Companion.asMutableMap
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.generators.PermutationGenerator
 import java.util.concurrent.LinkedBlockingQueue
@@ -25,9 +26,9 @@ class Day07 @Inject constructor(
       permutations.maxOf { permutation ->
         val head = permutation.first()
         val tail = permutation.drop(1)
-        val aOutput = computer.generateAmpOutputSingleRun(ampSoftware.toMutableList(), head, 0)
+        val aOutput = computer.generateAmpOutputSingleRun(ampSoftware.asMutableMap(), head, 0)
         tail.fold(aOutput) { previousOutput, phaseSetting ->
-          computer.generateAmpOutputSingleRun(ampSoftware.toMutableList(),
+          computer.generateAmpOutputSingleRun(ampSoftware.asMutableMap(),
             phaseSetting,
             previousOutput)
         }
@@ -51,18 +52,18 @@ class Day07 @Inject constructor(
 
       runBlocking {
         listOf(
-          async { computer.runAmplification(ampSoftware.toMutableList(), aInput, bInput) },
-          async { computer.runAmplification(ampSoftware.toMutableList(), bInput, cInput) },
-          async { computer.runAmplification(ampSoftware.toMutableList(), cInput, dInput) },
-          async { computer.runAmplification(ampSoftware.toMutableList(), dInput, eInput) },
-          async { computer.runAmplification(ampSoftware.toMutableList(), eInput, aInput) },
+          async { computer.runAmplification(ampSoftware.asMutableMap(), aInput, bInput) },
+          async { computer.runAmplification(ampSoftware.asMutableMap(), bInput, cInput) },
+          async { computer.runAmplification(ampSoftware.asMutableMap(), cInput, dInput) },
+          async { computer.runAmplification(ampSoftware.asMutableMap(), dInput, eInput) },
+          async { computer.runAmplification(ampSoftware.asMutableMap(), eInput, aInput) },
         ).awaitAll().last()
       }
     }
   }
 
   private suspend fun Day05.IntcodeComputer.generateAmpOutputSingleRun(
-    operations: MutableList<String>,
+    operations: MutableMap<Long, String>,
     phaseSetting: Long,
     input: Long,
   ): Long {
@@ -80,7 +81,7 @@ class Day07 @Inject constructor(
   }
 
   private suspend fun Day05.IntcodeComputer.runAmplification(
-    ampSoftware: MutableList<String>,
+    ampSoftware: MutableMap<Long, String>,
     input: LinkedBlockingQueue<Long>,
     output: LinkedBlockingQueue<Long>,
   ): Long {
