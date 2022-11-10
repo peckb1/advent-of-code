@@ -34,64 +34,62 @@ class Day05 @Inject constructor(
       handleOutput: suspend (Long) -> Unit
     ) {
       var pointerIndex = 0L
-      while(operations.getOrDefault(pointerIndex, "0").toInt() != HALT_PROGRAM.code) {
-        val codeString = operations.getOrDefault(pointerIndex, "0").padStart(5, '0')
+      while(operations.getOperation(pointerIndex).toInt() != HALT_PROGRAM.code) {
+        val codeString = operations.getOperation(pointerIndex).padStart(5, '0')
 
         val thirdParameterMode by lazy { Mode.fromCode(codeString[0].toString()) }
         val secondParameterMode by lazy { Mode.fromCode(codeString[1].toString()) }
         val firstParameterMode by lazy { Mode.fromCode(codeString[2].toString()) }
 
-        val firstParameterValue by lazy { operations.getOrDefault(pointerIndex + 1, "0").toLong() }
-        val secondParameterValue by lazy { operations.getOrDefault(pointerIndex + 2, "0").toLong() }
-        val thirdParameterValue by lazy { operations.getOrDefault(pointerIndex + 3, "0").toLong() }
+        val firstParameterValue by lazy { operations.getOperation(pointerIndex + 1).toLong() }
+        val secondParameterValue by lazy { operations.getOperation(pointerIndex + 2).toLong() }
+        val thirdParameterValue by lazy { operations.getOperation(pointerIndex + 3).toLong() }
 
         val aValue by lazy {
           when (firstParameterMode) {
             IMMEDIATE_MODE -> firstParameterValue
-            POSITION_MODE -> operations.getOrDefault(firstParameterValue, "0").toLong()
-            RELATIVE_MODE -> operations.getOrDefault(firstParameterValue + relativeBase, "0").toLong()
+            POSITION_MODE -> operations.getOperation(firstParameterValue).toLong()
+            RELATIVE_MODE -> operations.getOperation(firstParameterValue + relativeBase).toLong()
           }
         }
         val bValue by lazy {
           when (secondParameterMode) {
             IMMEDIATE_MODE -> secondParameterValue
-            POSITION_MODE -> operations.getOrDefault(secondParameterValue, "0").toLong()
-            RELATIVE_MODE -> operations.getOrDefault(secondParameterValue + relativeBase, "0").toLong()
+            POSITION_MODE -> operations.getOperation(secondParameterValue).toLong()
+            RELATIVE_MODE -> operations.getOperation(secondParameterValue + relativeBase).toLong()
+          }
+        }
+        val setValue by lazy {
+          when (thirdParameterMode) {
+            IMMEDIATE_MODE, POSITION_MODE -> thirdParameterValue
+            RELATIVE_MODE -> thirdParameterValue + relativeBase
           }
         }
 
         when (Operations.fromCode(codeString.takeLast(2))) {
           ADD -> {
-            when (thirdParameterMode) {
-              POSITION_MODE,
-              IMMEDIATE_MODE -> operations[thirdParameterValue] = (aValue + bValue).toString()
-              RELATIVE_MODE -> operations[thirdParameterValue + relativeBase] = (aValue + bValue).toString()
-            }
+            operations[setValue] = (aValue + bValue).toString()
             pointerIndex += 4
           }
           MUL -> {
-            when (thirdParameterMode) {
-              POSITION_MODE,
-              IMMEDIATE_MODE -> operations[thirdParameterValue] = (aValue * bValue).toString()
-              RELATIVE_MODE -> operations[thirdParameterValue + relativeBase] = (aValue * bValue).toString()
-            }
+            operations[setValue] = (aValue * bValue).toString()
             pointerIndex += 4
           }
           IN -> {
             val input = userInput().toString()
             when (firstParameterMode) {
-              POSITION_MODE,
-              IMMEDIATE_MODE -> operations[firstParameterValue] = input
+              POSITION_MODE, IMMEDIATE_MODE -> operations[firstParameterValue] = input
               RELATIVE_MODE -> operations[firstParameterValue + relativeBase] = input
             }
             pointerIndex += 2
           }
           OUT -> {
-            when (firstParameterMode) {
-              IMMEDIATE_MODE -> handleOutput(firstParameterValue)
-              POSITION_MODE -> handleOutput(operations.getOrDefault(firstParameterValue, "0").toLong())
-              RELATIVE_MODE -> handleOutput(operations.getOrDefault(firstParameterValue + relativeBase, "0").toLong())
+            val output = when (firstParameterMode) {
+              IMMEDIATE_MODE -> firstParameterValue
+              POSITION_MODE -> operations.getOperation(firstParameterValue).toLong()
+              RELATIVE_MODE -> operations.getOperation(firstParameterValue + relativeBase).toLong()
             }
+            handleOutput(output)
             pointerIndex += 2
           }
           JUMP_IF_TRUE -> {
@@ -110,28 +108,16 @@ class Day05 @Inject constructor(
           }
           LESS_THAN -> {
             val valueToSet = if (aValue < bValue) { 1 } else { 0 }
-            when (thirdParameterMode) {
-              POSITION_MODE,
-              IMMEDIATE_MODE -> operations[thirdParameterValue] = valueToSet.toString()
-              RELATIVE_MODE -> operations[thirdParameterValue + relativeBase] = valueToSet.toString()
-            }
+            operations[setValue] = valueToSet.toString()
             pointerIndex += 4
           }
           EQUALS -> {
             val valueToSet = if (aValue == bValue) { 1 } else { 0 }
-            when (thirdParameterMode) {
-              POSITION_MODE,
-              IMMEDIATE_MODE -> operations[thirdParameterValue] = valueToSet.toString()
-              RELATIVE_MODE -> operations[thirdParameterValue + relativeBase] = valueToSet.toString()
-            }
+            operations[setValue] = valueToSet.toString()
             pointerIndex += 4
           }
           RELATIVE_BASE -> {
-            relativeBase += when (firstParameterMode) {
-              IMMEDIATE_MODE -> firstParameterValue
-              POSITION_MODE -> operations.getOrDefault(firstParameterValue, "0").toLong()
-              RELATIVE_MODE -> operations.getOrDefault(firstParameterValue + relativeBase, "0").toLong()
-            }
+            relativeBase += aValue
             pointerIndex += 2
           }
           HALT_PROGRAM -> { throw IllegalStateException("Should have exited before here") }
@@ -174,4 +160,7 @@ class Day05 @Inject constructor(
       .toMap()
       .toMutableMap()
   }
+}
+private fun MutableMap<Long, String>.getOperation(pointerIndex: Long): String {
+  return this.getOrDefault(pointerIndex, "0")
 }
