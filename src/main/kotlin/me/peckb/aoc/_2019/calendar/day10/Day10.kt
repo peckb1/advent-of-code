@@ -23,13 +23,14 @@ class Day10 @Inject constructor(
       .also { setupAsteroid(it, area) }
     val bestAsteroid = bestAsteroid(asteroidMap)!!
 
+    val upVector = Vector2D(0.0, -1.0)
+
     val orderOfZapping = asteroidMap[bestAsteroid]?.entries?.sortedBy { (slope, _) ->
       when (slope) {
-        is Fraction -> {
-          val v1 = Vector2D(slope.denominator.toDouble(), slope.numerator.toDouble())
-          val up = Vector2D(0.0, -1.0)
-          val angle = Vector2D.angle(up, v1)
-          if (slope.denominator < 0) { FULL_CIRCLE_RAD - angle} else { angle }
+        is Direction -> {
+          val vectorInDirection = Vector2D(slope.deltaX.toDouble(), slope.deltaY.toDouble())
+          val angle = Vector2D.angle(upVector, vectorInDirection)
+          if (slope.deltaX < 0) { FULL_CIRCLE_RAD - angle} else { angle }
         }
         PositiveInfinity -> UP_ANGLE_RAD
         PositiveZero -> RIGHT_ANGLE_RAD
@@ -47,7 +48,7 @@ class Day10 @Inject constructor(
         orderOfZapping?.forEach { (_, asteroidsAtAngle) ->
           if (asteroidsAtAngle.isNotEmpty()) {
             asteroidsAtAngle.minByOrNull {
-              bestAsteroid!!.distanceTo(it)
+              bestAsteroid.distanceTo(it)
             }?.let { asteroidToZap ->
               done = false
               asteroidsAtAngle.remove(asteroidToZap)
@@ -76,24 +77,10 @@ class Day10 @Inject constructor(
     object NegativeZero : Slope()
     object PositiveInfinity: Slope()
     object NegativeInfinity: Slope()
-    data class Fraction(val numerator: Int, val denominator: Int) : Slope() {
-      operator fun plus(other: Fraction): Fraction {
-        return Fraction(
-          numerator = this.numerator * other.denominator + this.denominator * other.numerator,
-          denominator = this.denominator * other.denominator
-        ).reduced()
-      }
-
-      operator fun times(other: Fraction): Fraction {
-        return Fraction(
-          numerator = this.numerator * other.numerator,
-          denominator = this.denominator * other.denominator
-        ).reduced()
-      }
-
-      fun reduced(): Fraction {
-        val gcd = abs(gcd(numerator, denominator))
-        return Fraction(numerator / gcd, denominator / gcd)
+    data class Direction (val deltaY: Int, val deltaX: Int) : Slope() {
+      fun reduced(): Direction {
+        val gcd = abs(gcd(deltaY, deltaX))
+        return Direction(deltaY / gcd, deltaX / gcd)
       }
 
       private tailrec fun gcd(n1: Int, n2: Int): Int {
@@ -160,8 +147,8 @@ class Day10 @Inject constructor(
       }
     } else {
       // we're actually an angle
-      mySlope = Fraction(-deltaY, -deltaX).reduced()
-      theirSlope = Fraction(deltaY, deltaX).reduced()
+      mySlope = Direction(-deltaY, -deltaX).reduced()
+      theirSlope = Direction(deltaY, deltaX).reduced()
     }
 
     return mySlope to theirSlope
