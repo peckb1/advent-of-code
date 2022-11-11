@@ -1,6 +1,5 @@
 package me.peckb.aoc._2019.calendar.day10
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo.As
 import me.peckb.aoc._2019.calendar.day10.Day10.Slope.*
 import javax.inject.Inject
 
@@ -24,28 +23,18 @@ class Day10 @Inject constructor(
       .also { setupAsteroid(it, area) }
     val bestAsteroid = bestAsteroid(asteroidMap)!!
 
-//    val up = Vector2D(0.0, -1.0)
-//    val p1 = Vector2D(-1.0, -12.0)
-//    val p2 = Vector2D(1.0, -12.0)
-//    val a1 = Vector2D.angle(up, p1)
-//    val a2 = Vector2D.angle(up, p2)
-
     val orderOfZapping = asteroidMap[bestAsteroid]?.entries?.sortedBy { (slope, _) ->
       when (slope) {
         is Fraction -> {
           val v1 = Vector2D(slope.denominator.toDouble(), slope.numerator.toDouble())
           val up = Vector2D(0.0, -1.0)
           val angle = Vector2D.angle(up, v1)
-          if (slope.denominator < 0) {
-            (360.0 * 0.017453) - angle
-          } else {
-            angle
-          }
+          if (slope.denominator < 0) { FULL_CIRCLE_RAD - angle} else { angle }
         }
-        NegativeInfinity -> 180.0 * 0.017453
-        NegativeZero -> 270.0 * 0.017453
-        PositiveInfinity -> 0.0 * 0.017453
-        PositiveZero -> 90.0 * 0.017453
+        PositiveInfinity -> UP_ANGLE_RAD
+        PositiveZero -> RIGHT_ANGLE_RAD
+        NegativeInfinity -> DOWN_ANGLE_RAD
+        NegativeZero -> LEFT_ANGLE_RAD
       }
     }
 
@@ -127,32 +116,7 @@ class Day10 @Inject constructor(
             val deltaX = asteroid.x - otherAsteroid.x
             val deltaY = asteroid.y - otherAsteroid.y
 
-            val mySlope: Slope
-            val theirSlope: Slope
-
-            if (deltaX == 0) {
-              // we're an infinity!
-              if (deltaY < 0) {
-                mySlope = NegativeInfinity
-                theirSlope = PositiveInfinity
-              } else {
-                mySlope = PositiveInfinity
-                theirSlope = NegativeInfinity
-              }
-            } else if (deltaY == 0) {
-              // we're a zero slope
-              if (deltaX < 0) {
-                mySlope = PositiveZero
-                theirSlope = NegativeZero
-              } else {
-                mySlope = NegativeZero
-                theirSlope = PositiveZero
-              }
-            } else {
-              // we're actually an angle
-              mySlope = Fraction(-deltaY, -deltaX).reduced()
-              theirSlope = Fraction(deltaY, deltaX).reduced()
-            }
+            val (mySlope, theirSlope) = findSlopes(deltaX, deltaY)
 
             // handle my slope to it
             val myAsteroidsAtSlope = myVisibleAsteroids.getOrDefault(mySlope, mutableListOf())
@@ -172,12 +136,50 @@ class Day10 @Inject constructor(
     }
   }
 
+  private fun findSlopes(deltaX: Int, deltaY: Int): Pair<Slope, Slope> {
+    val mySlope: Slope
+    val theirSlope: Slope
+
+    if (deltaX == 0) {
+      // we're an infinity!
+      if (deltaY < 0) {
+        mySlope = NegativeInfinity
+        theirSlope = PositiveInfinity
+      } else {
+        mySlope = PositiveInfinity
+        theirSlope = NegativeInfinity
+      }
+    } else if (deltaY == 0) {
+      // we're a zero slope
+      if (deltaX < 0) {
+        mySlope = PositiveZero
+        theirSlope = NegativeZero
+      } else {
+        mySlope = NegativeZero
+        theirSlope = PositiveZero
+      }
+    } else {
+      // we're actually an angle
+      mySlope = Fraction(-deltaY, -deltaX).reduced()
+      theirSlope = Fraction(deltaY, deltaX).reduced()
+    }
+
+    return mySlope to theirSlope
+  }
+
   private fun bestAsteroid(asteroidMap: MutableMap<Asteroid, MutableMap<Slope, MutableList<Asteroid>>>): Asteroid? =
     asteroidMap.maxByOrNull { (_, visibleData) ->
       visibleData.size
     }?.key
 
   companion object {
-    const val ASTEROID = '#'
+    private const val ASTEROID = '#'
+
+    private const val DEG_TO_RAD = 0.017453
+    private const val UP_ANGLE_RAD = 0.0 * 0.017453
+    private const val RIGHT_ANGLE_RAD = 90.0 * 0.017453
+    private const val DOWN_ANGLE_RAD = 180.0 * 0.017453
+    private const val LEFT_ANGLE_RAD = 270.0 * 0.017453
+    private const val FULL_CIRCLE_RAD = 360 * DEG_TO_RAD
   }
 }
