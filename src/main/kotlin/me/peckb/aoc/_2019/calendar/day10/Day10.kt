@@ -23,14 +23,14 @@ class Day10 @Inject constructor(
       .also { setupAsteroid(it, area) }
     val bestAsteroid = bestAsteroid(asteroidMap)!!
 
-    val upVector = Vector2D(0.0, -1.0)
+
 
     val orderOfZapping = asteroidMap[bestAsteroid]?.entries?.sortedBy { (slope, _) ->
       when (slope) {
         is Direction -> {
           val vectorInDirection = Vector2D(slope.deltaX.toDouble(), slope.deltaY.toDouble())
-          val angle = Vector2D.angle(upVector, vectorInDirection)
-          if (slope.deltaX < 0) { FULL_CIRCLE_RAD - angle} else { angle }
+          val angle = Vector2D.angle(UP_VECTOR, vectorInDirection)
+          if (slope.deltaX < 0) { FULL_CIRCLE_RAD - angle } else { angle }
         }
         PositiveInfinity -> UP_ANGLE_RAD
         PositiveZero -> RIGHT_ANGLE_RAD
@@ -41,7 +41,7 @@ class Day10 @Inject constructor(
 
     var numZapped = 0
     var done = false
-    var lastZapped: Asteroid = Asteroid(0, 0)
+    var lastZapped = Asteroid(0, 0)
     while (!done) {
       done = true
       run zapLoop@{
@@ -160,13 +160,16 @@ class Day10 @Inject constructor(
     }?.key
 
   companion object {
+    private val UP_VECTOR = Vector2D(0.0, -1.0)
+
     private const val ASTEROID = '#'
 
     private const val DEG_TO_RAD = 0.017453
-    private const val UP_ANGLE_RAD = 0.0 * 0.017453
-    private const val RIGHT_ANGLE_RAD = 90.0 * 0.017453
-    private const val DOWN_ANGLE_RAD = 180.0 * 0.017453
-    private const val LEFT_ANGLE_RAD = 270.0 * 0.017453
+
+    private const val UP_ANGLE_RAD = 0 * DEG_TO_RAD
+    private const val RIGHT_ANGLE_RAD = 90 * DEG_TO_RAD
+    private const val DOWN_ANGLE_RAD = 180 * DEG_TO_RAD
+    private const val LEFT_ANGLE_RAD = 270 * DEG_TO_RAD
     private const val FULL_CIRCLE_RAD = 360 * DEG_TO_RAD
   }
 }
