@@ -5,8 +5,8 @@ apply(plugin = "kotlin")
 apply(plugin = "kotlin-kapt")
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_9
-    targetCompatibility = JavaVersion.VERSION_1_9
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 plugins {

@@ -57,7 +57,9 @@ as the value which passed the given day/phase combination
 #### 2019
 
 * Day 07
-  * This one took me a hot minute to figure out how I wanted to have the amplifiers talk to each other constantly.  
+  * This one took me a hot minute to figure out how I wanted to have the amplifiers talk to each other constantly.
+* Day 09
+  * Although just another operation for the Intcode computer, the self checking baked into the input is super impressive
 
 #### 2021
 
