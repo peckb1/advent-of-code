@@ -5,8 +5,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import me.peckb.aoc._2019.calendar.day05.Day05
-import me.peckb.aoc._2019.calendar.day05.Day05.Companion.asMutableMap
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.asMutableMap
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.generators.PermutationGenerator
 import java.util.concurrent.LinkedBlockingQueue
@@ -20,7 +20,7 @@ class Day07 @Inject constructor(
     val permutations = PermutationGenerator().generatePermutations(phaseSettings)
     val ampSoftware = operations(input)
 
-    val computer = Day05.IntcodeComputer()
+    val computer = IntcodeComputer()
 
     runBlocking {
       permutations.maxOf { permutation ->
@@ -41,7 +41,7 @@ class Day07 @Inject constructor(
     val permutations = PermutationGenerator().generatePermutations(phaseSettings)
     val ampSoftware = operations(input)
 
-    val computer = Day05.IntcodeComputer()
+    val computer = IntcodeComputer()
 
     permutations.maxOf { (aPhase, bPhase, cPhase, dPhase, ePhase) ->
       val aInput = LinkedBlockingQueue<Long>().apply { add(aPhase); add(0) }
@@ -62,7 +62,7 @@ class Day07 @Inject constructor(
     }
   }
 
-  private suspend fun Day05.IntcodeComputer.generateAmpOutputSingleRun(
+  private suspend fun IntcodeComputer.generateAmpOutputSingleRun(
     operations: MutableMap<Long, String>,
     phaseSetting: Long,
     input: Long,
@@ -80,7 +80,7 @@ class Day07 @Inject constructor(
     return amplifierAOutput
   }
 
-  private suspend fun Day05.IntcodeComputer.runAmplification(
+  private suspend fun IntcodeComputer.runAmplification(
     ampSoftware: MutableMap<Long, String>,
     input: LinkedBlockingQueue<Long>,
     output: LinkedBlockingQueue<Long>,
