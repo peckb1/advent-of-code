@@ -10,16 +10,10 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 class Day05 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-  fun partOne(filename: String, userInput: () -> Long, outputHandler: (Long) -> Unit) = generatorFactory.forFile(filename).readOne { input ->
+  fun solve(filename: String, userInput: () -> Long, outputHandler: (Long) -> Unit) = generatorFactory.forFile(filename).readOne { input ->
     val operations = operations(input).asMutableMap()
 
     runBlocking { IntcodeComputer().runProgram(operations, userInput, outputHandler) }
-  }
-
-  fun partTwo(filename: String, userInput: () -> Long, handleOutput: (Long) -> Unit) = generatorFactory.forFile(filename).readOne { input ->
-    val operations = operations(input).asMutableMap()
-
-    runBlocking { IntcodeComputer().runProgram(operations, userInput, handleOutput) }
   }
 
   private fun operations(line: String) = line.split(",")
