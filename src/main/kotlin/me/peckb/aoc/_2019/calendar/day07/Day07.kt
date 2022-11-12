@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import me.peckb.aoc._2019.calendar.incode.IntcodeComputer
 import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.asMutableMap
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.operations
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.generators.PermutationGenerator
 import java.util.concurrent.LinkedBlockingQueue
@@ -93,6 +94,4 @@ class Day07 @Inject constructor(
     )
     return lastOutput
   }
-
-  private fun operations(line: String) = line.split(",")
 }

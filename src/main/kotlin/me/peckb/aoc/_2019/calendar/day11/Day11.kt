@@ -6,6 +6,7 @@ import me.peckb.aoc._2019.calendar.day11.Day11.Direction.*
 import me.peckb.aoc._2019.calendar.day11.Day11.State.*
 import me.peckb.aoc._2019.calendar.incode.IntcodeComputer
 import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.asMutableMap
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.operations
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -44,10 +45,8 @@ class Day11 @Inject constructor(
       }
     }
   }
-  
-  private fun operations(line: String) = line.split(",")
 
-  private fun MutableMap<Long, String>.paint(initialColor: Day11.Color): MutableMap<Location, Color> {
+  private fun MutableMap<Long, String>.paint(initialColor: Color): MutableMap<Location, Color> {
     val operations = this
     val hull = mutableMapOf<Location, Color>().apply { set(Location(0, 0), initialColor) }
     val computer = IntcodeComputer()

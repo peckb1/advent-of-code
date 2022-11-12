@@ -1,5 +1,6 @@
 package me.peckb.aoc._2019.calendar.day02
 
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.operations
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -8,7 +9,7 @@ class Day02 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { input ->
-    val operations = operations(input).toMutableList()
+    val operations = operations(input).map { it.toInt() }.toMutableList()
 
     operations[1] = 12
     operations[2] = 2
@@ -17,7 +18,7 @@ class Day02 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { input ->
-    val originalList = operations(input)
+    val originalList = operations(input).map { it.toInt() }
 
     var foundNoun: Int? = null
     var foundVerb: Int? = null
@@ -40,8 +41,6 @@ class Day02 @Inject constructor(
 
     (100 * (foundNoun ?: 0)) + (foundVerb ?: 0)
   }
-
-  private fun operations(line: String) = line.split(",").map { it.toInt() }
 
   private fun runProgram(operations: MutableList<Int>): Int {
     var pointerIndex = 0
