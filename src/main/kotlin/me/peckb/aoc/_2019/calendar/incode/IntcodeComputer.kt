@@ -7,13 +7,6 @@ import java.lang.IllegalStateException
 class IntcodeComputer {
   private var relativeBase = 0L
 
-  companion object {
-    fun List<String>.asMutableMap(): MutableMap<Long, String> = toMutableList()
-      .mapIndexed { index, operation -> index.toLong() to operation }
-      .toMap()
-      .toMutableMap()
-  }
-
   suspend fun runProgram(
     operations: MutableMap<Long, String>,
     userInput: suspend () -> Long,
@@ -141,5 +134,14 @@ class IntcodeComputer {
     companion object {
       fun fromCode(codeString: String) = values().first { it.code == codeString.toInt() }
     }
+  }
+
+  companion object {
+    fun List<String>.asMutableMap(): MutableMap<Long, String> = toMutableList()
+      .mapIndexed { index, operation -> index.toLong() to operation }
+      .toMap()
+      .toMutableMap()
+
+    fun operations(line: String) = line.split(",")
   }
 }

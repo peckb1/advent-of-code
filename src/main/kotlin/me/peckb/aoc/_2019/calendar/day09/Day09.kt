@@ -3,6 +3,7 @@ package me.peckb.aoc._2019.calendar.day09
 import kotlinx.coroutines.runBlocking
 import me.peckb.aoc._2019.calendar.incode.IntcodeComputer
 import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.asMutableMap
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.operations
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -32,6 +33,4 @@ class Day09 @Inject constructor(
 
     return output
   }
-
-  private fun operations(line: String) = line.split(",")
 }
