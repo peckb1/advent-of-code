@@ -60,7 +60,6 @@ class Day12 @Inject constructor(
     return if (n2 != 0L) gcd(n2, n1 % n2) else n1
   }
 
-  // x=-1, y=0, z=2
   private fun position(line: String) = line
     .drop(1)
     .dropLast(1)
@@ -84,13 +83,6 @@ class Day12 @Inject constructor(
 
     // update the position of each moon
     moons.forEach { it.move() }
-
-    var sum = 0L
-    moons.forEachIndexed { index, moonA ->
-      ((index + 1) until moons.size).map { moons[it] }.map { moonB ->
-        sum += moonA.distanceFrom(moonB)
-      }
-    }
   }
 
   data class Moon(
@@ -119,20 +111,10 @@ class Day12 @Inject constructor(
       z += zVel
     }
 
-    fun distanceFrom(moon: Moon): Long {
-      return (abs(x - moon.x) + abs(y - moon.y) + abs(z - moon.z)).toLong()
-    }
+    private fun adjustXVel(deltaV: Int) { xVel += deltaV }
 
-    private fun adjustXVel(deltaV: Int) {
-      xVel += deltaV
-    }
+    private fun adjustYVel(deltaV: Int) { yVel += deltaV }
 
-    private fun adjustYVel(deltaV: Int) {
-      yVel += deltaV
-    }
-
-    private fun adjustZVel(deltaV: Int) {
-      zVel += deltaV
-    }
+    private fun adjustZVel(deltaV: Int) { zVel += deltaV }
   }
 }
