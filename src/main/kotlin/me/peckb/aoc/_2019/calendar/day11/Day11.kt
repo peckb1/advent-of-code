@@ -31,7 +31,7 @@ class Day11 @Inject constructor(
     var maxX = Int.MIN_VALUE
     var maxY = Int.MIN_VALUE
 
-    paintedHull.forEach { (location, color) ->
+    paintedHull.forEach { (location, _) ->
       minX = min(minX, location.x)
       minY = min(minY, location.y)
       maxX = max(maxX, location.x)

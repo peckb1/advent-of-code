@@ -21,7 +21,7 @@ internal class Day05Test {
   @Test
   fun testDay05PartOne() {
     var lastOutput: Long? = null
-    day05.partOne(
+    day05.solve(
       filename = DAY_05,
       userInput = { 1 },
       outputHandler = { lastOutput = it }
@@ -32,7 +32,7 @@ internal class Day05Test {
   @Test
   fun testDay05PartTwo() {
     var lastOutput: Long? = null
-    day05.partOne(
+    day05.solve(
       filename = DAY_05,
       userInput = { 5 },
       outputHandler = { lastOutput = it }
