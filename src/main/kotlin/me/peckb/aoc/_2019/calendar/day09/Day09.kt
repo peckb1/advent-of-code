@@ -1,8 +1,8 @@
 package me.peckb.aoc._2019.calendar.day09
 
 import kotlinx.coroutines.runBlocking
-import me.peckb.aoc._2019.calendar.day05.Day05
-import me.peckb.aoc._2019.calendar.day05.Day05.Companion.asMutableMap
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer
+import me.peckb.aoc._2019.calendar.incode.IntcodeComputer.Companion.asMutableMap
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -19,7 +19,7 @@ class Day09 @Inject constructor(
   }
 
   private fun run(boostOperations: MutableMap<Long, String>, input: Long): List<Long> {
-    val computer = Day05.IntcodeComputer()
+    val computer = IntcodeComputer()
 
     val output = mutableListOf<Long>()
     runBlocking {
