@@ -6,7 +6,7 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import kotlin.math.min
 
 typealias Chemical = String
-typealias Amount = Int
+typealias Amount = Long
 typealias ChemicalAmount = Pair<Amount, Chemical>
 
 class Day14 @Inject constructor(
@@ -20,15 +20,14 @@ class Day14 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::reaction) { input ->
     val reactions = setupReactions(input)
 
-    val chemicals = mutableMapOf<Chemical, Amount>().withDefault { 0 }
-    var oreMined = mine(reactions, chemicals)
-    var fuelGained = 0L
-    while(oreMined < 1_000_000_000_000) {
-      fuelGained++
-      oreMined += mine(reactions, chemicals)
+    // starting at 1 took me ~75 seconds to run - so start closer to speed up tests ;)
+    var maxFuel = 3_500_000L
+    while(mine(reactions, fuelNeeded = maxFuel) < MAX_ORE) {
+      maxFuel++
     }
 
-    fuelGained
+    // since our last value pushed us over MAX_ORE, subtract one from the result
+    maxFuel - 1
   }
 
   private fun setupReactions(input: Sequence<Reaction>) = mutableMapOf<Chemical, Reaction>().apply {
@@ -40,10 +39,11 @@ class Day14 @Inject constructor(
 
   private fun mine(
     reactions: MutableMap<Chemical, Reaction>,
-    surplusChemicals: MutableMap<Chemical, Amount> = mutableMapOf<Chemical, Amount>().withDefault { 0 }
+    surplusChemicals: MutableMap<Chemical, Amount> = mutableMapOf<Chemical, Amount>().withDefault { 0 },
+    fuelNeeded: Long = 1
   ): Long {
     var oreMined = 0L
-    val chemicalsNeeded = mutableMapOf<Chemical, Amount>().also { it[FUEL] = 1  }
+    val chemicalsNeeded = mutableMapOf<Chemical, Amount>().also { it[FUEL] = fuelNeeded }
 
     while(chemicalsNeeded.isNotEmpty()) {
       // what do we need to make next?
@@ -64,13 +64,19 @@ class Day14 @Inject constructor(
         val reactionToMakeNeededChemical = reactions.getValue(neededChemical)
         val amountOfChemicalMadeFromReaction = reactionToMakeNeededChemical.output.first
         val remainingChemicalToMakeAfterStorageUsage = amountOfNeededChemical - chemicalsInStorageWeCanUse
-        val extraChemicalsWouldBeMade = remainingChemicalToMakeAfterStorageUsage % amountOfChemicalMadeFromReaction != 0
+        val extraChemicalsWouldBeMade = remainingChemicalToMakeAfterStorageUsage % amountOfChemicalMadeFromReaction != 0L
         val numberOfReactionsNeeded = if (extraChemicalsWouldBeMade) {
           (remainingChemicalToMakeAfterStorageUsage / amountOfChemicalMadeFromReaction) + 1
         } else {
           (remainingChemicalToMakeAfterStorageUsage / amountOfChemicalMadeFromReaction)
         }
         val amountOfChemicalCreatedFromReaction = numberOfReactionsNeeded * amountOfChemicalMadeFromReaction
+        if (extraChemicalsWouldBeMade) {
+          val surplusChemicalsThatWouldBeCreated = amountOfChemicalCreatedFromReaction - amountOfNeededChemical
+          surplusChemicals[neededChemical] = amountInSurplus + surplusChemicalsThatWouldBeCreated
+        } else {
+          surplusChemicals[neededChemical] = amountInSurplus - chemicalsInStorageWeCanUse
+        }
 
         reactionToMakeNeededChemical.input.forEach { (reactionInputAmount, reactionInputChemical) ->
           val amountOfInputNeededForReaction = numberOfReactionsNeeded * reactionInputAmount
@@ -79,13 +85,6 @@ class Day14 @Inject constructor(
           } else {
             chemicalsNeeded.merge(reactionInputChemical, amountOfInputNeededForReaction, Amount::plus)
           }
-        }
-
-        if (extraChemicalsWouldBeMade) {
-          val surplusChemicalsThatWouldBeCreated = amountOfChemicalCreatedFromReaction - amountOfNeededChemical
-          surplusChemicals[neededChemical] = amountInSurplus + surplusChemicalsThatWouldBeCreated
-        } else {
-          surplusChemicals[neededChemical] = amountInSurplus - chemicalsInStorageWeCanUse
         }
       }
     }
@@ -103,12 +102,13 @@ class Day14 @Inject constructor(
   }
 
   private fun String.toChemicalAmount(): ChemicalAmount = split(" ")
-    .let { (amount, chemical) -> ChemicalAmount(amount.toInt(), chemical) }
+    .let { (amount, chemical) -> ChemicalAmount(amount.toLong(), chemical) }
 
   data class Reaction(val input: List<ChemicalAmount>, val output: ChemicalAmount)
 
   companion object {
     private const val FUEL = "FUEL"
     private const val ORE = "ORE"
+    private const val MAX_ORE = 1_000_000_000_000
   }
 }
