@@ -13,39 +13,29 @@ class Day14 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::reaction) { input ->
-    val reactions = mutableMapOf<Chemical, Reaction>()
-    input.forEach { reaction ->
-      val outputChemical = reaction.output.second
-      reactions[outputChemical] = reaction
-    }
-
-    val oreMined = mine(reactions)
-
-    oreMined
+    val reactions = setupReactions(input)
+    mine(reactions)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::reaction) { input ->
-    val reactions = mutableMapOf<Chemical, Reaction>()
-    input.forEach { reaction ->
-      val outputChemical = reaction.output.second
-      reactions[outputChemical] = reaction
-    }
+    val reactions = setupReactions(input)
 
     val chemicals = mutableMapOf<Chemical, Amount>().withDefault { 0 }
     var oreMined = mine(reactions, chemicals)
     var fuelGained = 0L
-    var percentagesDone = 0
     while(oreMined < 1_000_000_000_000) {
       fuelGained++
       oreMined += mine(reactions, chemicals)
-      val percentageComplete = (oreMined.toDouble() / 1_000_000_000_000.0) * 100
-      if (percentageComplete.toInt() > percentagesDone) {
-        percentagesDone++
-        println("$percentagesDone% complete. $fuelGained FUEL so far")
-      }
     }
 
     fuelGained
+  }
+
+  private fun setupReactions(input: Sequence<Reaction>) = mutableMapOf<Chemical, Reaction>().apply {
+    input.forEach { reaction ->
+      val outputChemical = reaction.output.second
+      this[outputChemical] = reaction
+    }
   }
 
   private fun mine(
@@ -53,20 +43,18 @@ class Day14 @Inject constructor(
     surplusChemicals: MutableMap<Chemical, Amount> = mutableMapOf<Chemical, Amount>().withDefault { 0 }
   ): Long {
     var oreMined = 0L
-    val chemicalsNeeded = mutableListOf<ChemicalAmount>().also { it.add(1 to FUEL)  }
+    val chemicalsNeeded = mutableMapOf<Chemical, Amount>().also { it[FUEL] = 1  }
 
     while(chemicalsNeeded.isNotEmpty()) {
-      // what do we need to make?
-      val (amountOfNeededChemical, neededChemical) = chemicalsNeeded.removeFirst()
-
-      val amountInSurplus = surplusChemicals.getValue(neededChemical)
-
-      // check if we have _any_ of it in storage
-      val chemicalsInStorageWeCanUse = if (amountInSurplus > 0) {
-        min(amountInSurplus, amountOfNeededChemical)
-      } else {
-        0
+      // what do we need to make next?
+      val (neededChemical, amountOfNeededChemical) = chemicalsNeeded.firstNotNullOf { it }.also {
+        chemicalsNeeded.remove(it.key)
       }
+
+
+      // check if we have _any_ of it in storage that we can use
+      val amountInSurplus = surplusChemicals.getValue(neededChemical)
+      val chemicalsInStorageWeCanUse = min(amountInSurplus, amountOfNeededChemical)
 
       if (chemicalsInStorageWeCanUse >= amountOfNeededChemical) {
         // if we have an abundance in storage, just use our surplus
@@ -89,14 +77,7 @@ class Day14 @Inject constructor(
           if (reactionInputChemical == ORE) {
             oreMined += amountOfInputNeededForReaction
           } else {
-            val indexOfExistingNeed = chemicalsNeeded.indexOfFirst { (_, chemical) ->
-              chemical == reactionInputChemical
-            }
-            if (indexOfExistingNeed == -1) {
-              chemicalsNeeded.add(amountOfInputNeededForReaction to reactionInputChemical)
-            } else {
-              chemicalsNeeded[indexOfExistingNeed] = (chemicalsNeeded[indexOfExistingNeed].first + amountOfInputNeededForReaction) to reactionInputChemical
-            }
+            chemicalsNeeded.merge(reactionInputChemical, amountOfInputNeededForReaction, Amount::plus)
           }
         }
 
