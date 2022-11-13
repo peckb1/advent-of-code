@@ -94,10 +94,10 @@ as the value which passed the given day/phase combination
 
 * Day 09 Creating a circular linked was trivial, and simplified the problem immensely.  
 
-
 #### 2019
 
-* Day 07 Using BlockingQueue(s) with my async coroutines simplified the communication between amplifiers. 
+* Day 07 Using BlockingQueue(s) with my async coroutines simplified the communication between amplifiers.
+* Day 14 Using a binary search on the fuel needed was a much needed speed up from a linear scan until we hit the fuel value. 
 
 #### 2021
 
