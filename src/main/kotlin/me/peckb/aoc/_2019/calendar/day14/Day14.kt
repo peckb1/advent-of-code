@@ -20,14 +20,21 @@ class Day14 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::reaction) { input ->
     val reactions = setupReactions(input)
 
-    // starting at 1 took me ~75 seconds to run - so start closer to speed up tests ;)
-    var maxFuel = 3_500_000L
-    while(mine(reactions, fuelNeeded = maxFuel) < MAX_ORE) {
-      maxFuel++
+    // binary search our fuel needed to find the one
+    var low = 1
+    var high = (Int.MAX_VALUE - low)
+    while(high - low > 1) {
+      val mid = (high + low) / 2
+      val ore = mine(reactions, fuelNeeded = mid)
+      if (ore > MAX_ORE) {
+        high = mid
+      } else {
+        low = mid
+      }
     }
 
-    // since our last value pushed us over MAX_ORE, subtract one from the result
-    maxFuel - 1
+    // since our high is the first one over MAX_ORE our low (being one away) is the one right under
+    low
   }
 
   private fun setupReactions(input: Sequence<Reaction>) = mutableMapOf<Chemical, Reaction>().apply {
@@ -40,10 +47,10 @@ class Day14 @Inject constructor(
   private fun mine(
     reactions: MutableMap<Chemical, Reaction>,
     surplusChemicals: MutableMap<Chemical, Amount> = mutableMapOf<Chemical, Amount>().withDefault { 0 },
-    fuelNeeded: Long = 1
+    fuelNeeded: Int = 1
   ): Long {
     var oreMined = 0L
-    val chemicalsNeeded = mutableMapOf<Chemical, Amount>().also { it[FUEL] = fuelNeeded }
+    val chemicalsNeeded = mutableMapOf<Chemical, Amount>().also { it[FUEL] = fuelNeeded.toLong() }
 
     while(chemicalsNeeded.isNotEmpty()) {
       // what do we need to make next?
