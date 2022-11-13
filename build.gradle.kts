@@ -52,7 +52,7 @@ tasks.test {
         exceptionFormat = FULL
     }
     finalizedBy(tasks.jacocoTestReport)
-    maxParallelForks = ((Runtime.getRuntime().availableProcessors() / 3) * 2)
+    maxParallelForks = ((Runtime.getRuntime().availableProcessors() / 3.0) * 2.0).toInt()
 }
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
