@@ -73,6 +73,7 @@ class Day15 @Inject constructor(
 
     var currentLocation = startLocation
     var directionAttemptingToTravel = LOST
+
     fun userInput(): Long {
       val unknownAreasNearMe = unknownAreasNearKnownLocations[currentLocation] ?:
       throw IllegalStateException("I should not have been travelled to without a list of neighbors (even if empty)")
