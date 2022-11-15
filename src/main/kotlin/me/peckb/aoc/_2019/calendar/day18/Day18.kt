@@ -7,7 +7,7 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.pathing.GenericIntDijkstra
 import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
 import java.lang.IllegalArgumentException
-import java.lang.IllegalStateException
+import kotlin.math.min
 
 typealias Cost = Int
 
@@ -19,69 +19,85 @@ class Day18 @Inject constructor(
     caves.print()
     caves[startingLocation.y][startingLocation.x] = EMPTY
 
-    val reachableKeysA = searchForKeys(caves, startingLocation, emptySet())
-      .sortedBy { it.cost }
+    val maxKeysToFind = caves.howManyKeys()
 
+    val randomInitialCost = findRandomPathCost(caves, startingLocation)
+    findReachableKeysCost(
+      caves = caves,
+      myLocation = startingLocation,
+      foundKeys = emptySet(),
+      costNotToExceed = randomInitialCost,
+      costSoFar = 0,
+      maxKeysToFind = maxKeysToFind
+    )
+  }
 
+  private fun findRandomPathCost(
+    caves: List<List<Section>>,
+    startLocation: Location
+  ): Int {
+    var runningCost = 0
+    val foundKeys = mutableSetOf<KEY>()
+    var firstReachableKeys = searchForKeys(caves, startLocation, foundKeys)
 
-    // a, f, b, j, g, n, h, d, l, o, e, p, c, i, k, m
-    val (nextKeyA, newStartA, costToGetThereA) = reachableKeysA.first { it.key.identifier == 'a' }
-    val reachableKeysB = searchForKeys(caves, newStartA, setOf(nextKeyA))
-
-    val (nextKeyB, newStartB, costToGetThereB) = reachableKeysB.first { it.key.identifier == 'f' }
-    val reachableKeysC = searchForKeys(caves, newStartB, setOf(nextKeyA, nextKeyB))
-
-    val (nextKeyC, newStartC, costToGetThereC) = reachableKeysC.first { it.key.identifier == 'b' }
-    val reachableKeysD = searchForKeys(caves, newStartC, setOf(nextKeyA, nextKeyB, nextKeyC))
-
-    val (nextKeyD, newStartD, costToGetThereD) = reachableKeysD.first { it.key.identifier == 'j' }
-    val reachableKeysE = searchForKeys(caves, newStartD, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD))
-
-    val (nextKeyE, newStartE, costToGetThereE) = reachableKeysE.first { it.key.identifier == 'g' }
-    val reachableKeysF = searchForKeys(caves, newStartE, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE))
-
-    val (nextKeyF, newStartF, costToGetThereF) = reachableKeysF.first { it.key.identifier == 'n' }
-    val reachableKeysG = searchForKeys(caves, newStartF, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF))
-
-    val (nextKeyG, newStartG, costToGetThereG) = reachableKeysG.first { it.key.identifier == 'h' }
-    val reachableKeysH = searchForKeys(caves, newStartG, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG))
-
-    val (nextKeyH, newStartH, costToGetThereH) = reachableKeysH.first { it.key.identifier == 'd' }
-    val reachableKeysI = searchForKeys(caves, newStartH, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH))
-
-    val (nextKeyI, newStartI, costToGetThereI) = reachableKeysI.first { it.key.identifier == 'l' }
-    val reachableKeysJ = searchForKeys(caves, newStartI, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI))
-
-    val (nextKeyJ, newStartJ, costToGetThereJ) = reachableKeysJ.first { it.key.identifier == 'o' }
-    val reachableKeysK = searchForKeys(caves, newStartJ, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ))
-
-    val (nextKeyK, newStartK, costToGetThereK) = reachableKeysK.first { it.key.identifier == 'e' }
-    val reachableKeysL = searchForKeys(caves, newStartK, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK))
-
-    val (nextKeyL, newStartL, costToGetThereL) = reachableKeysL.first { it.key.identifier == 'p' }
-    val reachableKeysM = searchForKeys(caves, newStartL, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL))
-
-    val (nextKeyM, newStartM, costToGetThereM) = reachableKeysM.first { it.key.identifier == 'c' }
-    val reachableKeysN = searchForKeys(caves, newStartM, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM))
-
-    val (nextKeyN, newStartN, costToGetThereN) = reachableKeysN.first { it.key.identifier == 'i' }
-    val reachableKeysO = searchForKeys(caves, newStartN, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM, nextKeyN))
-
-    val (nextKeyO, newStartO, costToGetThereO) = reachableKeysO.first { it.key.identifier == 'k' }
-    val reachableKeysP = searchForKeys(caves, newStartO, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM, nextKeyN, nextKeyO))
-
-    val (nextKeyP, newStartP, costToGetThereP) = reachableKeysP.first { it.key.identifier == 'm' }
-    val reachableKeysDone = searchForKeys(caves, newStartP, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM, nextKeyN, nextKeyO, nextKeyP))
-
-    if (reachableKeysDone.isNotEmpty()) {
-      throw IllegalStateException("Still need to find more keys $reachableKeysDone")
+    while(firstReachableKeys.isNotEmpty()) {
+      val (key, location, cost) = firstReachableKeys.random()
+      runningCost += cost
+      foundKeys.add(key)
+      firstReachableKeys = searchForKeys(caves, location, foundKeys)
     }
 
-    costToGetThereA + costToGetThereB + costToGetThereC + costToGetThereD + costToGetThereE + costToGetThereF + costToGetThereG + costToGetThereH + costToGetThereI + costToGetThereJ + costToGetThereK + costToGetThereL + costToGetThereM + costToGetThereN + costToGetThereO + costToGetThereP
+    return runningCost
+  }
+
+  private fun findReachableKeysCost(
+    caves: List<List<Section>>,
+    myLocation: Location,
+    foundKeys: Set<KEY>,
+    costNotToExceed: Int,
+    costSoFar: Int,
+    maxKeysToFind: Int
+  ): Int {
+    val firstReachableKeys = searchForKeys(caves, myLocation, foundKeys)
+
+    if (firstReachableKeys.isEmpty()) {
+      return 0
+    }
+
+    var myCheapestChild = 9000 - costSoFar
+    var newHighCost = costNotToExceed
+    val myCheapestChildCost = firstReachableKeys.minOf search@ { (key, location, cost) ->
+      if (costSoFar + cost > newHighCost) {
+        return@search 9000
+      }
+
+      val newKeySet = foundKeys.plus(key)
+      println("\t".repeat(foundKeys.size) + "${newKeySet.size} $key")
+      if (newKeySet.size == maxKeysToFind) {
+        return 0
+      }
+
+
+      val cheapestCostAfterFindingKey = findReachableKeysCost(
+        caves = caves,
+        myLocation = location,
+        foundKeys = newKeySet,
+        costNotToExceed = newHighCost,
+        costSoFar = costSoFar + cost,
+        maxKeysToFind = maxKeysToFind
+      )
+
+      myCheapestChild = min(cheapestCostAfterFindingKey, myCheapestChild)
+      newHighCost = min(costNotToExceed, costSoFar + myCheapestChild)
+
+      cost + cheapestCostAfterFindingKey
+    }
+
+    return myCheapestChildCost
   }
 
   private fun searchForKeys(
-    caves: MutableList<MutableList<Section>>,
+    caves: List<List<Section>>,
     currentLocation: Location,
     keysFound: Set<KEY>
   ): List<AttainableKeys> {
@@ -107,11 +123,11 @@ class Day18 @Inject constructor(
   }
 
   data class Location(val x: Int, val y: Int) : DijkstraNode<Location> {
-    private lateinit var caves: MutableList<MutableList<Section>>
+    private lateinit var caves: List<List<Section>>
     private lateinit var keysFound: Set<KEY>
     private lateinit var keyLocations: MutableSet<Pair<KEY, Location>>
 
-    fun withCaves(caves: MutableList<MutableList<Section>> = mutableListOf()) = apply {
+    fun withCaves(caves: List<List<Section>> = mutableListOf()) = apply {
       this.caves = caves
     }
 
@@ -161,7 +177,7 @@ class Day18 @Inject constructor(
 
   private fun createCaves(input: Sequence<String>): Pair<MutableList<MutableList<Section>>, Location> {
     val caves = mutableListOf<MutableList<Section>>()
-    var location: Location = Location(-1, -1)
+    var location = Location(-1, -1)
 
     input.forEachIndexed { y, line ->
       val row = mutableListOf<Section>()
@@ -180,6 +196,15 @@ class Day18 @Inject constructor(
     forEach { row ->
       row.forEach { print(it) }
       println()
+    }
+  }
+
+  private fun List<List<Section>>.howManyKeys(): Int {
+    return this.sumOf { row ->
+      row.sumOf { section ->
+        val result: Int = if (section is KEY) 1 else 0
+        result
+      }
     }
   }
 
