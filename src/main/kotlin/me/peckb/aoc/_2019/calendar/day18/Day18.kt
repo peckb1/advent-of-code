@@ -7,6 +7,7 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.pathing.GenericIntDijkstra
 import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
 import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
 
 typealias Cost = Int
 
@@ -19,81 +20,71 @@ class Day18 @Inject constructor(
     caves[startingLocation.y][startingLocation.x] = EMPTY
 
     val reachableKeysA = searchForKeys(caves, startingLocation, emptySet())
-      .sortedBy { it.second.second }
+      .sortedBy { it.cost }
 
-    val (nextKeyA, infoA) = reachableKeysA.first()
-    val (newStartA , costToGetThereA) = infoA
+
+
+    // a, f, b, j, g, n, h, d, l, o, e, p, c, i, k, m
+    val (nextKeyA, newStartA, costToGetThereA) = reachableKeysA.first { it.key.identifier == 'a' }
     val reachableKeysB = searchForKeys(caves, newStartA, setOf(nextKeyA))
 
-    val (nextKeyB, infoB) = reachableKeysB.first()
-    val (newStartB , costToGetThereB) = infoB
+    val (nextKeyB, newStartB, costToGetThereB) = reachableKeysB.first { it.key.identifier == 'f' }
     val reachableKeysC = searchForKeys(caves, newStartB, setOf(nextKeyA, nextKeyB))
 
-    val (nextKeyC, infoC) = reachableKeysC.first()
-    val (newStartC , costToGetThereC) = infoC
+    val (nextKeyC, newStartC, costToGetThereC) = reachableKeysC.first { it.key.identifier == 'b' }
     val reachableKeysD = searchForKeys(caves, newStartC, setOf(nextKeyA, nextKeyB, nextKeyC))
 
-    val (nextKeyD, infoD) = reachableKeysD.first()
-    val (newStartD , costToGetThereD) = infoD
+    val (nextKeyD, newStartD, costToGetThereD) = reachableKeysD.first { it.key.identifier == 'j' }
     val reachableKeysE = searchForKeys(caves, newStartD, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD))
 
-    val (nextKeyE, infoE) = reachableKeysE.first()
-    val (newStartE , costToGetThereE) = infoE
+    val (nextKeyE, newStartE, costToGetThereE) = reachableKeysE.first { it.key.identifier == 'g' }
     val reachableKeysF = searchForKeys(caves, newStartE, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE))
 
-    val (nextKeyF, infoF) = reachableKeysF.first()
-    val (newStartF , costToGetThereF) = infoF
+    val (nextKeyF, newStartF, costToGetThereF) = reachableKeysF.first { it.key.identifier == 'n' }
     val reachableKeysG = searchForKeys(caves, newStartF, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF))
 
-    val (nextKeyG, infoG) = reachableKeysG.first()
-    val (newStartG , costToGetThereG) = infoG
+    val (nextKeyG, newStartG, costToGetThereG) = reachableKeysG.first { it.key.identifier == 'h' }
     val reachableKeysH = searchForKeys(caves, newStartG, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG))
 
-    val (nextKeyH, infoH) = reachableKeysH.first()
-    val (newStartH , costToGetThereH) = infoH
+    val (nextKeyH, newStartH, costToGetThereH) = reachableKeysH.first { it.key.identifier == 'd' }
     val reachableKeysI = searchForKeys(caves, newStartH, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH))
 
-    val (nextKeyI, infoI) = reachableKeysI.first()
-    val (newStartI , costToGetThereI) = infoI
+    val (nextKeyI, newStartI, costToGetThereI) = reachableKeysI.first { it.key.identifier == 'l' }
     val reachableKeysJ = searchForKeys(caves, newStartI, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI))
 
-    val (nextKeyJ, infoJ) = reachableKeysJ.first()
-    val (newStartJ , costToGetThereJ) = infoJ
+    val (nextKeyJ, newStartJ, costToGetThereJ) = reachableKeysJ.first { it.key.identifier == 'o' }
     val reachableKeysK = searchForKeys(caves, newStartJ, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ))
 
-    val (nextKeyK, infoK) = reachableKeysK.first()
-    val (newStartK , costToGetThereK) = infoK
+    val (nextKeyK, newStartK, costToGetThereK) = reachableKeysK.first { it.key.identifier == 'e' }
     val reachableKeysL = searchForKeys(caves, newStartK, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK))
 
-    val (nextKeyL, infoL) = reachableKeysL.first()
-    val (newStartL , costToGetThereL) = infoL
+    val (nextKeyL, newStartL, costToGetThereL) = reachableKeysL.first { it.key.identifier == 'p' }
     val reachableKeysM = searchForKeys(caves, newStartL, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL))
 
-    val (nextKeyM, infoM) = reachableKeysM.first()
-    val (newStartM , costToGetThereM) = infoM
+    val (nextKeyM, newStartM, costToGetThereM) = reachableKeysM.first { it.key.identifier == 'c' }
     val reachableKeysN = searchForKeys(caves, newStartM, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM))
 
-    val (nextKeyN, infoN) = reachableKeysN.first()
-    val (newStartN , costToGetThereN) = infoN
+    val (nextKeyN, newStartN, costToGetThereN) = reachableKeysN.first { it.key.identifier == 'i' }
     val reachableKeysO = searchForKeys(caves, newStartN, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM, nextKeyN))
 
-    val (nextKeyO, infoO) = reachableKeysO.first()
-    val (newStartO , costToGetThereO) = infoO
+    val (nextKeyO, newStartO, costToGetThereO) = reachableKeysO.first { it.key.identifier == 'k' }
     val reachableKeysP = searchForKeys(caves, newStartO, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM, nextKeyN, nextKeyO))
 
-    val (nextKeyP, infoP) = reachableKeysP.first()
-    val (newStartP , costToGetThereP) = infoP
+    val (nextKeyP, newStartP, costToGetThereP) = reachableKeysP.first { it.key.identifier == 'm' }
     val reachableKeysDone = searchForKeys(caves, newStartP, setOf(nextKeyA, nextKeyB, nextKeyC, nextKeyD, nextKeyE, nextKeyF, nextKeyG, nextKeyH, nextKeyI, nextKeyJ, nextKeyK, nextKeyL, nextKeyM, nextKeyN, nextKeyO, nextKeyP))
 
-    val totalCostForThisPath = costToGetThereA + costToGetThereB + costToGetThereC + costToGetThereD + costToGetThereE + costToGetThereF + costToGetThereG + costToGetThereH + costToGetThereI + costToGetThereJ + costToGetThereK + costToGetThereL + costToGetThereM + costToGetThereN + costToGetThereO + costToGetThereP
-    -1
+    if (reachableKeysDone.isNotEmpty()) {
+      throw IllegalStateException("Still need to find more keys $reachableKeysDone")
+    }
+
+    costToGetThereA + costToGetThereB + costToGetThereC + costToGetThereD + costToGetThereE + costToGetThereF + costToGetThereG + costToGetThereH + costToGetThereI + costToGetThereJ + costToGetThereK + costToGetThereL + costToGetThereM + costToGetThereN + costToGetThereO + costToGetThereP
   }
 
   private fun searchForKeys(
     caves: MutableList<MutableList<Section>>,
     currentLocation: Location,
     keysFound: Set<KEY>
-  ): List<Pair<KEY, Pair<Location, Cost>>> {
+  ): List<AttainableKeys> {
     val keyLocations = mutableSetOf<Pair<KEY, Location>>()
 
     val searcher = object : GenericIntDijkstra<Location>() {}
@@ -105,9 +96,8 @@ class Day18 @Inject constructor(
     val paths = searcher.solve(start)
 
     return keyLocations.mapNotNull { (key, loc) ->
-      val cost = paths[Location(loc.x, loc.y)]
-      cost?.let {
-        key to (loc to it)
+      paths[Location(loc.x, loc.y)]?.let { cost ->
+        AttainableKeys(key, loc, cost)
       }
     }
   }
@@ -167,6 +157,7 @@ class Day18 @Inject constructor(
     }
   }
 
+  data class AttainableKeys(val key: KEY, val location: Location, val cost: Cost)
 
   private fun createCaves(input: Sequence<String>): Pair<MutableList<MutableList<Section>>, Location> {
     val caves = mutableListOf<MutableList<Section>>()
@@ -194,8 +185,12 @@ class Day18 @Inject constructor(
 
   sealed class Section(private val representation: Char) {
     object WALL : Section('#')
-    data class KEY(val identifier: Char) : Section(identifier)
-    data class DOOR(val identifier: Char) : Section(identifier)
+    data class KEY(val identifier: Char) : Section(identifier) {
+      override fun toString() = super.toString()
+    }
+    data class DOOR(val identifier: Char) : Section(identifier) {
+      override fun toString() = super.toString()
+    }
     object EMPTY : Section('.')
     object PERSON : Section('@')
 
