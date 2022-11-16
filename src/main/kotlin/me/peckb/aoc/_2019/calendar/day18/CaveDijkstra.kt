@@ -2,6 +2,7 @@ package me.peckb.aoc._2019.calendar.day18
 
 import me.peckb.aoc.pathing.Dijkstra
 import me.peckb.aoc.pathing.DijkstraNodeWithCost
+import me.peckb.aoc.pathing.GenericIntDijkstra
 
 class CaveDijkstra(private val caves: List<List<Day18.Section>>) : Dijkstra<Area, Path, AreaWithPath> {
   override fun Path.plus(cost: Path): Path = cost
@@ -58,4 +59,56 @@ data class Area(val x: Int, val y: Int)
 
 data class Path(val steps: List<Area>, val cost: Int = steps.size): Comparable<Path> {
   override fun compareTo(other: Path) = cost.compareTo(other.cost)
+}
+
+class SearchingDijkstra : GenericIntDijkstra<SearchArea>()
+
+data class SearchArea(val area: Area, val foundKeys: Set<Day18.Section.KEY>) : GenericIntDijkstra.DijkstraNode<SearchArea> {
+  lateinit var keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>
+  lateinit var keysByLocation: Map<Area, Day18.Section.KEY>
+  lateinit var locationsByKey: Map<Day18.Section.KEY, Area>
+  lateinit var caves: List<List<Day18.Section>>
+
+  fun withKeyToKeyPaths(keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>) = apply {
+    this.keyToKeyPaths = keyToKeyPaths
+  }
+
+  fun withKeysByLocation(keysByLocation: Map<Area, Day18.Section.KEY>) = apply {
+    this.keysByLocation = keysByLocation
+  }
+
+  fun withCaves(caves: List<List<Day18.Section>>) = apply {
+    this.caves = caves
+  }
+
+  fun withLocationsByKey(locationsByKey: Map<Day18.Section.KEY, Area>) = apply {
+    this.locationsByKey = locationsByKey
+  }
+
+  override fun neighbors(): Map<SearchArea, Int> {
+    val myKey = keysByLocation[area]!!
+    val myConnections = keyToKeyPaths[myKey]!!.filterNot { (theirKey, path) ->
+      if (foundKeys.contains(theirKey)) {
+        // we've already seen that key
+        true
+      } else {
+        val pathBlocked = path.steps.any { area ->
+          val section = caves[area.y][area.x]
+          section is Day18.Section.DOOR && !foundKeys.contains(section.key)
+        }
+        pathBlocked
+      }
+    }
+
+    return mutableMapOf<SearchArea, Int>().also { neighborMap ->
+      myConnections.forEach { (neighborKey, neighborPath) ->
+        val area = SearchArea(locationsByKey[neighborKey]!!, foundKeys.plus(neighborKey))
+          .withCaves(caves)
+          .withKeyToKeyPaths(keyToKeyPaths)
+          .withKeysByLocation(keysByLocation)
+          .withLocationsByKey(locationsByKey)
+        neighborMap[area] = neighborPath.cost
+      }
+    }
+  }
 }
