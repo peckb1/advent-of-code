@@ -9,14 +9,60 @@ import java.lang.IllegalArgumentException
 class Day18 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-
-
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     // parse our input and create our caves
     val (caves, startingLocation) = createCaves(input).also { (c, loc) ->
       c[loc.y][loc.x] = EMPTY
     }
 
+    val (locationsByKey, keysByLocation, keyToKeyPaths) = setupData(caves)
+
+    val solver = CaveDijkstra(caves)
+    val keysFromStart = solver.solve(startingLocation)
+      .filter { (area, _) -> keysByLocation.contains(area) }
+      .filterNot { (_, path) -> path.steps.any { area -> caves[area.y][area.x] is DOOR } }
+      .mapValues { (_, path) ->
+        val newSteps = path.steps.filter { area -> caves[area.y][area.x] is DOOR }
+        Path(newSteps, path.cost)
+      }
+
+    val searcher = SearchingDijkstra()
+    val cheapest = keysFromStart.minOf { (area, path) ->
+      val startNode = SearchArea(area, setOf(keysByLocation[area]!!))
+        .withCaves(caves)
+        .withKeyToKeyPaths(keyToKeyPaths)
+        .withKeysByLocation(keysByLocation)
+        .withLocationsByKey(locationsByKey)
+      val paths = searcher.solve(startNode)
+        .filter { it.key.foundKeys.size == locationsByKey.size }
+      path.cost + paths.minOf { it.value }
+    }
+
+    cheapest
+  }
+
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    -1
+  }
+
+  private fun createCaves(input: Sequence<String>): Pair<MutableList<MutableList<Section>>, Area> {
+    val caves = mutableListOf<MutableList<Section>>()
+    var location = Area(-1, -1)
+
+    input.forEachIndexed { y, line ->
+      val row = mutableListOf<Section>()
+      line.forEachIndexed { x, sectionChar ->
+        val section = Section.fromChar(sectionChar)
+        row.add(section).also {
+          if (section is PERSON) location = Area(x, y)
+        }
+      }
+      caves.add(row)
+    }
+    return caves to location
+  }
+
+  private fun setupData(caves: MutableList<MutableList<Section>>): Data {
     // find our keys and their routes!
     val locationsByKey = mutableMapOf<KEY, Area>()
     val keysByLocation = mutableMapOf<Area, KEY>()
@@ -48,52 +94,7 @@ class Day18 @Inject constructor(
       }
     }
 
-    val keysFromStart = solver.solve(startingLocation).filter { (area, path) ->
-      keysByLocation.contains(area)
-    }.mapValues { (_, path) ->
-      val newSteps = path.steps.filter { area ->
-        caves[area.y][area.x] is DOOR
-      }
-      Path(newSteps, path.cost)
-    }.filterNot { (_, path) ->
-      path.steps.any { area -> caves[area.y][area.x] is DOOR }
-    }
-
-    val searcher = SearchingDijkstra()
-    val cheapest = keysFromStart.minOf { (area, path) ->
-      val startNode = SearchArea(area, setOf(keysByLocation[area]!!))
-        .withCaves(caves)
-        .withKeyToKeyPaths(keyToKeyPaths)
-        .withKeysByLocation(keysByLocation)
-        .withLocationsByKey(locationsByKey)
-      val paths = searcher.solve(startNode)
-        .filter { it.key.foundKeys.size == locationsByKey.size }
-      path.cost + paths.minOf { it.value }
-    }
-
-    cheapest
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    -1
-  }
-
-
-  private fun createCaves(input: Sequence<String>): Pair<MutableList<MutableList<Section>>, Area> {
-    val caves = mutableListOf<MutableList<Section>>()
-    var location = Area(-1, -1)
-
-    input.forEachIndexed { y, line ->
-      val row = mutableListOf<Section>()
-      line.forEachIndexed { x, sectionChar ->
-        val section = Section.fromChar(sectionChar)
-        row.add(section).also {
-          if (section is PERSON) location = Area(x, y)
-        }
-      }
-      caves.add(row)
-    }
-    return caves to location
+    return Data(locationsByKey, keysByLocation, keyToKeyPaths)
   }
 
   private fun List<List<Section>>.print() {
@@ -132,3 +133,9 @@ class Day18 @Inject constructor(
     }
   }
 }
+
+data class Data(
+  val locationsByKey: MutableMap<KEY, Area>,
+  val keysByLocation: MutableMap<Area, KEY>,
+  val keyToKeyPaths: Map<KEY, Map<KEY, Path>>
+)
