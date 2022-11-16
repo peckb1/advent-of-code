@@ -3,6 +3,7 @@ package me.peckb.aoc._2019.calendar.day18
 import me.peckb.aoc.pathing.Dijkstra
 import me.peckb.aoc.pathing.DijkstraNodeWithCost
 import me.peckb.aoc.pathing.GenericIntDijkstra
+import kotlin.reflect.jvm.internal.impl.utils.DFS.Neighbors
 
 class CaveDijkstra(private val caves: List<List<Day18.Section>>) : Dijkstra<Area, Path, AreaWithPath> {
   override fun Path.plus(cost: Path): Path = cost
@@ -64,10 +65,16 @@ data class Path(val steps: List<Area>, val cost: Int = steps.size): Comparable<P
 class SearchingDijkstra : GenericIntDijkstra<SearchArea>()
 
 data class SearchArea(val area: Area, val foundKeys: Set<Day18.Section.KEY>) : GenericIntDijkstra.DijkstraNode<SearchArea> {
-  lateinit var keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>
-  lateinit var keysByLocation: Map<Area, Day18.Section.KEY>
-  lateinit var locationsByKey: Map<Day18.Section.KEY, Area>
-  lateinit var caves: List<List<Day18.Section>>
+  private lateinit var keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>
+  private lateinit var keysByLocation: Map<Area, Day18.Section.KEY>
+  private lateinit var locationsByKey: Map<Day18.Section.KEY, Area>
+  private lateinit var caves: List<List<Day18.Section>>
+
+  private lateinit var customNeighbors: Map<SearchArea, Int>
+
+  fun usingCustomNeighbors(customNeighbors: Map<SearchArea, Int>) = apply {
+    this.customNeighbors = customNeighbors
+  }
 
   fun withKeyToKeyPaths(keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>) = apply {
     this.keyToKeyPaths = keyToKeyPaths
@@ -86,6 +93,10 @@ data class SearchArea(val area: Area, val foundKeys: Set<Day18.Section.KEY>) : G
   }
 
   override fun neighbors(): Map<SearchArea, Int> {
+    if (this::customNeighbors.isInitialized) {
+      return customNeighbors
+    }
+
     val myKey = keysByLocation[area]!!
     val myConnections = keyToKeyPaths[myKey]!!.filterNot { (theirKey, path) ->
       if (foundKeys.contains(theirKey)) {

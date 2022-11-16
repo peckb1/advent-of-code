@@ -42,7 +42,51 @@ class Day18 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    -1
+    // parse our input and create our caves
+    val (caves, startingLocation) = createCaves(input).also { (c, loc) ->
+      val (x, y) = loc
+      c[y][x] = WALL
+      c[y - 1][x] = WALL
+      c[y][x + 1] = WALL
+      c[y + 1][x] = WALL
+      c[y][x - 1] = WALL
+      c.print()
+    }
+    val (locationsByKey, keysByLocation, keyToKeyPaths) = setupData(caves)
+
+    val solver = CaveDijkstra(caves)
+    val startingLocations = startingLocation.let { (x, y) ->
+      listOf(
+        Area(x - 1, y - 1),
+        Area(x - 1, y + 1),
+        Area(x + 1, y - 1),
+        Area(x + 1, y + 1),
+      )
+    }
+    val customNeighbors = startingLocations
+      .map { solver.solve(it).toSafeKeys(keysByLocation, caves) }
+      .flatMap { it.asSequence() }
+      .groupBy({ it.key }, { it.value })
+      .mapValues { (_, v) -> v.first().cost }
+      .mapKeys { (area, _) ->
+        SearchArea(area, emptySet())
+          .withCaves(caves)
+          .withKeyToKeyPaths(keyToKeyPaths)
+          .withKeysByLocation(keysByLocation)
+          .withLocationsByKey(locationsByKey)
+      }
+
+    val searcher = SearchingDijkstra()
+    val startNode = SearchArea(Area(startingLocation.x, startingLocation.y), emptySet())
+      .withCaves(caves)
+      .withKeyToKeyPaths(keyToKeyPaths)
+      .withKeysByLocation(keysByLocation)
+      .withLocationsByKey(locationsByKey)
+      .usingCustomNeighbors(customNeighbors)
+
+    searcher.solve(startNode)
+      .filter { it.key.foundKeys.size == locationsByKey.size }
+      .minOfOrNull { it.value }
   }
 
   private fun createCaves(input: Sequence<String>): Pair<MutableList<MutableList<Section>>, Area> {
@@ -133,6 +177,16 @@ class Day18 @Inject constructor(
     }
   }
 }
+
+private fun MutableMap<Area, Path>.toSafeKeys(
+  keysByLocation: MutableMap<Area, KEY>,
+  caves: MutableList<MutableList<Day18.Section>>
+) = this.filter { (area, _) -> keysByLocation.contains(area) }
+  .filterNot { (_, path) -> path.steps.any { area -> caves[area.y][area.x] is DOOR } }
+  .mapValues { (_, path) ->
+    val newSteps = path.steps.filter { area -> caves[area.y][area.x] is DOOR }
+    Path(newSteps, path.cost)
+  }
 
 data class Data(
   val locationsByKey: MutableMap<KEY, Area>,
