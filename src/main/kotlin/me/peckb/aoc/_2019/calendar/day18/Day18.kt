@@ -6,69 +6,68 @@ import javax.inject.Inject
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.pathing.Dijkstra
 import me.peckb.aoc.pathing.DijkstraNodeWithCost
+import me.peckb.aoc.pathing.GenericIntDijkstra
 import java.lang.IllegalArgumentException
 import kotlin.math.min
 
 class Day18 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-  var globalCounter: Long = 0
 
-  class CaveDijkstra(private val caves: List<List<Section>>) : Dijkstra<Area, Path, AreaWithPath> {
-    override fun Path.plus(cost: Path): Path = cost
+  class SearchingDijkstra(
 
-    override fun Area.withCost(cost: Path): AreaWithPath = AreaWithPath(this, cost).withCaves(caves)
+  ) : GenericIntDijkstra<SearchArea>() {
 
-    override fun minCost(): Path = Path(emptyList(), Int.MIN_VALUE)
-
-    override fun maxCost(): Path = Path(emptyList(), Int.MAX_VALUE)
   }
 
-  class AreaWithPath(private val area: Area, private val path: Path) : DijkstraNodeWithCost<Area, Path> {
-    private lateinit var caves: List<List<Section>>
+  data class SearchArea(val area: Area, val foundKeys: Set<KEY>) : GenericIntDijkstra.DijkstraNode<SearchArea> {
+    lateinit var keyToKeyPaths: Map<KEY, Map<KEY, Path>>
+    lateinit var keysByLocation: Map<Area, KEY>
+    lateinit var locationsByKey: Map<KEY, Area>
+    lateinit var caves: List<List<Section>>
 
-    override fun compareTo(other: DijkstraNodeWithCost<Area, Path>): Int {
-      val pathCompare by lazy { path.compareTo(other.cost()) }
-      val yCompare by lazy { path.steps.last().y.compareTo(other.cost().steps.last().y) }
-      val xCompare by lazy { path.steps.last().x.compareTo(other.cost().steps.last().x) }
-
-      return when (pathCompare) {
-        0 -> {
-          when (yCompare) {
-            0 -> xCompare
-            else -> yCompare
-          }
-        }
-        else -> pathCompare
-      }
+    fun withKeyToKeyPaths(keyToKeyPaths: Map<KEY, Map<KEY, Path>>) = apply {
+      this.keyToKeyPaths = keyToKeyPaths
     }
 
-    override fun neighbors(): List<AreaWithPath> {
-      val (x, y) = area
-
-      val n = caves[y - 1][x] to Area(x, y - 1)
-      val e = caves[y][x + 1] to Area(x + 1, y)
-      val s = caves[y + 1][x] to Area(x, y + 1)
-      val w = caves[y][x - 1] to Area(x - 1, y)
-
-      return listOf(n, e, s, w)
-        .filter { (section, _) -> section !is WALL }
-        .map { (_, area) -> AreaWithPath(area, Path(path.steps.plus(area))) }
+    fun withKeysByLocation(keysByLocation: Map<Area, KEY>) = apply {
+      this.keysByLocation = keysByLocation
     }
-
-    override fun node(): Area = area
-
-    override fun cost(): Path = path
 
     fun withCaves(caves: List<List<Section>>) = apply {
       this.caves = caves
     }
-  }
 
-  data class Area(val x: Int, val y: Int)
+    fun withLocationsByKey(locationsByKey: Map<KEY, Area>) = apply {
+      this.locationsByKey = locationsByKey
+    }
 
-  data class Path(val steps: List<Area>, val cost: Int = steps.size): Comparable<Path> {
-    override fun compareTo(other: Path) = cost.compareTo(other.cost)
+    override fun neighbors(): Map<SearchArea, Int> {
+      val myKey = keysByLocation[area]!!
+      val myConnections = keyToKeyPaths[myKey]!!.filterNot { (theirKey, path) ->
+        if (foundKeys.contains(theirKey)) {
+          // we've already seen that key
+          true
+        } else {
+          val pathBlocked = path.steps.any { area ->
+            val section = caves[area.y][area.x]
+            section is DOOR && !foundKeys.contains(section.key)
+          }
+          pathBlocked
+        }
+      }
+
+      return mutableMapOf<SearchArea, Int>().also { neighborMap ->
+         myConnections.forEach { (neighborKey, neighborPath) ->
+           val area = SearchArea(locationsByKey[neighborKey]!!, foundKeys.plus(neighborKey))
+             .withCaves(caves)
+             .withKeyToKeyPaths(keyToKeyPaths)
+             .withKeysByLocation(keysByLocation)
+             .withLocationsByKey(locationsByKey)
+           neighborMap[area] = neighborPath.cost
+         }
+      }
+    }
   }
 
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
@@ -97,7 +96,7 @@ class Day18 @Inject constructor(
 
     // create some helper/reference maps
     val keysByLocation = keys.associateBy({ it.second }, { it.first })
-    val locationsByKeys = keys.associateBy({ it.first }, { it.second })
+    val locationsByKey = keys.associateBy({ it.first }, { it.second })
 
     // cull the map of keys to everywhere to just a map of keys to other keys
     // convert "routes" into just the paths from key to key, knowing which doors block those keys
@@ -113,95 +112,118 @@ class Day18 @Inject constructor(
         }
     }
 
-    // find the keys reachable from our start location
     val keysFromStart = solver.solve(startingLocation).filter { (area, path) ->
       keysByLocation.contains(area)
+    }.mapValues { (_, path) ->
+      val newSteps = path.steps.filter { area ->
+        caves[area.y][area.x] is DOOR
+      }
+      Path(newSteps, path.cost)
     }.filterNot { (_, path) ->
       path.steps.any { area -> caves[area.y][area.x] is DOOR }
     }
 
-    findCheapPath(keysFromStart, keyToKeyPaths, keysByLocation, locationsByKeys, caves)
-  }
-
-  private fun findCheapPath(
-    keysFromStart: Map<Area, Path>,
-    keyToKeyPaths: Map<KEY, Map<KEY, Path>>,
-    keysByLocation: Map<Area, KEY>,
-    locationsByKeys: Map<KEY, Area>,
-    caves: List<List<Section>>
-  ): Int? {
-    return keysFromStart.mapNotNull { (startKeyArea, pathToStartKey) ->
-      println("Start Key ${keysByLocation[startKeyArea]}")
-
-      findRoute(
-        keyToKeyPaths = keyToKeyPaths,
-        keysByLocation = keysByLocation,
-        locationsByKeys = locationsByKeys,
-        caves = caves,
-        startArea = startKeyArea,
-        foundKeys = setOf(keysByLocation.getValue(startKeyArea)),
-        costToHere = pathToStartKey.cost,
-        bestPathSoFar = Int.MAX_VALUE
-      )
-    }.minOfOrNull { it }
-  }
-
-  private fun findRoute(
-    keyToKeyPaths: Map<KEY, Map<KEY, Path>>,
-    keysByLocation: Map<Area, KEY>,
-    locationsByKeys: Map<KEY, Area>,
-    caves: List<List<Section>>,
-    startArea: Area,
-    foundKeys: Set<KEY>,
-    costToHere: Int,
-    bestPathSoFar: Int
-  ): Int? {
-    val myKey = keysByLocation.getValue(startArea)
-    val reachableKeys = keyToKeyPaths.getValue(myKey)
-      .asSequence()
-      .filterNot { (key, _) -> foundKeys.contains(key) }
-      .filterNot { (_, path) ->
-        path.steps.any { area ->
-          val section = caves[area.y][area.x]
-          section is DOOR && !foundKeys.contains(KEY(section.identifier.lowercaseChar()))
-        }
-      }.filterNot { (_, path) ->
-        costToHere + path.cost > bestPathSoFar
-      }.toList()
-
-    return if (reachableKeys.isEmpty()) {
-      // we have nowhere to go!
-      if (foundKeys.size == keyToKeyPaths.size) {
-        // we found all possible keys!
-//        println("$foundKeys $costToHere")
-        globalCounter ++
-        println(globalCounter)
-        costToHere
-      } else {
-        // we have nowhere to go, but didn't find everyone, so it's a failed route
-        globalCounter ++
-        null
-      }
-    } else {
-      // we have more keys to try and fetch!
-      var newBestPath = bestPathSoFar
-      reachableKeys.mapNotNull { (nextKey, pathToNextKey) ->
-        val route = findRoute(
-          keyToKeyPaths = keyToKeyPaths,
-          keysByLocation = keysByLocation,
-          locationsByKeys = locationsByKeys,
-          caves = caves,
-          startArea = locationsByKeys.getValue(nextKey),
-          foundKeys = foundKeys.plus(nextKey),
-          costToHere = costToHere + pathToNextKey.cost,
-          bestPathSoFar = newBestPath
-        )
-        route?.also {
-          newBestPath = min(newBestPath, it)
-        }
-      }.minOfOrNull { it }
+    val searcher = SearchingDijkstra()
+    val cheapest = keysFromStart.minOf { (area, path) ->
+      val startNode = SearchArea(area, setOf(keysByLocation[area]!!))
+        .withCaves(caves)
+        .withKeyToKeyPaths(keyToKeyPaths)
+        .withKeysByLocation(keysByLocation)
+        .withLocationsByKey(locationsByKey)
+      val paths = searcher.solve(startNode)
+        .filter { it.key.foundKeys.size == keys.size }
+      println("Finished ${keysByLocation[area]}")
+      path.cost + paths.minOf { it.value }
     }
+
+    cheapest
+
+//    // find the keys reachable from our start location
+//    val keysFromStart = solver.solve(startingLocation).filter { (area, path) ->
+//      keysByLocation.contains(area)
+//    }.filterNot { (_, path) ->
+//      path.steps.any { area -> caves[area.y][area.x] is DOOR }
+//    }
+//
+//    findCheapPath(keysFromStart, keyToKeyPaths, keysByLocation, locationsByKeys, caves)
   }
+
+//  private fun findCheapPath(
+//    keysFromStart: Map<Area, Path>,
+//    keyToKeyPaths: Map<KEY, Map<KEY, Path>>,
+//    keysByLocation: Map<Area, KEY>,
+//    locationsByKeys: Map<KEY, Area>,
+//    caves: List<List<Section>>
+//  ): Int? {
+//    return keysFromStart.mapNotNull { (startKeyArea, pathToStartKey) ->
+//      println("Start Key ${keysByLocation[startKeyArea]}")
+//
+//      findRoute(
+//        keyToKeyPaths = keyToKeyPaths,
+//        keysByLocation = keysByLocation,
+//        locationsByKeys = locationsByKeys,
+//        caves = caves,
+//        startArea = startKeyArea,
+//        foundKeys = setOf(keysByLocation.getValue(startKeyArea)),
+//        costToHere = pathToStartKey.cost,
+//        bestPathSoFar = Int.MAX_VALUE
+//      )
+//    }.minOfOrNull { it }
+//  }
+
+//  private fun findRoute(
+//    keyToKeyPaths: Map<KEY, Map<KEY, Path>>,
+//    keysByLocation: Map<Area, KEY>,
+//    locationsByKeys: Map<KEY, Area>,
+//    caves: List<List<Section>>,
+//    startArea: Area,
+//    foundKeys: Set<KEY>,
+//    costToHere: Int,
+//    bestPathSoFar: Int
+//  ): Int? {
+//    val myKey = keysByLocation.getValue(startArea)
+//    val reachableKeys = keyToKeyPaths.getValue(myKey)
+//      .asSequence()
+//      .filterNot { (key, _) -> foundKeys.contains(key) }
+//      .filterNot { (_, path) ->
+//        path.steps.any { area ->
+//          val section = caves[area.y][area.x]
+//          section is DOOR && !foundKeys.contains(KEY(section.identifier.lowercaseChar()))
+//        }
+//      }.filterNot { (_, path) ->
+//        costToHere + path.cost > bestPathSoFar
+//      }.toList()
+//
+//    return if (reachableKeys.isEmpty()) {
+//      // we have nowhere to go!
+//      if (foundKeys.size == keyToKeyPaths.size) {
+//        // we found all possible keys!
+//        println(globalCounter)
+//        costToHere
+//      } else {
+//        // we have nowhere to go, but didn't find everyone, so it's a failed route
+//        null
+//      }
+//    } else {
+//      // we have more keys to try and fetch!
+//      var newBestPath = bestPathSoFar
+//      reachableKeys.mapNotNull { (nextKey, pathToNextKey) ->
+//        val route = findRoute(
+//          keyToKeyPaths = keyToKeyPaths,
+//          keysByLocation = keysByLocation,
+//          locationsByKeys = locationsByKeys,
+//          caves = caves,
+//          startArea = locationsByKeys.getValue(nextKey),
+//          foundKeys = foundKeys.plus(nextKey),
+//          costToHere = costToHere + pathToNextKey.cost,
+//          bestPathSoFar = newBestPath
+//        )
+//        route?.also {
+//          newBestPath = min(newBestPath, it)
+//        }
+//      }.minOfOrNull { it }
+//    }
+//  }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     -1
@@ -237,7 +259,7 @@ class Day18 @Inject constructor(
     data class KEY(val identifier: Char) : Section(identifier) {
       override fun toString() = super.toString()
     }
-    data class DOOR(val identifier: Char) : Section(identifier) {
+    data class DOOR(val identifier: Char, val key: KEY = KEY(identifier.lowercaseChar())) : Section(identifier) {
       override fun toString() = super.toString()
     }
     object EMPTY : Section('.')
