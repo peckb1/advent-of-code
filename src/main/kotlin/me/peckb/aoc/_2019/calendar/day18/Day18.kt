@@ -14,43 +14,38 @@ class Day18 @Inject constructor(
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     // parse our input and create our caves
     val (caves, startingLocation) = createCaves(input).also { (c, loc) ->
-      c.print()
       c[loc.y][loc.x] = EMPTY
     }
 
-    // find our keys!
-    val keys = caves.flatMapIndexed { y, row ->
-      row.mapIndexedNotNull { x, section ->
-        if (section is KEY) { section to Area(x, y) } else { null }
+    // find our keys and their routes!
+    val locationsByKey = mutableMapOf<KEY, Area>()
+    val keysByLocation = mutableMapOf<Area, KEY>()
+    caves.forEachIndexed { y, row ->
+      row.forEachIndexed { x, section ->
+        if (section is KEY) {
+          val area = Area(x, y)
+          locationsByKey[section] = area
+          keysByLocation[area] = section
+        }
       }
     }
 
-    // setup a map of every key to the path to everywhere else on the map
+    // set up a map of every key to the path to everywhere else on the map
     val solver = CaveDijkstra(caves)
-    val routes = mutableMapOf<KEY, MutableMap<Area, Path>>().apply {
-      keys.associateByTo(
-        destination = this,
-        keySelector = { (key, _) -> key},
-        valueTransform = { (_, area) -> solver.solve(area) }
-      )
+    val routes = locationsByKey.mapValues { (_, area) ->
+      solver.solve(area)
     }
-
-    // create some helper/reference maps
-    val keysByLocation = keys.associateBy({ it.second }, { it.first })
-    val locationsByKey = keys.associateBy({ it.first }, { it.second })
 
     // cull the map of keys to everywhere to just a map of keys to other keys
     // convert "routes" into just the paths from key to key, knowing which doors block those keys
-    val keyToKeyPaths = routes.mapValues { (key, paths) ->
-      paths.filter { (area, _) -> keysByLocation.contains(area) }
-        .filterNot { (area, _) -> keysByLocation.getValue(area) == key }
-        .mapKeys { (area, _) -> keysByLocation.getValue(area) }
-        .mapValues { (_, path) ->
-          val newSteps = path.steps.filter { area ->
-            caves[area.y][area.x] is DOOR
+    val keyToKeyPaths: Map<KEY, Map<KEY, Path>> = routes.mapValues { (_, paths) ->
+      mutableMapOf<KEY, Path>().apply {
+        paths.filter { (area, path) -> keysByLocation.contains(area) && path.cost > 0 }
+          .forEach { (area, path) ->
+            val newSteps = path.steps.filter { caves[it.y][it.x] is DOOR }
+            this[keysByLocation[area]!!] = Path(newSteps, path.cost)
           }
-          Path(newSteps, path.cost)
-        }
+      }
     }
 
     val keysFromStart = solver.solve(startingLocation).filter { (area, path) ->
@@ -72,8 +67,7 @@ class Day18 @Inject constructor(
         .withKeysByLocation(keysByLocation)
         .withLocationsByKey(locationsByKey)
       val paths = searcher.solve(startNode)
-        .filter { it.key.foundKeys.size == keys.size }
-      println("Finished ${keysByLocation[area]}")
+        .filter { it.key.foundKeys.size == locationsByKey.size }
       path.cost + paths.minOf { it.value }
     }
 
