@@ -19,6 +19,7 @@ internal class Day18Test {
 
   @Test
   fun testDay18PartOne() {
+    // 4286 too high
     assertEquals(-1, day18.partOne(DAY_18))
   }
 

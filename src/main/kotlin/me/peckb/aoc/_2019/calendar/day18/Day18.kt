@@ -7,10 +7,13 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.pathing.Dijkstra
 import me.peckb.aoc.pathing.DijkstraNodeWithCost
 import java.lang.IllegalArgumentException
+import kotlin.math.min
 
 class Day18 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
+  var globalCounter: Long = 0
+
   class CaveDijkstra(private val caves: List<List<Section>>) : Dijkstra<Area, Path, AreaWithPath> {
     override fun Path.plus(cost: Path): Path = cost
 
@@ -102,6 +105,12 @@ class Day18 @Inject constructor(
       paths.filter { (area, _) -> keysByLocation.contains(area) }
         .filterNot { (area, _) -> keysByLocation.getValue(area) == key }
         .mapKeys { (area, _) -> keysByLocation.getValue(area) }
+        .mapValues { (_, path) ->
+          val newSteps = path.steps.filter { area ->
+            caves[area.y][area.x] is DOOR
+          }
+          Path(newSteps, path.cost)
+        }
     }
 
     // find the keys reachable from our start location
@@ -125,13 +134,14 @@ class Day18 @Inject constructor(
       println("Start Key ${keysByLocation[startKeyArea]}")
 
       findRoute(
-        keyToKeyPaths,
-        keysByLocation,
-        locationsByKeys,
-        caves,
-        startKeyArea,
-        setOf(keysByLocation.getValue(startKeyArea)),
-        pathToStartKey.cost
+        keyToKeyPaths = keyToKeyPaths,
+        keysByLocation = keysByLocation,
+        locationsByKeys = locationsByKeys,
+        caves = caves,
+        startArea = startKeyArea,
+        foundKeys = setOf(keysByLocation.getValue(startKeyArea)),
+        costToHere = pathToStartKey.cost,
+        bestPathSoFar = Int.MAX_VALUE
       )
     }.minOfOrNull { it }
   }
@@ -143,43 +153,52 @@ class Day18 @Inject constructor(
     caves: List<List<Section>>,
     startArea: Area,
     foundKeys: Set<KEY>,
-    costToHere: Int
+    costToHere: Int,
+    bestPathSoFar: Int
   ): Int? {
     val myKey = keysByLocation.getValue(startArea)
     val reachableKeys = keyToKeyPaths.getValue(myKey)
+      .asSequence()
       .filterNot { (key, _) -> foundKeys.contains(key) }
       .filterNot { (_, path) ->
         path.steps.any { area ->
           val section = caves[area.y][area.x]
           section is DOOR && !foundKeys.contains(KEY(section.identifier.lowercaseChar()))
         }
-      }
+      }.filterNot { (_, path) ->
+        costToHere + path.cost > bestPathSoFar
+      }.toList()
 
     return if (reachableKeys.isEmpty()) {
       // we have nowhere to go!
       if (foundKeys.size == keyToKeyPaths.size) {
         // we found all possible keys!
-        println("$costToHere $foundKeys")
+//        println("$foundKeys $costToHere")
+        globalCounter ++
+        println(globalCounter)
         costToHere
       } else {
         // we have nowhere to go, but didn't find everyone, so it's a failed route
+        globalCounter ++
         null
       }
     } else {
       // we have more keys to try and fetch!
+      var newBestPath = bestPathSoFar
       reachableKeys.mapNotNull { (nextKey, pathToNextKey) ->
-        if (foundKeys.size < 5) {
-          println("\t".repeat(foundKeys.size) +"NextKey Key $nextKey")
-        }
-        findRoute(
-          keyToKeyPaths,
-          keysByLocation,
-          locationsByKeys,
-          caves,
-          locationsByKeys.getValue(nextKey),
-          foundKeys.plus(nextKey),
-          costToHere + pathToNextKey.cost
+        val route = findRoute(
+          keyToKeyPaths = keyToKeyPaths,
+          keysByLocation = keysByLocation,
+          locationsByKeys = locationsByKeys,
+          caves = caves,
+          startArea = locationsByKeys.getValue(nextKey),
+          foundKeys = foundKeys.plus(nextKey),
+          costToHere = costToHere + pathToNextKey.cost,
+          bestPathSoFar = newBestPath
         )
+        route?.also {
+          newBestPath = min(newBestPath, it)
+        }
       }.minOfOrNull { it }
     }
   }
