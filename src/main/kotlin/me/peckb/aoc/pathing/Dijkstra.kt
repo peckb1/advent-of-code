@@ -43,7 +43,7 @@ interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWith
 }
 
 interface DijkstraNodeWithCost<Node, Cost> : Comparable<DijkstraNodeWithCost<Node, Cost>> {
-  fun neighbors(): List<DijkstraNodeWithCost<Node, Cost>>?
+  fun neighbors(): List<DijkstraNodeWithCost<Node, Cost>>
   fun node(): Node
   fun cost(): Cost
 }
