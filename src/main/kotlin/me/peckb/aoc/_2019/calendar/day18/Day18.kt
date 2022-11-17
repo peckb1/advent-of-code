@@ -102,14 +102,11 @@ class Day18 @Inject constructor(
 
   sealed class Section {
     sealed class Source : Section() {
-      data class Robot(val id: Int) : Source() { override fun toString() = "@" }
-      data class Key(val id: Char) : Source() { override fun toString() = "$id" }
+      data class Robot(val id: Int) : Source()
+      data class Key(val id: Char) : Source()
     }
-    data class Door(val id: Char) : Section() {
-      override fun toString() = "$id"
-      val key: Key = Key(id.lowercaseChar())
-    }
-    object Empty : Section() { override fun toString() = "." }
-    object Wall : Section() { override fun toString() = "#" }
+    data class Door(val id: Char) : Section() { val key: Key = Key(id.lowercaseChar()) }
+    object Empty : Section()
+    object Wall : Section()
   }
  }
