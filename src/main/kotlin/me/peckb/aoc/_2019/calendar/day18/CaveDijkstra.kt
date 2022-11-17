@@ -3,7 +3,6 @@ package me.peckb.aoc._2019.calendar.day18
 import me.peckb.aoc.pathing.Dijkstra
 import me.peckb.aoc.pathing.DijkstraNodeWithCost
 import me.peckb.aoc.pathing.GenericIntDijkstra
-import kotlin.reflect.jvm.internal.impl.utils.DFS.Neighbors
 
 class CaveDijkstra(private val caves: List<List<Day18.Section>>) : Dijkstra<Area, Path, AreaWithPath> {
   override fun Path.plus(cost: Path): Path = cost
@@ -15,7 +14,7 @@ class CaveDijkstra(private val caves: List<List<Day18.Section>>) : Dijkstra<Area
   override fun maxCost(): Path = Path(emptyList(), Int.MAX_VALUE)
 }
 
-class AreaWithPath(private val area: Area, private val path: Path) : DijkstraNodeWithCost<Area, Path> {
+data class AreaWithPath(private val area: Area, private val path: Path) : DijkstraNodeWithCost<Area, Path> {
   private lateinit var caves: List<List<Day18.Section>>
 
   override fun compareTo(other: DijkstraNodeWithCost<Area, Path>): Int {
@@ -70,10 +69,10 @@ data class SearchArea(val area: Area, val foundKeys: Set<Day18.Section.KEY>) : G
   private lateinit var locationsByKey: Map<Day18.Section.KEY, Area>
   private lateinit var caves: List<List<Day18.Section>>
 
-  private lateinit var customNeighbors: Map<SearchArea, Int>
+  private lateinit var initialNeighbors: (Set<Day18.Section.KEY>) -> Map<SearchArea, Int>
 
-  fun usingCustomNeighbors(customNeighbors: Map<SearchArea, Int>) = apply {
-    this.customNeighbors = customNeighbors
+  fun usingInitialNeighbors(initialNeighbors: (Set<Day18.Section.KEY>) -> Map<SearchArea, Int>) = apply {
+    this.initialNeighbors = initialNeighbors
   }
 
   fun withKeyToKeyPaths(keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>) = apply {
@@ -93,31 +92,46 @@ data class SearchArea(val area: Area, val foundKeys: Set<Day18.Section.KEY>) : G
   }
 
   override fun neighbors(): Map<SearchArea, Int> {
-    if (this::customNeighbors.isInitialized) {
-      return customNeighbors
+    val myKey = keysByLocation[area]
+
+//    println("Looking for neighbors for $myKey")
+
+    val extraConnections = if (this::initialNeighbors.isInitialized && foundKeys.size != keyToKeyPaths.size) {
+      val keySet = myKey?.let(foundKeys::plus) ?: foundKeys
+//      println("Assuming we have seen $keySet")
+      initialNeighbors.invoke(keySet).also {
+//        println("Found these extra connections $it")
+      }.toMutableMap()
+    } else {
+//      println("no extra connections")
+      mutableMapOf()
     }
 
-    val myKey = keysByLocation[area]!!
-    val myConnections = keyToKeyPaths[myKey]!!.filterNot { (theirKey, path) ->
-      if (foundKeys.contains(theirKey)) {
-        // we've already seen that key
-        true
-      } else {
-        val pathBlocked = path.steps.any { area ->
-          val section = caves[area.y][area.x]
-          section is Day18.Section.DOOR && !foundKeys.contains(section.key)
+    val myConnections = myKey?.let {
+      keyToKeyPaths[it]!!.filterNot { (theirKey, path) ->
+        if (foundKeys.contains(theirKey)) {
+          // we've already seen that key
+          true
+        } else {
+          val pathBlocked = path.steps.any { area ->
+            val section = caves[area.y][area.x]
+            section is Day18.Section.DOOR && !foundKeys.contains(section.key)
+          }
+          pathBlocked
         }
-        pathBlocked
       }
-    }
+    } ?: emptyMap()
 
-    return mutableMapOf<SearchArea, Int>().also { neighborMap ->
+    println("My normal connections are $myConnections")
+
+    return extraConnections.also { neighborMap ->
       myConnections.forEach { (neighborKey, neighborPath) ->
         val area = SearchArea(locationsByKey[neighborKey]!!, foundKeys.plus(neighborKey))
           .withCaves(caves)
           .withKeyToKeyPaths(keyToKeyPaths)
           .withKeysByLocation(keysByLocation)
           .withLocationsByKey(locationsByKey)
+          .usingInitialNeighbors(initialNeighbors)
         neighborMap[area] = neighborPath.cost
       }
     }

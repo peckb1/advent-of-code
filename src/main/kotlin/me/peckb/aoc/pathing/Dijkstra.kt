@@ -16,6 +16,8 @@ interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWith
     while (toVisit.isNotEmpty()) {
       val current: NodeWithCost = toVisit.poll().also { visited.add(it.node()) }
 
+//      println("Next node to Visit: $current")
+
       val foundEnd: Boolean? = end?.let { node: Node ->
         comparator?.let { it.compare(current.node(), end) == 0 } ?: (current.node() == node)
       }

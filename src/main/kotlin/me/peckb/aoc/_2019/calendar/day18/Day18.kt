@@ -33,6 +33,7 @@ class Day18 @Inject constructor(
         .withKeyToKeyPaths(keyToKeyPaths)
         .withKeysByLocation(keysByLocation)
         .withLocationsByKey(locationsByKey)
+        .usingInitialNeighbors { emptyMap() }
       val paths = searcher.solve(startNode)
         .filter { it.key.foundKeys.size == locationsByKey.size }
       path.cost + paths.minOf { it.value }
@@ -63,18 +64,23 @@ class Day18 @Inject constructor(
         Area(x + 1, y + 1),
       )
     }
-    val customNeighbors = startingLocations
-      .map { solver.solve(it).toSafeKeys(keysByLocation, caves) }
-      .flatMap { it.asSequence() }
-      .groupBy({ it.key }, { it.value })
-      .mapValues { (_, v) -> v.first().cost }
-      .mapKeys { (area, _) ->
-        SearchArea(area, emptySet())
-          .withCaves(caves)
-          .withKeyToKeyPaths(keyToKeyPaths)
-          .withKeysByLocation(keysByLocation)
-          .withLocationsByKey(locationsByKey)
-      }
+    fun initialNeighbors(foundKeys: Set<KEY>) : Map<SearchArea, Int> {
+      return startingLocations
+        .map { solver.solve(it).toSafeKeys(keysByLocation, caves, foundKeys) }
+        .flatMap { it.asSequence() }
+        .groupBy({ it.key }, { it.value })
+        .mapValues { (_, v) -> v.first().cost }
+        .mapKeys { (area, _) ->
+          SearchArea(area, foundKeys)
+            .withCaves(caves)
+            .withKeyToKeyPaths(keyToKeyPaths)
+            .withKeysByLocation(keysByLocation)
+            .withLocationsByKey(locationsByKey)
+          .usingInitialNeighbors(::initialNeighbors)
+        }
+    }
+
+    val asd = initialNeighbors(emptySet())
 
     val searcher = SearchingDijkstra()
     val startNode = SearchArea(Area(startingLocation.x, startingLocation.y), emptySet())
@@ -82,10 +88,13 @@ class Day18 @Inject constructor(
       .withKeyToKeyPaths(keyToKeyPaths)
       .withKeysByLocation(keysByLocation)
       .withLocationsByKey(locationsByKey)
-      .usingCustomNeighbors(customNeighbors)
+      .usingInitialNeighbors(::initialNeighbors)
 
-    searcher.solve(startNode)
-      .filter { it.key.foundKeys.size == locationsByKey.size }
+    val base = searcher.solve(startNode)
+
+    -1
+
+    base.filter { it.key.foundKeys.size == (locationsByKey.size - 1) }
       .minOfOrNull { it.value }
   }
 
@@ -180,9 +189,17 @@ class Day18 @Inject constructor(
 
 private fun MutableMap<Area, Path>.toSafeKeys(
   keysByLocation: MutableMap<Area, KEY>,
-  caves: MutableList<MutableList<Day18.Section>>
+  caves: MutableList<MutableList<Day18.Section>>,
+  keysFound: Set<KEY>
 ) = this.filter { (area, _) -> keysByLocation.contains(area) }
-  .filterNot { (_, path) -> path.steps.any { area -> caves[area.y][area.x] is DOOR } }
+  .filterNot { (_, path) ->
+    path.steps.any { area ->
+      val section = caves[area.y][area.x]
+      section is DOOR && !keysFound.contains(section.key)
+    }
+  }.filterNot { (area, _) ->
+    keysFound.contains(keysByLocation[area])
+  }
   .mapValues { (_, path) ->
     val newSteps = path.steps.filter { area -> caves[area.y][area.x] is DOOR }
     Path(newSteps, path.cost)
