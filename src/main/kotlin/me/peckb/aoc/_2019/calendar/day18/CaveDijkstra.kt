@@ -1,139 +1,67 @@
 package me.peckb.aoc._2019.calendar.day18
 
+import me.peckb.aoc._2019.calendar.day18.Day18.*
 import me.peckb.aoc.pathing.Dijkstra
 import me.peckb.aoc.pathing.DijkstraNodeWithCost
-import me.peckb.aoc.pathing.GenericIntDijkstra
 
-class CaveDijkstra(private val caves: List<List<Day18.Section>>) : Dijkstra<Area, Path, AreaWithPath> {
-  override fun Path.plus(cost: Path): Path = cost
-
-  override fun Area.withCost(cost: Path): AreaWithPath = AreaWithPath(this, cost).withCaves(caves)
-
-  override fun minCost(): Path = Path(emptyList(), Int.MIN_VALUE)
-
-  override fun maxCost(): Path = Path(emptyList(), Int.MAX_VALUE)
+class CaveDijkstra(
+  private val caves: Map<Area, Section>,
+  private val result: MutableMap<Section.Source.Key, Route>,
+  private val doorsByArea: MutableMap<Area, Set<Section.Door>>,
+  private val sourceArea: Area
+) : Dijkstra<Area, Distance, CaveWithDistance> {
+  override fun Area.withCost(cost: Distance) = CaveWithDistance(this, cost).withResult(result).withDoorsByArea(doorsByArea).withCaves(caves).withSourceArea(sourceArea)
+  override fun Distance.plus(cost: Distance) = this + cost
+  override fun maxCost() = Int.MAX_VALUE
+  override fun minCost() = 0
 }
 
-data class AreaWithPath(private val area: Area, private val path: Path) : DijkstraNodeWithCost<Area, Path> {
-  private lateinit var caves: List<List<Day18.Section>>
+class CaveWithDistance(private val area: Area, private val distance: Distance) :
+  DijkstraNodeWithCost<Area, Distance> {
+  private lateinit var caves: Map<Area, Section>
+  private lateinit var doorsByArea: MutableMap<Area, Set<Section.Door>>
+  private lateinit var result: MutableMap<Section.Source.Key, Route>
+  private lateinit var sourceArea: Area
 
-  override fun compareTo(other: DijkstraNodeWithCost<Area, Path>): Int {
-    val pathCompare by lazy { path.compareTo(other.cost()) }
-    val yCompare by lazy { path.steps.last().y.compareTo(other.cost().steps.last().y) }
-    val xCompare by lazy { path.steps.last().x.compareTo(other.cost().steps.last().x) }
+  fun withResult(result: MutableMap<Section.Source.Key, Route>) = apply { this.result = result }
+  fun withDoorsByArea(doorsByArea: MutableMap<Area, Set<Section.Door>>) = apply { this.doorsByArea = doorsByArea }
+  fun withCaves(caves: Map<Area, Section>) = apply { this.caves = caves }
+  fun withSourceArea(sourceArea: Area) = apply { this.sourceArea = sourceArea }
 
-    return when (pathCompare) {
-      0 -> {
-        when (yCompare) {
-          0 -> xCompare
-          else -> yCompare
-        }
-      }
-      else -> pathCompare
-    }
-  }
-
-  override fun neighbors(): List<AreaWithPath> {
-    val (x, y) = area
-
-    val n = caves[y - 1][x] to Area(x, y - 1)
-    val e = caves[y][x + 1] to Area(x + 1, y)
-    val s = caves[y + 1][x] to Area(x, y + 1)
-    val w = caves[y][x - 1] to Area(x - 1, y)
-
-    return listOf(n, e, s, w)
-      .filter { (section, _) -> section !is Day18.Section.WALL }
-      .map { (_, area) -> AreaWithPath(area, Path(path.steps.plus(area))) }
-  }
-
+  override fun compareTo(other: DijkstraNodeWithCost<Area, Distance>): Int = distance.compareTo(other.cost())
+  override fun cost(): Distance = distance
   override fun node(): Area = area
 
-  override fun cost(): Path = path
-
-  fun withCaves(caves: List<List<Day18.Section>>) = apply {
-    this.caves = caves
-  }
-}
-
-data class Area(val x: Int, val y: Int)
-
-data class Path(val steps: List<Area>, val cost: Int = steps.size): Comparable<Path> {
-  override fun compareTo(other: Path) = cost.compareTo(other.cost)
-}
-
-class SearchingDijkstra : GenericIntDijkstra<SearchArea>()
-
-data class SearchArea(val area: Area, val foundKeys: Set<Day18.Section.KEY>) : GenericIntDijkstra.DijkstraNode<SearchArea> {
-  private lateinit var keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>
-  private lateinit var keysByLocation: Map<Area, Day18.Section.KEY>
-  private lateinit var locationsByKey: Map<Day18.Section.KEY, Area>
-  private lateinit var caves: List<List<Day18.Section>>
-
-  private lateinit var initialNeighbors: (Set<Day18.Section.KEY>) -> Map<SearchArea, Int>
-
-  fun usingInitialNeighbors(initialNeighbors: (Set<Day18.Section.KEY>) -> Map<SearchArea, Int>) = apply {
-    this.initialNeighbors = initialNeighbors
-  }
-
-  fun withKeyToKeyPaths(keyToKeyPaths: Map<Day18.Section.KEY, Map<Day18.Section.KEY, Path>>) = apply {
-    this.keyToKeyPaths = keyToKeyPaths
-  }
-
-  fun withKeysByLocation(keysByLocation: Map<Area, Day18.Section.KEY>) = apply {
-    this.keysByLocation = keysByLocation
-  }
-
-  fun withCaves(caves: List<List<Day18.Section>>) = apply {
-    this.caves = caves
-  }
-
-  fun withLocationsByKey(locationsByKey: Map<Day18.Section.KEY, Area>) = apply {
-    this.locationsByKey = locationsByKey
-  }
-
-  override fun neighbors(): Map<SearchArea, Int> {
-    val myKey = keysByLocation[area]
-
-//    println("Looking for neighbors for $myKey")
-
-    val extraConnections = if (this::initialNeighbors.isInitialized && foundKeys.size != keyToKeyPaths.size) {
-      val keySet = myKey?.let(foundKeys::plus) ?: foundKeys
-//      println("Assuming we have seen $keySet")
-      initialNeighbors.invoke(keySet).also {
-//        println("Found these extra connections $it")
-      }.toMutableMap()
-    } else {
-//      println("no extra connections")
-      mutableMapOf()
+  override fun neighbors(): List<CaveWithDistance> {
+    var doors = doorsByArea[area]!!
+    when (val section = caves[area]!!) {
+      is Section.Door -> {
+        doors = doors.plus(section)
+      }
+      is Section.Source.Key -> {
+        result[section] = Route(distance, doors)
+        if (area != sourceArea) { return emptyList() }
+      }
+      Section.Empty, Section.Wall, is Section.Source.Robot -> { /* ignore */ }
     }
 
-    val myConnections = myKey?.let {
-      keyToKeyPaths[it]!!.filterNot { (theirKey, path) ->
-        if (foundKeys.contains(theirKey)) {
-          // we've already seen that key
-          true
-        } else {
-          val pathBlocked = path.steps.any { area ->
-            val section = caves[area.y][area.x]
-            section is Day18.Section.DOOR && !foundKeys.contains(section.key)
-          }
-          pathBlocked
-        }
-      }
-    } ?: emptyMap()
+    val (x, y) = area
+    val neighborAreas = listOf(
+      Area(x - 1, y),
+      Area(x, y - 1),
+      Area(x, y + 1),
+      Area(x + 1, y)
+    )
 
-    println("My normal connections are $myConnections")
-
-    return extraConnections.also { neighborMap ->
-      myConnections.forEach { (neighborKey, neighborPath) ->
-        val area = SearchArea(locationsByKey[neighborKey]!!, foundKeys.plus(neighborKey))
-          .withCaves(caves)
-          .withKeyToKeyPaths(keyToKeyPaths)
-          .withKeysByLocation(keysByLocation)
-          .withLocationsByKey(locationsByKey)
-          .usingInitialNeighbors(initialNeighbors)
-        neighborMap[area] = neighborPath.cost
+    val neighborsToSearch = neighborAreas.mapNotNull { neighbor ->
+      if (neighbor !in caves || neighbor in doorsByArea || caves[neighbor] is Section.Wall) {
+        null
+      } else {
+        doorsByArea[neighbor] = doors
+        neighbor
       }
     }
+
+    return neighborsToSearch.map { CaveWithDistance(it, 1) }
   }
 }
