@@ -1,1 +1,1 @@
-## [](https://adventofcode.com/2016/day/16)
+## [Day 16: Dragon Checksum](https://adventofcode.com/2016/day/16)
