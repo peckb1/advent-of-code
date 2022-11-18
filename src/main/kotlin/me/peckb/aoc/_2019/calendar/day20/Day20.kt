@@ -12,104 +12,25 @@ class Day20 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val torus = Torus.setup(input)
-    val (portalToSpaces, innerPortals, outerPortals) = findPortals(torus)
-
-    val dijkstra = TorusDijkstra()
-    val startNode = TorusPath(portalToSpaces["AA"]!!.first(), 0)
-      .withTorus(torus)
-      .withOuterPortals(outerPortals)
-      .withInnerPortals(innerPortals)
-      .withPortalToSpaces(portalToSpaces)
-    val endNode = TorusPath(portalToSpaces["ZZ"]!!.first(), 0)
-    val paths = dijkstra.solve(startNode, endNode)
-
-    paths[endNode]
+    solve(input, false)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    solve(input, true)
+  }
+
+  fun solve(input: Sequence<String>, shouldRecurse: Boolean): Int? {
     val torus = Torus.setup(input)
     val (portalToSpaces, innerPortals, outerPortals) = findPortals(torus)
 
     val dijkstra = TorusDijkstra()
+    val searchData = SearchData(torus, portalToSpaces, outerPortals, innerPortals, shouldRecurse)
     val startNode = TorusPath(portalToSpaces["AA"]!!.first(), 0)
-      .withTorus(torus)
-      .withOuterPortals(outerPortals)
-      .withInnerPortals(innerPortals)
-      .withPortalToSpaces(portalToSpaces)
-      .shouldRecurse(true)
+      .withSearchData(searchData)
     val endNode = TorusPath(portalToSpaces["ZZ"]!!.first(), 0)
     val paths = dijkstra.solve(startNode, endNode)
 
-    paths[endNode]
-  }
-
-  class TorusDijkstra : GenericIntDijkstra<TorusPath>()
-
-  data class TorusPath(val path: Path, val depth: Int) : DijkstraNode<TorusPath> {
-    private var shouldRecurse: Boolean = false
-
-    private lateinit var torus: Torus
-    private lateinit var portalToSpaces: Map<String, Set<Path>>
-    private lateinit var outerPortals: Map<Path, String>
-    private lateinit var innerPortals: Map<Path, String>
-
-    fun shouldRecurse(shouldRecurse: Boolean) = apply { this.shouldRecurse = shouldRecurse }
-    fun withTorus(torus: Torus) = apply { this.torus = torus }
-    fun withPortalToSpaces(portalToSpaces: Map<String, Set<Path>>) = apply { this.portalToSpaces = portalToSpaces }
-    fun withOuterPortals(outerPortals: Map<Path, String>) = apply { this.outerPortals = outerPortals }
-    fun withInnerPortals(innerPortals: Map<Path, String>) = apply { this.innerPortals = innerPortals }
-
-    override fun neighbors(): Map<TorusPath, Int> {
-      val (x, y) = path
-
-      val n = torus.map[y - 1][x]
-      val e = torus.map[y][x + 1]
-      val s = torus.map[y + 1][x]
-      val w = torus.map[y][x - 1]
-
-      val nonPortalNeighbors = listOf(n, e, s, w)
-        .filterIsInstance<Path>()
-        .map { path ->
-          TorusPath(path, depth)
-            .withTorus(torus)
-            .withPortalToSpaces(portalToSpaces)
-            .withInnerPortals(innerPortals)
-            .withOuterPortals(outerPortals)
-            .shouldRecurse(shouldRecurse)
-        }.associateWith { 1 }
-        .toMutableMap()
-
-      outerPortals[path]
-        ?.let {  portal -> portalToSpaces[portal]!!.minus(path).firstOrNull() }
-        ?.let {
-          val newDepth = if(shouldRecurse) depth - 1 else depth
-          if (newDepth >= 0) {
-            TorusPath(it, newDepth)
-              .withTorus(torus)
-              .withPortalToSpaces(portalToSpaces)
-              .withInnerPortals(innerPortals)
-              .withOuterPortals(outerPortals)
-              .shouldRecurse(shouldRecurse)
-          } else {
-            null
-          }
-        }?.also { nonPortalNeighbors[it] = 1 }
-
-      innerPortals[path]
-        ?.let {  portal -> portalToSpaces[portal]!!.minus(path).firstOrNull() }
-        ?.let {
-          val newDepth = if(shouldRecurse) depth + 1 else depth
-          TorusPath(it, newDepth)
-            .withTorus(torus)
-            .withPortalToSpaces(portalToSpaces)
-            .withInnerPortals(innerPortals)
-            .withOuterPortals(outerPortals)
-            .shouldRecurse(shouldRecurse)
-        }?.also { nonPortalNeighbors[it] = 1 }
-
-      return nonPortalNeighbors
-    }
+    return paths[endNode]
   }
 
   private fun findPortals(torus: Torus): PortalData {
@@ -134,8 +55,6 @@ class Day20 @Inject constructor(
     addToMaps(findHorizontalLinePortals(torus.map, torus.innerSouthIndex, UP), pathToInnerPortal)
     addToMaps(findVerticalLinePortals(torus.map, torus.innerWestIndex, RIGHT), pathToInnerPortal)
 
-    // it's not inner -> outer
-    // it is up -> down and left -> right
     return PortalData(portalToSpaces, pathToInnerPortal, pathToOuterPortal)
   }
 
@@ -201,5 +120,13 @@ class Day20 @Inject constructor(
     val portalToSpaces: MutableMap<String, Set<Path>>,
     val pathToInnerPortal: MutableMap<Path, String>,
     val pathToOuterPortal: MutableMap<Path, String>
+  )
+
+  data class SearchData(
+    val torus: Torus,
+    val portalToSpaces: Map<String, Set<Path>>,
+    val outerPortals: Map<Path, String>,
+    val innerPortals: Map<Path, String>,
+    val shouldRecurse: Boolean
   )
 }
