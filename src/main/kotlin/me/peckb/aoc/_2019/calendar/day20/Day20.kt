@@ -13,36 +13,56 @@ class Day20 @Inject constructor(
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val torus = Torus.setup(input)
-    val (portalToSpaces, spaceToPortal) = findPortals(torus)
+    val (portalToSpaces, innerPortals, outerPortals) = findPortals(torus)
 
     val dijkstra = TorusDijkstra()
-    val startNode = TorusPath(portalToSpaces["AA"]!!.first())
+    val startNode = TorusPath(portalToSpaces["AA"]!!.first(), 0)
       .withTorus(torus)
-      .withSpaceToPortal(spaceToPortal)
+      .withOuterPortals(outerPortals)
+      .withInnerPortals(innerPortals)
       .withPortalToSpaces(portalToSpaces)
-    val endNode = TorusPath(portalToSpaces["ZZ"]!!.first())
+    val endNode = TorusPath(portalToSpaces["ZZ"]!!.first(), 0)
     val paths = dijkstra.solve(startNode, endNode)
 
     paths[endNode]
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    -1
+    val torus = Torus.setup(input)
+    val (portalToSpaces, innerPortals, outerPortals) = findPortals(torus)
+
+    val dijkstra = TorusDijkstra()
+    val startNode = TorusPath(portalToSpaces["AA"]!!.first(), 0)
+      .withTorus(torus)
+      .withOuterPortals(outerPortals)
+      .withInnerPortals(innerPortals)
+      .withPortalToSpaces(portalToSpaces)
+      .shouldRecurse(true)
+    val endNode = TorusPath(portalToSpaces["ZZ"]!!.first(), 0)
+    val paths = dijkstra.solve(startNode, endNode)
+
+    paths[endNode]
   }
 
   class TorusDijkstra : GenericIntDijkstra<TorusPath>()
 
-  data class TorusPath(val path: Path) : DijkstraNode<TorusPath> {
+  data class TorusPath(val path: Path, val depth: Int) : DijkstraNode<TorusPath> {
+    private var shouldRecurse: Boolean = false
+
     private lateinit var torus: Torus
     private lateinit var portalToSpaces: Map<String, Set<Path>>
-    private lateinit var spaceToPortal: Map<Path, String>
+    private lateinit var outerPortals: Map<Path, String>
+    private lateinit var innerPortals: Map<Path, String>
 
+    fun shouldRecurse(shouldRecurse: Boolean) = apply { this.shouldRecurse = shouldRecurse }
     fun withTorus(torus: Torus) = apply { this.torus = torus }
     fun withPortalToSpaces(portalToSpaces: Map<String, Set<Path>>) = apply { this.portalToSpaces = portalToSpaces }
-    fun withSpaceToPortal(spaceToPortal: Map<Path, String>) = apply { this.spaceToPortal = spaceToPortal }
+    fun withOuterPortals(outerPortals: Map<Path, String>) = apply { this.outerPortals = outerPortals }
+    fun withInnerPortals(innerPortals: Map<Path, String>) = apply { this.innerPortals = innerPortals }
 
     override fun neighbors(): Map<TorusPath, Int> {
       val (x, y) = path
+
       val n = torus.map[y - 1][x]
       val e = torus.map[y][x + 1]
       val s = torus.map[y + 1][x]
@@ -51,43 +71,72 @@ class Day20 @Inject constructor(
       val nonPortalNeighbors = listOf(n, e, s, w)
         .filterIsInstance<Path>()
         .map { path ->
-          TorusPath(path).withTorus(torus).withPortalToSpaces(portalToSpaces).withSpaceToPortal(spaceToPortal)
+          TorusPath(path, depth)
+            .withTorus(torus)
+            .withPortalToSpaces(portalToSpaces)
+            .withInnerPortals(innerPortals)
+            .withOuterPortals(outerPortals)
+            .shouldRecurse(shouldRecurse)
         }.associateWith { 1 }
         .toMutableMap()
 
-      spaceToPortal[path]
+      outerPortals[path]
         ?.let {  portal -> portalToSpaces[portal]!!.minus(path).firstOrNull() }
-        ?.let { TorusPath(it).withTorus(torus).withPortalToSpaces(portalToSpaces).withSpaceToPortal(spaceToPortal) }
-        ?.also { nonPortalNeighbors[it] = 1 }
+        ?.let {
+          val newDepth = if(shouldRecurse) depth - 1 else depth
+          if (newDepth >= 0) {
+            TorusPath(it, newDepth)
+              .withTorus(torus)
+              .withPortalToSpaces(portalToSpaces)
+              .withInnerPortals(innerPortals)
+              .withOuterPortals(outerPortals)
+              .shouldRecurse(shouldRecurse)
+          } else {
+            null
+          }
+        }?.also { nonPortalNeighbors[it] = 1 }
+
+      innerPortals[path]
+        ?.let {  portal -> portalToSpaces[portal]!!.minus(path).firstOrNull() }
+        ?.let {
+          val newDepth = if(shouldRecurse) depth + 1 else depth
+          TorusPath(it, newDepth)
+            .withTorus(torus)
+            .withPortalToSpaces(portalToSpaces)
+            .withInnerPortals(innerPortals)
+            .withOuterPortals(outerPortals)
+            .shouldRecurse(shouldRecurse)
+        }?.also { nonPortalNeighbors[it] = 1 }
 
       return nonPortalNeighbors
     }
   }
 
-  private fun findPortals(torus: Torus): Pair<Map<String, Set<Path>>, Map<Path, String>> {
+  private fun findPortals(torus: Torus): PortalData {
     val portalToSpaces = mutableMapOf<String, Set<Path>>()
-    val spaceToPortal = mutableMapOf<Path, String>()
+    val pathToInnerPortal = mutableMapOf<Path, String>()
+    val pathToOuterPortal = mutableMapOf<Path, String>()
 
-    fun addToMaps(portals: Map<Path, String>) {
+    fun addToMaps(portals: Map<Path, String>, portalAggregator: MutableMap<Path, String>) {
       portals.forEach { (area, identifier) ->
-        spaceToPortal[area] = identifier
+        portalAggregator[area] = identifier
         portalToSpaces.merge(identifier, setOf(area)) { a, b -> a.plus(b) }
       }
     }
 
-    addToMaps(findHorizontalLinePortals(torus.map, torus.outerNorthIndex, UP))
-    addToMaps(findVerticalLinePortals(torus.map, torus.outerEastIndex, RIGHT))
-    addToMaps(findHorizontalLinePortals(torus.map, torus.outerSouthIndex, DOWN))
-    addToMaps(findVerticalLinePortals(torus.map, torus.outerWestIndex, LEFT))
+    addToMaps(findHorizontalLinePortals(torus.map, torus.outerNorthIndex, UP), pathToOuterPortal)
+    addToMaps(findVerticalLinePortals(torus.map, torus.outerEastIndex, RIGHT), pathToOuterPortal)
+    addToMaps(findHorizontalLinePortals(torus.map, torus.outerSouthIndex, DOWN), pathToOuterPortal)
+    addToMaps(findVerticalLinePortals(torus.map, torus.outerWestIndex, LEFT), pathToOuterPortal)
 
-    addToMaps(findHorizontalLinePortals(torus.map, torus.innerNorthIndex, DOWN))
-    addToMaps(findVerticalLinePortals(torus.map, torus.innerEastIndex, LEFT))
-    addToMaps(findHorizontalLinePortals(torus.map, torus.innerSouthIndex, UP))
-    addToMaps(findVerticalLinePortals(torus.map, torus.innerWestIndex, RIGHT))
+    addToMaps(findHorizontalLinePortals(torus.map, torus.innerNorthIndex, DOWN), pathToInnerPortal)
+    addToMaps(findVerticalLinePortals(torus.map, torus.innerEastIndex, LEFT), pathToInnerPortal)
+    addToMaps(findHorizontalLinePortals(torus.map, torus.innerSouthIndex, UP), pathToInnerPortal)
+    addToMaps(findVerticalLinePortals(torus.map, torus.innerWestIndex, RIGHT), pathToInnerPortal)
 
     // it's not inner -> outer
     // it is up -> down and left -> right
-    return portalToSpaces to spaceToPortal
+    return PortalData(portalToSpaces, pathToInnerPortal, pathToOuterPortal)
   }
 
   private fun findHorizontalLinePortals(map: List<List<Area>>, yIndex: Int, portalDirection: PortalDirection): Map<Path, String> {
@@ -147,4 +196,10 @@ class Day20 @Inject constructor(
     LEFT(Int::minus, { inner, outer -> "$outer$inner" }),
     RIGHT(Int::plus, { inner, outer -> "$inner$outer" })
   }
+
+  data class PortalData(
+    val portalToSpaces: MutableMap<String, Set<Path>>,
+    val pathToInnerPortal: MutableMap<Path, String>,
+    val pathToOuterPortal: MutableMap<Path, String>
+  )
 }
