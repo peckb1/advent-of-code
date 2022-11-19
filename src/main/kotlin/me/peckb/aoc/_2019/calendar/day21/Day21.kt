@@ -80,6 +80,4 @@ class Day21 @Inject constructor(
 
     return lastOutput
   }
-
-  private fun day21(line: String) = 4
 }
