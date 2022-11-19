@@ -344,11 +344,11 @@ class Day24 @Inject constructor(
       }
     }
 
-    repeat(200) { repeatCount ->
+    repeat(200) { _ ->
       val areasToShift = mutableListOf<RecursiveArea>()
       (min .. max).forEach { currentDepth ->
-        maps[currentDepth]!!.forEachIndexed { y, row ->
-          row.forEachIndexed { x, area ->
+        maps[currentDepth]!!.forEach { row ->
+          row.forEach { area ->
             area?.also {
               areasToShift.add(it)
               it.generateNextMutation()
