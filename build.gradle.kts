@@ -25,24 +25,25 @@ repositories {
 
 dependencies {
     // main dependencies
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.3")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
     implementation("io.arrow-kt:arrow-core:1.1.2")
-    implementation("org.apache.commons:commons-text:1.9")
+    implementation("org.apache.commons:commons-text:1.10.0")
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+
     // used for generating skeletons
-    implementation("com.squareup:kotlinpoet:1.11.0")
+    implementation("com.squareup:kotlinpoet:1.12.0")
 
     // dependency injection library and annotation procressing
-    implementation("com.google.dagger:dagger:2.42")
-    kapt("com.google.dagger:dagger-compiler:2.42")
-    kaptTest("com.google.dagger:dagger-compiler:2.42")
+    implementation("com.google.dagger:dagger:2.44.2")
+    kapt("com.google.dagger:dagger-compiler:2.44.2")
+    kaptTest("com.google.dagger:dagger-compiler:2.44.2")
 
     // test libraries
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
 }
 
 tasks.test {
