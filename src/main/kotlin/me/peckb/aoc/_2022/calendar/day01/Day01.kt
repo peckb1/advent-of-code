@@ -15,17 +15,18 @@ class Day01 @Inject constructor(
     findCalories(input).apply { sortDescending() }.take(3).sum()
   }
 
-  private fun findCalories(calories: Sequence<Int?>) = mutableListOf<Int>()
-    .apply { add(0) }
-    .also { elfCalories ->
-      calories.forEach { calorieCount ->
-        val lastIndex = elfCalories.size - 1
-
-        calorieCount
-          ?.let { elfCalories[lastIndex] = elfCalories[lastIndex] + it }
-          ?: run { elfCalories.add(0) }
+  private fun findCalories(calories: Sequence<Int?>): MutableList<Int> {
+    return calories.fold(mutableListOf(NEW_ELF)) { elves, nextCalorie ->
+      elves.apply {
+        val lastElf = size - 1
+        nextCalorie?.let { this[lastElf] = this[lastElf] + it } ?: add(NEW_ELF)
       }
     }
+  }
 
   private fun calorieCount(line: String): Int? = line.toIntOrNull()
+
+  companion object {
+    private const val NEW_ELF = 0
+  }
 }
