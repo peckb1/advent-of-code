@@ -72,7 +72,12 @@ as the value which passed the given day/phase combination
 * Day 13
   * The paper folding to get messages was cool!
 * Day 17
-  * I miss maths sometimes, and spending the time to get the mathmatical solution for part 1 was quite nice. 
+  * I miss maths sometimes, and spending the time to get the mathmatical solution for part 1 was quite nice.
+
+#### 2022
+
+* Day 03
+  * A cute bit of set intersection
 
 ### Interesting approaches:
 
