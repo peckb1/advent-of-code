@@ -21,6 +21,6 @@ class Day04 @Inject constructor(
 
   private fun ranges(line: String) = line
     .split(",")
-    .map { pairOfRanges -> pairOfRanges.split("-") }
-    .map { (firstElfRange, secondElfRange) -> firstElfRange.toInt()..secondElfRange.toInt() }
+    .map { range -> range.split("-") }
+    .map { (min, max) -> min.toInt()..max.toInt() }
 }
