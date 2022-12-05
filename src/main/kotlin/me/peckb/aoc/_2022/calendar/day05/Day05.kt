@@ -43,12 +43,8 @@ class Day05 @Inject constructor(
 
     val stacks = Array(stackCounts) { ArrayDeque<Char>() }
     repeat(stackCountRowIndex) { row ->
-      val stackData = inputList[row]
-      repeat(stackCounts) { stackId ->
-        val index = (stackId * 4) + 1
-        if (index < stackData.length) {
-          stackData[index].takeUnless { it == ' ' }?.let { stacks[stackId].addLast(it) }
-        }
+      inputList[row].chunked(4).forEachIndexed { stackId, boxChunk ->
+        boxChunk[1].takeUnless { it == ' ' }?.let { stacks[stackId].addLast(it) }
       }
     }
 
