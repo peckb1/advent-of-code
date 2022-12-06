@@ -20,4 +20,3 @@ class Day06 @Inject constructor(
     .windowed(size)
     .indexOfFirst { it.toSet().size == size } + size
 }
-
