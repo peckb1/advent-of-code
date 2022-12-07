@@ -30,7 +30,7 @@ class Day07 @Inject constructor(
     val allDirectories = mutableSetOf<Directory>().also { it.add(rootDirectory) }
 
     var currentDirectory = rootDirectory
-    var index = 1
+    var index = 1 // we can skip the first line that just goes into the root
 
     while(index < input.size) {
       val lineParts = input[index].split(" ")
@@ -56,7 +56,7 @@ class Day07 @Inject constructor(
             itemsInDirectory++
             nextIndex++
           }
-          index += itemsInDirectory + 1 // add one because we want to have the index pass by the last item in the dir
+          index += itemsInDirectory
         }
         "cd" -> {
           currentDirectory = when (location) {
@@ -64,10 +64,11 @@ class Day07 @Inject constructor(
             ".." -> currentDirectory.parent!!
             else -> currentDirectory.directories[location]!!
           }
-          index++
         }
         else -> throw IllegalStateException("Unknown Command $location")
       }
+
+      index++
     }
 
     return allDirectories
