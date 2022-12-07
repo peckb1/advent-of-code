@@ -4,7 +4,6 @@ import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.lang.IllegalStateException
-import java.math.BigInteger
 
 class Day07 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -34,9 +33,11 @@ class Day07 @Inject constructor(
     var index = 1
 
     while(index < input.size) {
-      val command = input[index]
-      val parts = command.split(" ")
-      when (parts[1]) {
+      val lineParts = input[index].split(" ")
+      val command = lineParts[1]
+      val location by lazy { lineParts[2] }
+
+      when (command) {
         "ls" -> {
           var itemsInDirectory = 0
           var nextIndex = index + 1
@@ -49,25 +50,23 @@ class Day07 @Inject constructor(
                   allDirectories.add(directory)
                   currentDirectory.directories.putIfAbsent(b, directory)
                 }
-                else -> { // file size
-                  currentDirectory.files.putIfAbsent(b, File(b, a.toLong()))
-                }
+                else -> currentDirectory.files.putIfAbsent(b, File(b, a.toLong()))
               }
             }
             itemsInDirectory++
-            nextIndex = index + itemsInDirectory + 1
+            nextIndex++
           }
-          index += itemsInDirectory + 1
+          index += itemsInDirectory + 1 // add one because we want to have the index pass by the last item in the dir
         }
         "cd" -> {
-          currentDirectory = when (parts[2]) {
+          currentDirectory = when (location) {
             "/" -> rootDirectory
             ".." -> currentDirectory.parent!!
-            else -> currentDirectory.directories[parts[2]]!!
+            else -> currentDirectory.directories[location]!!
           }
           index++
         }
-        else -> throw IllegalStateException("Unknown Command ${parts[1]}")
+        else -> throw IllegalStateException("Unknown Command $location")
       }
     }
 
