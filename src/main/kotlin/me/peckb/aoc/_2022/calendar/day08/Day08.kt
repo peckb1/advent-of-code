@@ -48,41 +48,30 @@ class Day08 @Inject constructor(
     (1 until (jungle.size - 1)).forEach { y ->
       (1 until (jungle[y].size - 1)).forEach { x ->
         val me = jungle[y][x]
+        val yRange = jungle.indices
+        val xRange = jungle[y].indices
 
-        var counterLeft = 1
-        var foundEqualOrHigherLeft = false
-        while (!foundEqualOrHigherLeft && x - counterLeft >= 0) {
-          foundEqualOrHigherLeft = jungle[y][x - counterLeft] >= me
-          counterLeft++
+        fun heightCheck(nextY: (Int) -> Int, nextX: (Int) -> Int): Pair<Int, Boolean> {
+          var visibleTrees = 1
+          var equalOrGreaterTree = false
+          var newY = nextY(visibleTrees)
+          var newX = nextX(visibleTrees)
+          while (!equalOrGreaterTree && yRange.contains(newY) && xRange.contains(newX)) {
+            equalOrGreaterTree = jungle[newY][newX] >= me
+            visibleTrees++
+            newY = nextY(visibleTrees)
+            newX = nextX(visibleTrees)
+          }
+          return (visibleTrees - 1) to equalOrGreaterTree
         }
 
-        var counterRight = 1
-        var foundEqualOrHigherRight = false
-        while (!foundEqualOrHigherRight && x + counterRight < jungle[y].size) {
-          foundEqualOrHigherRight = jungle[y][x + counterRight] >= me
-          counterRight++
-        }
+        val (visibleL, foundL) = heightCheck({ y }, { x - it })
+        val (visibleR, foundR) = heightCheck({ y }, { x + it })
+        val (visibleU, foundU) = heightCheck({ y - it }, { x })
+        val (visibleD, foundD) = heightCheck({ y + it }, { x })
 
-        var counterUp = 1
-        var foundEqualOrHigherUp = false
-        while (!foundEqualOrHigherUp && y - counterUp >= 0) {
-          foundEqualOrHigherUp = jungle[y - counterUp][x] >= me
-          counterUp++
-        }
-
-        var counterDown = 1
-        var foundEqualOrHigherDown = false
-        while (!foundEqualOrHigherDown && y + counterDown < jungle.size) {
-          foundEqualOrHigherDown = jungle[y + counterDown][x] >= me
-          counterDown++
-        }
-
-        treeVisibilityHandler?.invoke(
-          TreeVisibility(foundEqualOrHigherLeft, foundEqualOrHigherRight, foundEqualOrHigherUp, foundEqualOrHigherDown)
-        )
-        treeVisibilityCounterHandler?.invoke(
-          TreeVisibilityCounts(counterLeft - 1, counterRight - 1, counterUp - 1, counterDown - 1,)
-        )
+        treeVisibilityHandler?.invoke(TreeVisibility(foundL, foundR, foundU, foundD))
+        treeVisibilityCounterHandler?.invoke(TreeVisibilityCounts(visibleL, visibleR, visibleU, visibleD))
       }
     }
   }
