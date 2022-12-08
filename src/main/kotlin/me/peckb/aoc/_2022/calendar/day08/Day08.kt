@@ -12,9 +12,9 @@ class Day08 @Inject constructor(
     val (jungle, height, width) = createJungle(input)
 
     var visible = (height * 2) + (width * 2) - 4
-    checkHeights(jungle) { (_, _, _, _, left, right, up, down) ->
+    checkHeights(jungle, treeVisibilityHandler = { (left, right, up, down) ->
       if (!left || !right || !up || !down) visible++
-    }
+    })
     visible
   }
 
@@ -22,9 +22,9 @@ class Day08 @Inject constructor(
     val (jungle, _, _) = createJungle(input)
 
     var bestScenicScore = -1
-    checkHeights(jungle) { (left, right, up, down, _, _, _, _) ->
+    checkHeights(jungle, treeVisibilityCounterHandler = { (left, right, up, down) ->
       bestScenicScore = max(bestScenicScore, left * right * up * down)
-    }
+    })
     bestScenicScore
   }
 
@@ -40,7 +40,11 @@ class Day08 @Inject constructor(
     return Jungle(jungle, jungle.size, jungle[0].size)
   }
 
-  private fun checkHeights(jungle: List<List<Int>>, treeVisibilityHandler: (TreeVisibility) -> Unit) {
+  private fun checkHeights(
+    jungle: List<List<Int>>,
+    treeVisibilityHandler: ((TreeVisibility) -> Unit)? = null,
+    treeVisibilityCounterHandler: ((TreeVisibilityCounts) -> Unit)? = null
+  ) {
     (1 until (jungle.size - 1)).forEach { y ->
       (1 until (jungle[y].size - 1)).forEach { x ->
         val me = jungle[y][x]
@@ -73,10 +77,12 @@ class Day08 @Inject constructor(
           counterDown++
         }
 
-        treeVisibilityHandler(TreeVisibility(
-          counterLeft - 1, counterRight - 1, counterUp - 1, counterDown - 1,
-          foundEqualOrHigherLeft, foundEqualOrHigherRight, foundEqualOrHigherUp, foundEqualOrHigherDown
-        ))
+        treeVisibilityHandler?.invoke(
+          TreeVisibility(foundEqualOrHigherLeft, foundEqualOrHigherRight, foundEqualOrHigherUp, foundEqualOrHigherDown)
+        )
+        treeVisibilityCounterHandler?.invoke(
+          TreeVisibilityCounts(counterLeft - 1, counterRight - 1, counterUp - 1, counterDown - 1,)
+        )
       }
     }
   }
@@ -87,11 +93,14 @@ class Day08 @Inject constructor(
     val width: Int
   )
 
-  data class TreeVisibility(
+  data class TreeVisibilityCounts(
     val visibleLeftTrees: Int,
     val visibleRightTrees: Int,
     val visibleUpTrees: Int,
     val visibleDownTrees: Int,
+  )
+
+  data class TreeVisibility(
     val foundEqualOrHigherLeft: Boolean,
     val foundEqualOrHigherRight: Boolean,
     val foundEqualOrHigherUp: Boolean,
