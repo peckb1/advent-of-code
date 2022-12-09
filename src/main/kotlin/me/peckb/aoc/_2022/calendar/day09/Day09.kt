@@ -20,22 +20,15 @@ class Day09 @Inject constructor(
 
   private fun findUniqueTailLocations(input: Sequence<Movement>, children: Int): Int {
     val rope = (0..children).map { Location(0, 0) }.toMutableList()
-
     val lastTailVisitedLocation = mutableSetOf<Location>().also { it.add(rope.last()) }
 
     input.forEach { movement ->
       repeat(movement.steps) {
-        val head = rope[0]
-        rope[0] = when (movement.direction) {
-          LEFT -> Location(head.x - 1, head.y)
-          RIGHT -> Location(head.x + 1, head.y)
-          DOWN -> Location(head.x, head.y + 1)
-          UP -> Location(head.x, head.y - 1)
-        }
+        rope[0] = rope[0].move(movement.direction) // move the head
 
         var parentIndex = 0
         var shouldCheckChild = true
-        while (shouldCheckChild && parentIndex < rope.size - 1) {
+        while (shouldCheckChild) { // move all the children!
           val parent = rope[parentIndex]
           val child = rope[parentIndex + 1]
 
@@ -44,12 +37,16 @@ class Day09 @Inject constructor(
               x = child.x + parent.x.compareTo(child.x),
               y = child.y + parent.y.compareTo(child.y),
             ).also {
-              if (parentIndex + 1 == children) lastTailVisitedLocation.add(it)
+              if (parentIndex + 1 == children) {
+                lastTailVisitedLocation.add(it)
+                shouldCheckChild = false
+              }
             }
-            parentIndex++
           } else {
             shouldCheckChild = false
           }
+
+          parentIndex++
         }
       }
     }
@@ -74,5 +71,14 @@ class Day09 @Inject constructor(
 
   enum class Direction { LEFT, RIGHT, DOWN, UP }
 
-  data class Location(val x: Int, val y: Int)
+  data class Location(val x: Int, val y: Int) {
+    fun move(direction: Direction): Location {
+      return when (direction) {
+        LEFT -> Location(x - 1, y)
+        RIGHT -> Location(x + 1, y)
+        DOWN -> Location(x, y + 1)
+        UP -> Location(x, y - 1)
+      }
+    }
+  }
 }
