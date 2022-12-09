@@ -112,7 +112,10 @@ as the value which passed the given day/phase combination
 * Keeping track of the single index as I parsed through the bit string for Day16 
   * This ended up turning into a re-learning of AtomicInteger, and "invisible" mutability of parameters
 * Aside from the maths solution for Day 17 part1, finding the set of valid X and Y coordinates for part two was clever. 
-    
+
+#### 2021
+
+* The [-1, 0, 1] returned by `compareTo( ~ )` helped simplify the movement of a tail.
 
 ## Takeaways
 
