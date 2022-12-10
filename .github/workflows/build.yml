@@ -17,7 +17,7 @@ jobs:
           - name: Checkout the AoC Input files
             uses: actions/checkout@v3
             with:
-              token: ${{ github.token }}
+              token: ${{ secrets.GITHUB_TOKEN }}
               repository: peckb1/advent-of-code-input
               path: advent-of-code-input
               ref: main
