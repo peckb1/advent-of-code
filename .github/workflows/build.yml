@@ -20,6 +20,7 @@ jobs:
               token: ${{ github.token }}
               repository: peckb1/advent-of-code-input
               path: advent-of-code-input
+              ref: main
 
           - name: Bring in the gradle wrapper running the build
             uses: gradle/wrapper-validation-action@v1
