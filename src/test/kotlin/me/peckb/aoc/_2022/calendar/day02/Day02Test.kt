@@ -28,6 +28,6 @@ internal class Day02Test {
   }
 
   companion object {
-    private const val DAY_02: String = "src/test/resources/2022/day02.input"
+    private const val DAY_02: String = "advent-of-code-input/2022/day02.input"
   }
 }

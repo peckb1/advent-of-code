@@ -8,7 +8,7 @@ import javax.inject.Inject
 
 internal class Day14Test {
   companion object {
-    const val DAY_14 = "src/test/resources/2021/day14.input"
+    const val DAY_14 = "advent-of-code-input/2021/day14.input"
   }
 
   @BeforeEach
