@@ -19,7 +19,7 @@ jobs:
             with:
               token: ${{ secrets.AOC_INPUT }}
               repository: peckb1/advent-of-code-input
-              path: advent-of-code-input
+              path: ../advent-of-code-input
               ref: main
 
           - name: Bring in the gradle wrapper running the build
@@ -34,7 +34,7 @@ jobs:
             run: chmod +x gradlew
 
           - name: Build with Gradle jacocoTestReport
-            run: ./gradlew --no-daemon build test
+            run: ./gradlew --no-daemon build test --tests "me.peckb.aoc._2022.calendar.day10.Day10Test"
 
           - name: Publish Unit Test Results
             uses: EnricoMi/publish-unit-test-result-action@v2
