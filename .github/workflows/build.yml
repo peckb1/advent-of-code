@@ -26,12 +26,11 @@ jobs:
               run: chmod +x gradlew
 
             - name: Build
-              run: ./gradlew --no-daemon build
+              run: ./gradlew --no-daemon build -x test
 
     test:
         needs: build
         runs-on: ubuntu-latest
-
 
         steps:
             - name: Checkout Main AoC code
