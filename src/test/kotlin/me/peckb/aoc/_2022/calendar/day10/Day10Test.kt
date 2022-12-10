@@ -19,12 +19,20 @@ internal class Day10Test {
 
   @Test
   fun testDay10PartOne() {
-    assertEquals(-1, day10.partOne(DAY_10))
+    assertEquals(12520, day10.partOne(DAY_10))
   }
 
   @Test
   fun testDay10PartTwo() {
-    assertEquals(-1, day10.partTwo(DAY_10))
+    val crtOutput = """
+      #### #  # ###  #### ###    ##  ##  #    
+      #    #  # #  #    # #  #    # #  # #    
+      ###  #### #  #   #  #  #    # #    #    
+      #    #  # ###   #   ###     # # ## #    
+      #    #  # #    #    #    #  # #  # #    
+      #### #  # #    #### #     ##   ### #### 
+    """.trimIndent()
+    assertEquals(crtOutput, day10.partTwo(DAY_10))
   }
 
   companion object {
