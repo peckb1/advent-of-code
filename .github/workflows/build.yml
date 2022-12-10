@@ -14,6 +14,14 @@ jobs:
           - name: Checkout Main AoC code
             uses: actions/checkout@v3
 
+          - name: Checkout the AoC Input files
+            uses: actions/checkout@v3
+            with:
+              token: ${{ secrets.AOC_INPUT }}
+              repository: peckb1/advent-of-code-input
+              path: advent-of-code-input
+              ref: main
+
           - name: Bring in the gradle wrapper running the build
             uses: gradle/wrapper-validation-action@v1
 
@@ -26,7 +34,7 @@ jobs:
             run: chmod +x gradlew
 
           - name: Build with Gradle jacocoTestReport
-            run: ./gradlew --no-daemon build test
+            run: ./gradlew --no-daemon build
 
           - name: Publish Unit Test Results
             uses: EnricoMi/publish-unit-test-result-action@v2

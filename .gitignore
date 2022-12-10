@@ -31,3 +31,6 @@ build/*
 
 # IntelliJ
 .idea/*
+
+# AoC Input repository
+advent-of-code-input/
