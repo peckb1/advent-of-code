@@ -9,6 +9,7 @@ import com.squareup.kotlinpoet.KModifier.LATEINIT
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import me.peckb.aoc.generators.skeleton.SkeletonGenerator.Companion.INPUT_DIRECTORY
 import me.peckb.aoc.generators.skeleton.SkeletonGenerator.Companion.TEST_DIRECTORY
 import java.io.File
 import java.nio.file.Files
@@ -27,7 +28,7 @@ object TestClass {
             TypeSpec.companionObjectBuilder()
               .addProperty(
                 PropertySpec.builder("DAY_$day", String::class)
-                  .initializer("%S", "$TEST_DIRECTORY/resources/$year/day$day.input")
+                  .initializer("%S", "$INPUT_DIRECTORY/$year/day$day.input")
                   .addModifiers(PRIVATE, CONST)
                   .build()
               )
