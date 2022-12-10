@@ -9,7 +9,7 @@ import kotlin.test.Ignore
 
 internal class Day23Test {
   companion object {
-    const val DAY_23 = "src/test/resources/2021/day23.input"
+    const val DAY_23 = "advent-of-code-input/2021/day23.input"
   }
 
   @BeforeEach
