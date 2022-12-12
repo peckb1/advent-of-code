@@ -113,9 +113,10 @@ as the value which passed the given day/phase combination
   * This ended up turning into a re-learning of AtomicInteger, and "invisible" mutability of parameters
 * Aside from the maths solution for Day 17 part1, finding the set of valid X and Y coordinates for part two was clever. 
 
-#### 2021
+#### 2022
 
-* The [-1, 0, 1] returned by `compareTo( ~ )` helped simplify the movement of a tail.
+* Day 09 The [-1, 0, 1] returned by `compareTo( ~ )` helped simplify the movement of a tail.
+* Day 12 Reversing the Dijkstra to go from `E` to all `a` to save an order of magnitude of searching was a nice optimization. 
 
 ## Takeaways
 

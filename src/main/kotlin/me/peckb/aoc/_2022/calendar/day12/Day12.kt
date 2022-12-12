@@ -4,58 +4,51 @@ import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.pathing.GenericIntDijkstra
+import me.peckb.aoc.pathing.GenericIntDijkstra.DijkstraNode
 
 class Day12 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val (start, end, _) = generateCliffPoints(input)
+    CliffDijkstra.solve(end, start)[start]
+  }
+
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val (_, end, lowElevationCliffs) = generateCliffPoints(input)
+    CliffDijkstra.solve(end).filterKeys { lowElevationCliffs.contains(it) }.minOf { it.value }
+  }
+
+  private fun generateCliffPoints(input: Sequence<String>): CliffData {
+    val lowElevationCliffs = mutableSetOf<Cliff>()
     lateinit var start: Cliff
     lateinit var end: Cliff
 
     val cliffs: MutableList<MutableList<Cliff>> = mutableListOf()
-
     input.forEachIndexed { y, row ->
       val cliffRow = mutableListOf<Cliff>()
       row.forEachIndexed { x, c ->
-        when (c) {
-          'S' -> Cliff('a', x, y).also { start = it }
+        val cliff = when (c) {
+          'S' -> Cliff('a', x, y).also { start = it; lowElevationCliffs.add(it) }
+          'a' -> Cliff(c, x, y).also { lowElevationCliffs.add(it) }
           'E' -> Cliff('z', x, y).also { end = it }
           else -> Cliff(c, x, y)
-        }.also {
-          it.withCliffs(cliffs)
-          cliffRow.add(it)
-        }
-      }
-      cliffs.add(cliffRow)
-    }
-
-    CliffDijkstra.solve(start, end)[end]
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val starts = mutableSetOf<Cliff>()
-    lateinit var end: Cliff
-
-    val cliffs: MutableList<MutableList<Cliff>> = mutableListOf()
-    input.forEachIndexed { y, row ->
-      val cliffRow = mutableListOf<Cliff>()
-      row.forEachIndexed { x, c ->
-        val cliff = if (c == 'S' || c == 'a') {
-          Cliff('a', x, y).withCliffs(cliffs).also { starts.add(it) }
-        } else if (c == 'E') {
-          Cliff('z', x, y).withCliffs(cliffs).also { end = it }
-        } else {
-          Cliff(c, x, y).withCliffs(cliffs)
-        }
+        }.also { it.withCliffs(cliffs) }
         cliffRow.add(cliff)
       }
       cliffs.add(cliffRow)
     }
 
-    starts.minOf { start -> CliffDijkstra.solve(start, end)[end] ?: Int.MAX_VALUE }
+    return CliffData(start, end, lowElevationCliffs)
   }
 
-  data class Cliff(val char: Char, val x: Int, val y: Int) : GenericIntDijkstra.DijkstraNode<Cliff> {
+  data class CliffData(
+    val start: Cliff,
+    val end: Cliff,
+    val lowElevationCliffs: Set<Cliff>
+  )
+
+  data class Cliff(val char: Char, val x: Int, val y: Int) : DijkstraNode<Cliff> {
     private lateinit var cliffs: List<List<Cliff>>
     private val height = char.code
 
@@ -65,14 +58,11 @@ class Day12 @Inject constructor(
       val l = if (x - 1 >= 0) cliffs[y][x - 1] else null
       val r = if (x + 1 < cliffs[y].size) cliffs[y][x + 1] else null
 
-      return listOfNotNull(u, d, l, r).filter { it.height - height <= 1 }.associateWith { 1 }
+      return listOfNotNull(u, d, l, r).filter { height - it.height <= 1 }.associateWith { 1 }
     }
 
-    fun withCliffs(cliffs: MutableList<MutableList<Cliff>>) = apply {
-      this.cliffs = cliffs
-    }
+    fun withCliffs(cliffs: MutableList<MutableList<Cliff>>) = apply { this.cliffs = cliffs }
   }
 
   object CliffDijkstra : GenericIntDijkstra<Cliff>()
-
 }
