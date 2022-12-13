@@ -34,11 +34,11 @@ class Day13 @Inject constructor(
     }
 
     allPackets.sortWith { packetDataOne, packetDataTwo ->
-       when (inRightOrder(packetDataOne, packetDataTwo)) {
-         true -> -1
-         false -> 1
-         null -> 0
-       }
+      when (inRightOrder(packetDataOne, packetDataTwo)) {
+        true -> -1
+        false -> 1
+        null -> 0
+      }
     }
 
     (allPackets.indexOf(markerOne) + 1) * (allPackets.indexOf(markerTwo) + 1)
@@ -49,7 +49,7 @@ class Day13 @Inject constructor(
     if (left.intValue != null && right.intValue != null) {
       when (left.intValue.compareTo(right.intValue)) {
         -1 -> inOrder = true
-        0 -> { /* no op, keep scanning */ }
+        0 -> {}/* no op, keep scanning */
         1 -> inOrder = false
       }
     } else if (left.intValue != null && right.listValue != null) {
@@ -59,7 +59,7 @@ class Day13 @Inject constructor(
     } else if (left.listValue != null && right.listValue != null) {
       var index = 0
       var childSearchHasNotFinished = true
-      while(inOrder == null && childSearchHasNotFinished) {
+      while (inOrder == null && childSearchHasNotFinished) {
         val leftChild = left.listValue.getOrNull(index)
         val rightChild = right.listValue.getOrNull(index)
 
@@ -125,7 +125,7 @@ class Day13 @Inject constructor(
           index = endIndex
         }
 
-        ',' -> index ++
+        ',' -> index++
       }
     }
 
