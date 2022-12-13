@@ -1,7 +1,7 @@
 package me.peckb.aoc._2022.calendar.day13
 
-import arrow.core.Either
-import arrow.core.getOrElse
+import me.peckb.aoc._2022.calendar.day13.Day13.PacketData.Companion.fromIntValue
+import me.peckb.aoc._2022.calendar.day13.Day13.PacketData.Companion.fromListValue
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -25,16 +25,15 @@ class Day13 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val markerOne = listOf(PacketData(Either.Right(listOf(PacketData(Either.Left(2))))))
-    val markerTwo = listOf(PacketData(Either.Right(listOf(PacketData(Either.Left(6))))))
-    val allPackets: MutableList<List<PacketData>> = mutableListOf(
-      markerOne,
-      markerTwo
-    )
+    val markerOne = fromListValue(listOf(fromIntValue(2)))
+    val markerTwo = fromListValue(listOf(fromIntValue(6)))
+    val allPackets: MutableList<PacketData> = mutableListOf(markerOne, markerTwo)
+
     input.chunked(3).forEach { (p1, p2, _) ->
       allPackets.add(packet(p1))
       allPackets.add(packet(p2))
     }
+
     allPackets.sortWith { packetDataOne, packetDataTwo ->
        when (inRightOrder(packetDataOne, packetDataTwo)) {
          true -> -1
@@ -46,58 +45,55 @@ class Day13 @Inject constructor(
     (allPackets.indexOf(markerOne) + 1) * (allPackets.indexOf(markerTwo) + 1)
   }
 
-  private fun inRightOrder(leftList: List<PacketData>, rightList: List<PacketData>): Boolean? {
+  private fun inRightOrder(left: PacketData, right: PacketData): Boolean? {
     var inOrder: Boolean? = null
-    var iCouldNotTell = false
-    var index = 0
-    while(inOrder == null && !iCouldNotTell) {
-      val left = leftList.getOrNull(index)
-      val right = rightList.getOrNull(index)
-      if (left != null && right != null) {
-        if (left.isInt() && right.isInt()) {
-          if(left.intValue() > right.intValue()) {
-            inOrder = false
-          }
-          if (left.intValue() < right.intValue()) {
-            inOrder = true
-          }
-        } else if (left.isInt() && right.isList()) {
-          val childOrder = inRightOrder(listOf(PacketData(Either.Left(left.intValue()))), right.listValue())
-          childOrder?.also { inOrder = it }
-        } else if (left.isList() && right.isInt()) {
-          val childOrder = inRightOrder(left.listValue(), listOf(PacketData(Either.Left(right.intValue()))))
-          childOrder?.also { inOrder = it }
-        } else { // left.isList && right.isList
-          val childOrder = inRightOrder(left.listValue(), right.listValue())
-          childOrder?.also { inOrder = it }
-        }
-      } else if (left == null && right == null) {
-        iCouldNotTell = true
-      } else {
-        inOrder = (left == null)
+    if (left.intValue != null && right.intValue != null) {
+      when (left.intValue.compareTo(right.intValue)) {
+        -1 -> inOrder = true
+        0 -> { /* no op, keep scanning */ }
+        1 -> inOrder = false
       }
-      index++
+    } else if (left.intValue != null && right.listValue != null) {
+      inRightOrder(fromListValue(listOf(left)), right)?.also { inOrder = it }
+    } else if (left.listValue != null && right.intValue != null) {
+      inRightOrder(left, fromListValue(listOf(right)))?.also { inOrder = it }
+    } else if (left.listValue != null && right.listValue != null) {
+      var index = 0
+      var childSearchHasNotFinished = true
+      while(inOrder == null && childSearchHasNotFinished) {
+        val leftChild = left.listValue.getOrNull(index)
+        val rightChild = right.listValue.getOrNull(index)
+
+        if (leftChild != null && rightChild != null) {
+          inRightOrder(leftChild, rightChild)?.also { inOrder = it }
+        } else if (leftChild == null && rightChild == null) {
+          childSearchHasNotFinished = false
+        } else {
+          inOrder = (leftChild == null)
+        }
+
+        index++
+      }
     }
     return inOrder
   }
 
 
-  data class PacketData(val data: Either<Int, List<PacketData>>) {
-    fun isInt() = data.isLeft()
-    fun isList() = data.isRight()
-
-    fun intValue(): Int = data.swap().getOrElse { throw IllegalStateException() }
-    fun listValue(): List<PacketData> = data.getOrElse { throw IllegalStateException() }
+  class PacketData private constructor(val intValue: Int?, val listValue: List<PacketData>?) {
+    companion object {
+      fun fromIntValue(intValue: Int) = PacketData(intValue, null)
+      fun fromListValue(listValue: List<PacketData>) = PacketData(null, listValue)
+    }
   }
 
-  private fun packet(line: String): List<PacketData> {
+  private fun packet(line: String): PacketData {
     var index = 1
     val packetParents = ArrayDeque<MutableList<PacketData>>()
     var currentPacketData: MutableList<PacketData> = mutableListOf()
-    // DEV NOTE: by keeping it less than `line.length - 1` we don't need to worry about an empty parent stack
-    //           for our outermost packet data list
+    // DEV NOTE: by keeping it less than `line.length - 1` we don't need to worry about
+    //           an empty parent stack for our outermost packet data list
     while (index < line.length - 1) {
-      when (val c = line[index]) {
+      when (line[index]) {
         '[' -> {
           // start a list to add items to
           packetParents.add(currentPacketData)
@@ -106,8 +102,9 @@ class Day13 @Inject constructor(
         }
 
         ']' -> {
+          // we finished a list, add it to our parent
           val parent = packetParents.removeLast()
-          parent.add(PacketData(Either.Right(currentPacketData)))
+          parent.add(fromListValue(currentPacketData))
           currentPacketData = parent
           index++
         }
@@ -118,7 +115,7 @@ class Day13 @Inject constructor(
           while (line[endIndex] != ',' && line[endIndex] != ']') {
             endIndex++
           }
-          val nextData = PacketData(Either.Left(line.substring(index, endIndex).toInt()))
+          val nextData = fromIntValue(line.substring(index, endIndex).toInt())
           currentPacketData.add(nextData)
           index = endIndex
         }
@@ -127,7 +124,6 @@ class Day13 @Inject constructor(
       }
     }
 
-    return currentPacketData
+    return fromListValue(currentPacketData)
   }
-
 }
