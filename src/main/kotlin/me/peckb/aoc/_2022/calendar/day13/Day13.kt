@@ -59,7 +59,7 @@ class Day13 @Inject constructor(
           val rightChild = pm.right.value.getOrNull(index)
 
           if (leftChild != null && rightChild != null) {
-            inRightOrder(leftChild, rightChild)?.also { inOrder = it }
+            inOrder = inRightOrder(leftChild, rightChild)
           } else if (leftChild == null && rightChild == null) {
             childSearchHasNotFinished = false
           } else {
