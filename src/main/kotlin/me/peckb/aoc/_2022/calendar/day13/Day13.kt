@@ -1,7 +1,8 @@
 package me.peckb.aoc._2022.calendar.day13
 
-import me.peckb.aoc._2022.calendar.day13.Day13.PacketData.Companion.fromIntValue
-import me.peckb.aoc._2022.calendar.day13.Day13.PacketData.Companion.fromListValue
+import me.peckb.aoc._2022.calendar.day13.Day13.PacketData.IntValue
+import me.peckb.aoc._2022.calendar.day13.Day13.PacketData.ListValue
+import me.peckb.aoc._2022.calendar.day13.Day13.PacketMatcher.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -24,8 +25,8 @@ class Day13 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val markerOne = fromListValue(listOf(fromIntValue(2)))
-    val markerTwo = fromListValue(listOf(fromIntValue(6)))
+    val markerOne = ListValue(listOf(IntValue(2)))
+    val markerTwo = ListValue(listOf(IntValue(6)))
     val allPackets: MutableList<PacketData> = mutableListOf(markerOne, markerTwo)
 
     input.chunked(3).forEach { (p1, p2, _) ->
@@ -45,51 +46,61 @@ class Day13 @Inject constructor(
   }
 
   private fun inRightOrder(left: PacketData, right: PacketData): Boolean? {
-    var inOrder: Boolean? = null
-    if (left.intValue != null && right.intValue != null) {
-      when (left.intValue.compareTo(right.intValue)) {
-        -1 -> inOrder = true
-        0 -> {}/* no op, keep scanning */
-        1 -> inOrder = false
-      }
-    } else if (left.intValue != null && right.listValue != null) {
-      inRightOrder(fromListValue(listOf(left)), right)?.also { inOrder = it }
-    } else if (left.listValue != null && right.intValue != null) {
-      inRightOrder(left, fromListValue(listOf(right)))?.also { inOrder = it }
-    } else if (left.listValue != null && right.listValue != null) {
-      var index = 0
-      var childSearchHasNotFinished = true
-      while (inOrder == null && childSearchHasNotFinished) {
-        val leftChild = left.listValue.getOrNull(index)
-        val rightChild = right.listValue.getOrNull(index)
+    return when(val pm = PacketMatcher.from(left, right)) {
+      is IntInt -> pm.left.comparedTo(pm.right)
+      is IntList -> inRightOrder(pm.left.wrapInList(), pm.right)
+      is ListInt -> inRightOrder(pm.left, pm.right.wrapInList())
+      is ListList -> {
+        var index = 0
+        var childSearchHasNotFinished = true
+        var inOrder: Boolean? = null
+        while (inOrder == null && childSearchHasNotFinished) {
+          val leftChild = pm.left.value.getOrNull(index)
+          val rightChild = pm.right.value.getOrNull(index)
 
-        if (leftChild != null && rightChild != null) {
-          inRightOrder(leftChild, rightChild)?.also { inOrder = it }
-        } else if (leftChild == null && rightChild == null) {
-          childSearchHasNotFinished = false
-        } else {
-          inOrder = (leftChild == null)
+          if (leftChild != null && rightChild != null) {
+            inRightOrder(leftChild, rightChild)?.also { inOrder = it }
+          } else if (leftChild == null && rightChild == null) {
+            childSearchHasNotFinished = false
+          } else {
+            inOrder = (leftChild == null)
+          }
+
+          index++
         }
-
-        index++
+        inOrder
       }
     }
-    return inOrder
   }
 
+sealed class PacketData {
+  data class ListValue(val value: List<PacketData>) : PacketData()
+  data class IntValue(val value: Int) : PacketData() {
+    fun wrapInList() = ListValue(listOf(this))
 
-  class PacketData private constructor(val intValue: Int?, val listValue: List<PacketData>?) {
-    override fun toString(): String {
-      return intValue?.toString()
-        ?: listValue?.toString()
-        ?: throw IllegalStateException("It should be impossible to create me without one value")
-    }
-
-    companion object {
-      fun fromIntValue(intValue: Int) = PacketData(intValue, null)
-      fun fromListValue(listValue: List<PacketData>) = PacketData(null, listValue)
+    fun comparedTo(other: IntValue): Boolean? = when (value.compareTo(other.value)) {
+      -1 -> true
+      1 -> false
+      else -> null
     }
   }
+}
+
+sealed class PacketMatcher {
+  data class IntInt(val left: IntValue, val right: IntValue) : PacketMatcher()
+  data class IntList(val left: IntValue, val right: ListValue) : PacketMatcher()
+  data class ListInt(val left: ListValue, val right: IntValue) : PacketMatcher()
+  data class ListList(val left: ListValue, val right: ListValue) : PacketMatcher()
+
+  companion object {
+    fun from(left: PacketData, right: PacketData): PacketMatcher {
+      return if (left is IntValue && right is IntValue) IntInt(left, right)
+      else if (left is IntValue && right is ListValue) IntList(left, right)
+      else if (left is ListValue && right is IntValue) ListInt(left, right)
+      else ListList(left as ListValue, right as ListValue)
+    }
+  }
+}
 
   private fun packet(line: String): PacketData {
     var index = 0
@@ -108,7 +119,7 @@ class Day13 @Inject constructor(
         ']' -> {
           // we finished a list, add it to our parent (if we have a parent to add to)
           packetParents.removeLastOrNull()?.also { parent ->
-            currentPacketData?.also { parent.add(fromListValue(it)) }
+            currentPacketData?.also { parent.add(ListValue(it)) }
             currentPacketData = parent
           }
           index++
@@ -120,7 +131,7 @@ class Day13 @Inject constructor(
           while (line[endIndex] != ',' && line[endIndex] != ']') {
             endIndex++
           }
-          val nextData = fromIntValue(line.substring(index, endIndex).toInt())
+          val nextData = IntValue(line.substring(index, endIndex).toInt())
           currentPacketData?.add(nextData)
           index = endIndex
         }
@@ -129,6 +140,6 @@ class Day13 @Inject constructor(
       }
     }
 
-    return currentPacketData?.let(::fromListValue) ?: throw IllegalStateException("There should always be one list")
+    return currentPacketData?.let(::ListValue) ?: throw IllegalStateException("There should always be one list")
   }
 }
