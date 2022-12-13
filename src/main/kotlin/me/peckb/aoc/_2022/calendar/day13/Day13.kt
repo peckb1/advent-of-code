@@ -12,16 +12,15 @@ class Day13 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    input.chunked(3).map { (p1, p2, _) ->
-      packet(p1) to packet(p2)
-    }.mapIndexedNotNull { index, packetPair->
-      val (packetListOne, packetListTwo) = packetPair
-      when (inRightOrder(packetListOne, packetListTwo)) {
-        true -> index + 1
-        false -> null
-        else -> throw IllegalStateException("Why do I not know the order")
-      }
-    }.sum()
+    input.chunked(3)
+      .map { (p1, p2, _) -> packet(p1) to packet(p2) }
+      .mapIndexedNotNull { index, packetPair ->
+        when (inRightOrder(packetPair.first, packetPair.second)) {
+          true -> index + 1
+          false -> null
+          else -> throw IllegalStateException("Why do I not know the order")
+        }
+      }.sum()
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
@@ -87,25 +86,25 @@ class Day13 @Inject constructor(
   }
 
   private fun packet(line: String): PacketData {
-    var index = 1
+    var index = 0
     val packetParents = ArrayDeque<MutableList<PacketData>>()
-    var currentPacketData: MutableList<PacketData> = mutableListOf()
-    // DEV NOTE: by keeping it less than `line.length - 1` we don't need to worry about
-    //           an empty parent stack for our outermost packet data list
-    while (index < line.length - 1) {
+    var currentPacketData: MutableList<PacketData>? = null
+
+    while (index < line.length) {
       when (line[index]) {
         '[' -> {
           // start a list to add items to
-          packetParents.add(currentPacketData)
+          currentPacketData?.also(packetParents::add)
           currentPacketData = mutableListOf()
           index++
         }
 
         ']' -> {
-          // we finished a list, add it to our parent
-          val parent = packetParents.removeLast()
-          parent.add(fromListValue(currentPacketData))
-          currentPacketData = parent
+          // we finished a list, add it to our parent (if we have a parent to add to)
+          packetParents.removeLastOrNull()?.also { parent ->
+            currentPacketData?.also { parent.add(fromListValue(it)) }
+            currentPacketData = parent
+          }
           index++
         }
 
@@ -116,7 +115,7 @@ class Day13 @Inject constructor(
             endIndex++
           }
           val nextData = fromIntValue(line.substring(index, endIndex).toInt())
-          currentPacketData.add(nextData)
+          currentPacketData?.add(nextData)
           index = endIndex
         }
 
@@ -124,6 +123,6 @@ class Day13 @Inject constructor(
       }
     }
 
-    return fromListValue(currentPacketData)
+    return currentPacketData?.let(::fromListValue) ?: throw IllegalStateException("There should always be one list")
   }
 }
