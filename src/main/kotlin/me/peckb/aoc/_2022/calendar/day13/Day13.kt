@@ -79,6 +79,12 @@ class Day13 @Inject constructor(
 
 
   class PacketData private constructor(val intValue: Int?, val listValue: List<PacketData>?) {
+    override fun toString(): String {
+      return intValue?.toString()
+        ?: listValue?.toString()
+        ?: throw IllegalStateException("It should be impossible to create me without one value")
+    }
+
     companion object {
       fun fromIntValue(intValue: Int) = PacketData(intValue, null)
       fun fromListValue(listValue: List<PacketData>) = PacketData(null, listValue)
