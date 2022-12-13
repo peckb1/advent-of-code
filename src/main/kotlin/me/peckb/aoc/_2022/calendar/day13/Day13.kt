@@ -115,7 +115,7 @@ class Day13 @Inject constructor(
         }
 
         in '0'..'9' -> {
-          // scan to the next ',' and add that number to the current list of
+          // scan to the end of the number and add that number to the current list of
           var endIndex = index + 1
           while (line[endIndex] != ',' && line[endIndex] != ']') {
             endIndex++
