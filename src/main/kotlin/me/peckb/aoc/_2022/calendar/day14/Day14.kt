@@ -4,7 +4,6 @@ import me.peckb.aoc._2022.calendar.day14.Day14.CaveSubstance.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import java.lang.IllegalStateException
 import kotlin.math.max
 import kotlin.math.min
 
@@ -13,44 +12,32 @@ class Day14 @Inject constructor(
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::rockPath) { input ->
     val (caves, maxY, minX, maxX) = populateCaves(input)
+    val xRange = (minX .. maxX)
 
-    // sand falling time
     var sandFellIntoTheAbyss = false
     while(!sandFellIntoTheAbyss) {
       var sandX = SPOUT_X
       var sandY = SPOUT_Y
       var sandPlaced = false
       while(!sandPlaced) {
-        if (sandX !in (minX .. maxX) || sandY >= maxY) {
-          sandPlaced = true
-          sandFellIntoTheAbyss = true
-        } else {
-          if (caves[sandY + 1][sandX] is Empty) {
-            sandY++
-          } else if (caves[sandY + 1][sandX - 1] is Empty) {
-            sandY++
-            sandX--
-          } else if (caves[sandY + 1][sandX + 1] is Empty) {
-            sandY++
-            sandX++
-          } else {
-            sandPlaced = true
-            caves[sandY][sandX] = Sand
-          }
+        if (sandX !in xRange || sandY >= maxY) { sandPlaced = true; sandFellIntoTheAbyss = true }
+        else {
+          if (caves[sandY + 1][sandX] is Empty) { sandY++ }
+          else if (caves[sandY + 1][sandX - 1] is Empty) { sandY++; sandX-- }
+          else if (caves[sandY + 1][sandX + 1] is Empty) { sandY++; sandX++ }
+          else { sandPlaced = true; caves[sandY][sandX] = Sand }
         }
       }
     }
 
-    caves.sumOf { row ->
-      row.count { it is Sand }
-    }
+    caves.countSand()
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::rockPath) { input ->
     val caveData = populateCaves(input)
-    val (caves, maxY, minX, maxX) = caveData
+    val (caves, maxY) = caveData
 
-    // put in that "infinie" wall
+    // put in that "infinite" wall
     caves[maxY + 2].indices.forEach { x -> caves[maxY + 2][x] = Wall }
 
     // sand falling time
@@ -60,27 +47,18 @@ class Day14 @Inject constructor(
       var sandY = SPOUT_Y
       var sandPlaced = false
       while(!sandPlaced) {
-        if (caves[sandY + 1][sandX] is Empty) {
-          sandY++
-        } else if (caves[sandY + 1][sandX - 1] is Empty) {
-          sandY++
-          sandX--
-        } else if (caves[sandY + 1][sandX + 1] is Empty) {
-          sandY++
-          sandX++
-        } else {
+        if (caves[sandY + 1][sandX] is Empty) { sandY++ }
+        else if (caves[sandY + 1][sandX - 1] is Empty) { sandY++; sandX-- }
+        else if (caves[sandY + 1][sandX + 1] is Empty) { sandY++; sandX++ }
+        else {
           sandPlaced = true
           caves[sandY][sandX] = Sand
-          if (sandY == SPOUT_Y && sandX == SPOUT_X) {
-            sandBlockedTheHole = true
-          }
+          if (sandY == SPOUT_Y && sandX == SPOUT_X) { sandBlockedTheHole = true }
         }
       }
     }
 
-    caves.sumOf { row ->
-      row.count { it is Sand }
-    }
+    caves.countSand()
   }
 
   private fun rockPath(line: String): List<Line> =
@@ -92,11 +70,11 @@ class Day14 @Inject constructor(
     }
 
   private fun populateCaves(input: Sequence<List<Line>>): CaveData {
-    val height = 500
-    val width = 1000
+    val height = CAVE_HEIGHT
+    val width = CAVE_WIDTH
 
     val caves = Array(height) { Array<CaveSubstance>(width) { Empty } }
-    caves[SPOUT_Y][SPOUT_X] = CaveSubstance.Spout
+    caves[SPOUT_Y][SPOUT_X] = Spout
 
     var globalMinX = Int.MAX_VALUE
     var globalMaxX = Int.MIN_VALUE
@@ -131,27 +109,18 @@ class Day14 @Inject constructor(
     object Wall : CaveSubstance("#")
     object Empty : CaveSubstance(".")
     object Spout : CaveSubstance("+")
-    object Sand : CaveSubstance("o")
+    object Sand : CaveSubstance(" ")
 
-    override fun toString(): String {
-      return representation
-    }
+    override fun toString(): String = representation
   }
 
   companion object {
     private const val SPOUT_Y = 0
     private const val SPOUT_X = 500
+
+    private const val CAVE_WIDTH = 1000
+    private const val CAVE_HEIGHT = 200
   }
 
-  fun Array<Array<CaveSubstance>>.printCaves(caveData: CaveData) {
-    forEachIndexed { y, row ->
-      if (y <= caveData.maxY + 2) {
-        (caveData.minX - 2..caveData.maxX + 2).forEach { x ->
-          print(row[x])
-        }
-        println()
-      }
-    }
-    println()
-  }
+  private fun Array<Array<CaveSubstance>>.countSand() = sumOf { row -> row.count { it is Sand } }
 }
