@@ -12,60 +12,16 @@ class Day14 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::rockPath) { input ->
-    val width = 1000
-    val height = 500
-
-    val spoutX = 500
-    val spoutY = 0
-
-    val caves = Array(height) { Array<CaveSubstance>(width) { Empty } }
-    caves[spoutY][spoutX] = CaveSubstance.Spout
-
-    var globalMinX = Int.MAX_VALUE
-    var globalMinY = 0
-    var globalMaxX = Int.MIN_VALUE
-    var globalMaxY = Int.MIN_VALUE
-
-
-    input.forEach { lines ->
-      lines.forEach { (startPoint, endPoint) ->
-        val minY = min(startPoint.y, endPoint.y)
-        val maxY = max(startPoint.y, endPoint.y)
-        val minX = min(startPoint.x, endPoint.x)
-        val maxX = max(startPoint.x, endPoint.x)
-        globalMaxX = max(globalMaxX, maxX)
-        globalMaxY = max(globalMaxY, maxY)
-        globalMinX = min(globalMinX, minX)
-
-        (minX .. maxX) .forEach { x ->
-          (minY .. maxY).forEach { y ->
-            caves[y][x] = Wall
-          }
-        }
-      }
-    }
-
-    fun printCaves() {
-      caves.forEachIndexed { y, row ->
-        if (y <= globalMaxY + 2) {
-          (globalMinX - 2..globalMaxX + 2).forEach { x ->
-            print(row[x])
-          }
-          println()
-        }
-      }
-      println()
-    }
+    val (caves, maxY, minX, maxX) = populateCaves(input)
 
     // sand falling time
     var sandFellIntoTheAbyss = false
     while(!sandFellIntoTheAbyss) {
-//      printCaves()
-      var sandX = spoutX
-      var sandY = spoutY
+      var sandX = SPOUT_X
+      var sandY = SPOUT_Y
       var sandPlaced = false
       while(!sandPlaced) {
-        if (sandX !in (globalMinX .. globalMaxX) || sandY >= globalMaxY) {
+        if (sandX !in (minX .. maxX) || sandY >= maxY) {
           sandPlaced = true
           sandFellIntoTheAbyss = true
         } else {
@@ -85,66 +41,23 @@ class Day14 @Inject constructor(
       }
     }
 
-    printCaves()
-
     caves.sumOf { row ->
       row.count { it is Sand }
     }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::rockPath) { input ->
-    val width = 1000
-    val height = 500
+    val caveData = populateCaves(input)
+    val (caves, maxY, minX, maxX) = caveData
 
-    val spoutX = 500
-    val spoutY = 0
-
-    val caves = Array(height) { Array<CaveSubstance>(width) { Empty } }
-    caves[spoutY][spoutX] = CaveSubstance.Spout
-
-    var globalMinX = Int.MAX_VALUE
-    var globalMinY = 0
-    var globalMaxX = Int.MIN_VALUE
-    var globalMaxY = Int.MIN_VALUE
-
-
-    input.forEach { lines ->
-      lines.forEach { (startPoint, endPoint) ->
-        val minY = min(startPoint.y, endPoint.y)
-        val maxY = max(startPoint.y, endPoint.y)
-        val minX = min(startPoint.x, endPoint.x)
-        val maxX = max(startPoint.x, endPoint.x)
-        globalMaxX = max(globalMaxX, maxX)
-        globalMaxY = max(globalMaxY, maxY)
-        globalMinX = min(globalMinX, minX)
-
-        (minX .. maxX) .forEach { x ->
-          (minY .. maxY).forEach { y ->
-            caves[y][x] = Wall
-          }
-        }
-      }
-    }
-
-    (0 until width).forEach { x -> caves[globalMaxY + 2][x] = Wall}
-
-    fun printCaves() {
-      caves.forEachIndexed { y, row ->
-        if (y <= globalMaxY + 3) {
-          (0 until width).forEach { x ->
-            print(row[x])
-          }
-          println()
-        }
-      }
-      println()
-    }
+    // put in that "infinie" wall
+    caves[maxY + 2].indices.forEach { x -> caves[maxY + 2][x] = Wall }
 
     // sand falling time
     var sandBlockedTheHole = false
     while(!sandBlockedTheHole) {
-      var sandX = spoutX
-      var sandY = spoutY
+      var sandX = SPOUT_X
+      var sandY = SPOUT_Y
       var sandPlaced = false
       while(!sandPlaced) {
         if (caves[sandY + 1][sandX] is Empty) {
@@ -158,14 +71,12 @@ class Day14 @Inject constructor(
         } else {
           sandPlaced = true
           caves[sandY][sandX] = Sand
-          if (sandY == spoutY && sandX == spoutX) {
+          if (sandY == SPOUT_Y && sandX == SPOUT_X) {
             sandBlockedTheHole = true
           }
         }
       }
     }
-
-    printCaves()
 
     caves.sumOf { row ->
       row.count { it is Sand }
@@ -180,6 +91,38 @@ class Day14 @Inject constructor(
       )
     }
 
+  private fun populateCaves(input: Sequence<List<Line>>): CaveData {
+    val height = 500
+    val width = 1000
+
+    val caves = Array(height) { Array<CaveSubstance>(width) { Empty } }
+    caves[SPOUT_Y][SPOUT_X] = CaveSubstance.Spout
+
+    var globalMinX = Int.MAX_VALUE
+    var globalMaxX = Int.MIN_VALUE
+    var globalMaxY = Int.MIN_VALUE
+
+
+    input.forEach { lines ->
+      lines.forEach { (startPoint, endPoint) ->
+        val minY = min(startPoint.y, endPoint.y)
+        val maxY = max(startPoint.y, endPoint.y)
+        val minX = min(startPoint.x, endPoint.x)
+        val maxX = max(startPoint.x, endPoint.x)
+
+        globalMaxX = max(globalMaxX, maxX)
+        globalMaxY = max(globalMaxY, maxY)
+        globalMinX = min(globalMinX, minX)
+
+        (minX..maxX).forEach { x -> (minY..maxY).forEach { y -> caves[y][x] = Wall } }
+      }
+    }
+
+    return CaveData(caves, globalMaxY, globalMinX, globalMaxX)
+  }
+
+  data class CaveData(val caves: Array<Array<CaveSubstance>>, val maxY: Int, val minX: Int, val maxX: Int)
+
   data class Point(val x: Int, val y: Int)
 
   data class Line(val start: Point, val end: Point)
@@ -193,5 +136,22 @@ class Day14 @Inject constructor(
     override fun toString(): String {
       return representation
     }
+  }
+
+  companion object {
+    private const val SPOUT_Y = 0
+    private const val SPOUT_X = 500
+  }
+
+  fun Array<Array<CaveSubstance>>.printCaves(caveData: CaveData) {
+    forEachIndexed { y, row ->
+      if (y <= caveData.maxY + 2) {
+        (caveData.minX - 2..caveData.maxX + 2).forEach { x ->
+          print(row[x])
+        }
+        println()
+      }
+    }
+    println()
   }
 }
