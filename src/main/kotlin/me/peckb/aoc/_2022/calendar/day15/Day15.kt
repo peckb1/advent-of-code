@@ -39,11 +39,11 @@ class Day15 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::sensors) { input ->
-    findFrequence(input.toList())
+    findFrequency(input.toList())?.let { (x, y) -> (x - 1) * 4_000_000L + y }
   }
 
   // split out into a new function for doing early return shenanigans
-  private fun findFrequence(sensors: List<Sensor>): Long {
+  private fun findFrequency(sensors: List<Sensor>): Pair<Int, Int>? {
     (0..4_000_000).forEach { row ->
       // this will be the current maximum x value for a given row that is covered by a sensor
       // and within the distance do its closest beacon
@@ -61,14 +61,14 @@ class Day15 @Inject constructor(
       coverageRanges.forEach { (start, end) ->
         // if the start of our x value is one past (as our ranges are inclusive) the previous maximum
         // then we have just jumped passed the gap and the previous X for this row is our hidden beacon!
-        if (start > maxCoverageXIndex + 1) return (start - 1) * 4_000_000L + row
+        if (start > maxCoverageXIndex + 1) return (start to row)
 
         // if this range isn't a gap, then ensure that our current upper X index
         // is the largest X index that we have seen so far
         maxCoverageXIndex = max(maxCoverageXIndex, end)
       }
     }
-    return -1
+    return null
   }
 
   private fun rowCoverage(sensors: List<Sensor>, row: Int): List<Pair<Int, Int>> {
