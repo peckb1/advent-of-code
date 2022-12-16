@@ -118,7 +118,8 @@ as the value which passed the given day/phase combination
 #### 2022
 
 * Day 09 The [-1, 0, 1] returned by `compareTo( ~ )` helped simplify the movement of a tail.
-* Day 12 Reversing the Dijkstra to go from `E` to all `a` to save an order of magnitude of searching was a nice optimization. 
+* Day 12 Reversing the Dijkstra to go from `E` to all `a` to save an order of magnitude of searching was a nice optimization.
+* Day 15 Precomputing the shortest paths for every valve combination seemed key to being able to quickly go from node to node in a brute force solution.   
 
 ## Takeaways
 
