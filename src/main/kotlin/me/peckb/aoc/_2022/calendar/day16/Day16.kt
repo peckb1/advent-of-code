@@ -53,12 +53,12 @@ class Day16 @Inject constructor(
         val totalPressureGained = minutesOpen * tunnel.flowRate
 
         totalPressureGained + findBestPressure(
-          valveToOpen.tunnelId,
-          timeAtLocationAfterOpening,
-          totalTimeAllowed,
-          tunnelMap,
-          paths,
-          previouslyOpenedValues.plus(valveToOpen.tunnelId)
+          currentLocation = valveToOpen.tunnelId,
+          timeAtLocation = timeAtLocationAfterOpening,
+          totalTimeAllowed = totalTimeAllowed,
+          tunnelMap = tunnelMap,
+          paths = paths,
+          previouslyOpenedValues = previouslyOpenedValues.plus(valveToOpen.tunnelId)
         )
       }
     } ?: 0 // in case we have no tunnel options we'd have a null max
@@ -74,106 +74,46 @@ class Day16 @Inject constructor(
     paths: Map<Tunnel, MutableMap<TunnelNode, Int>>,
     previouslyOpenedValues: Set<String>
   ): Int {
-    return if (myTimeAfterOpeningMyValve == elephantTimeAfterOpeningTheirValve) {
-      val myOptions = paths[tunnelMap[myLocation]!!]!!.filter { (tn, _) ->
-        tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
-      }
-      val elephantOptions = paths[tunnelMap[elephantLocation]!!]!!.filter { (tn, _) ->
-        tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
-      }
-      myOptions.maxOfOrNull { (myValve, myTravelCost) ->
-        val myTimeAtLocationAfterOpening = myTimeAfterOpeningMyValve + myTravelCost + TIME_TO_OPEN_VALVE
-        if (myTimeAtLocationAfterOpening < totalTimeAllowed) {
-          val myTunnel = tunnelMap[myValve.tunnelId]!!
-          val myMinutesToOpen = totalTimeAllowed - myTimeAtLocationAfterOpening
-          val myTotalPressureGained = myMinutesToOpen * myTunnel.flowRate
-
-          myTotalPressureGained + (elephantOptions.maxOfOrNull { (elephantValve, elephantTravelCost) ->
-            if (myValve == elephantValve) {
-              -1
-            } else {
-              // we are headed to different nodes!
-              val elephantTimeAtLocationAfterOpening = elephantTimeAfterOpeningTheirValve + elephantTravelCost + TIME_TO_OPEN_VALVE
-              if (elephantTimeAtLocationAfterOpening < totalTimeAllowed) {
-
-                if (myLocation == elephantLocation) {
-                  println("I am going to explore $myValve while the elephant explores $elephantValve")
-                }
-
-                val elephantTunnel = tunnelMap[elephantValve.tunnelId]!!
-                val elephantMinutesToOpen = totalTimeAllowed - elephantTimeAtLocationAfterOpening
-                val elephantTotalPressureGained = elephantMinutesToOpen * elephantTunnel.flowRate
-
-                elephantTotalPressureGained + findBestPressureTwo(
-                  myLocation = myValve.tunnelId,
-                  elephantLocation = elephantValve.tunnelId,
-                  myTimeAfterOpeningMyValve = myTimeAtLocationAfterOpening,
-                  elephantTimeAfterOpeningTheirValve = elephantTimeAtLocationAfterOpening,
-                  totalTimeAllowed = totalTimeAllowed,
-                  tunnelMap = tunnelMap,
-                  paths = paths,
-                  previouslyOpenedValues = previouslyOpenedValues.plus(myValve.tunnelId).plus(elephantValve.tunnelId),
-                )
-              } else {
-                0
-              }
-            }
-          } ?: 0)
-        } else {
-          0
-        }
-      } ?: 0
-    } else if (myTimeAfterOpeningMyValve < elephantTimeAfterOpeningTheirValve) {
-      val myOptions = paths[tunnelMap[myLocation]!!]!!.filter { (tn, _) ->
-        tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
-      }
-      myOptions.maxOfOrNull { (myValve, myTravelCost) ->
-        val myTimeAtLocationAfterOpening = myTimeAfterOpeningMyValve + myTravelCost + TIME_TO_OPEN_VALVE
-        if (myTimeAtLocationAfterOpening < totalTimeAllowed) {
-          val myTunnel = tunnelMap[myValve.tunnelId]!!
-          val myMinutesToOpen = totalTimeAllowed - myTimeAtLocationAfterOpening
-          val myTotalPressureGained = myMinutesToOpen * myTunnel.flowRate
-
-          myTotalPressureGained + findBestPressureTwo(
-            myLocation = myValve.tunnelId,
-            elephantLocation = elephantLocation,
-            myTimeAfterOpeningMyValve = myTimeAtLocationAfterOpening,
-            elephantTimeAfterOpeningTheirValve = elephantTimeAfterOpeningTheirValve,
-            totalTimeAllowed = totalTimeAllowed,
-            tunnelMap = tunnelMap,
-            paths = paths,
-            previouslyOpenedValues = previouslyOpenedValues.plus(myValve.tunnelId),
-          )
-        } else {
-          0
-        }
-      } ?: 0
-    } else { // myTimeAfterOpeningMyValve < elephantTimeAfterOpeningTheirValve
-      val elephantOptions = paths[tunnelMap[elephantLocation]!!]!!.filter { (tn, _) ->
-        tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
-      }
-      elephantOptions.maxOfOrNull { (elephantValve, elephantTravelCost) ->
-        val elephantTimeAtLocationAfterOpening = elephantTimeAfterOpeningTheirValve + elephantTravelCost + TIME_TO_OPEN_VALVE
-        if (elephantTimeAtLocationAfterOpening < totalTimeAllowed) {
-          val elephantTunnel = tunnelMap[elephantValve.tunnelId]!!
-          val elephantMinutesToOpen = totalTimeAllowed - elephantTimeAtLocationAfterOpening
-          val elephantTotalPressureGained = elephantMinutesToOpen * elephantTunnel.flowRate
-
-          elephantTotalPressureGained + findBestPressureTwo(
-            myLocation = myLocation,
-            elephantLocation = elephantValve.tunnelId,
-            myTimeAfterOpeningMyValve = myTimeAfterOpeningMyValve,
-            elephantTimeAfterOpeningTheirValve = elephantTimeAtLocationAfterOpening,
-            totalTimeAllowed = totalTimeAllowed,
-            tunnelMap = tunnelMap,
-            paths = paths,
-            previouslyOpenedValues = previouslyOpenedValues.plus(elephantValve.tunnelId),
-          )
-        } else {
-          0
-        }
-      } ?: 0
+    val myOptions = paths[tunnelMap[myLocation]!!]!!.filter { (tn, _) ->
+      tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
     }
+    val elephantOptions = paths[tunnelMap[elephantLocation]!!]!!.filter { (tn, _) ->
+      tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
+    }
+
+    return myOptions.maxOfOrNull { (myValve, myTravelCost) ->
+      val myTimeAtLocationAfterOpening = myTimeAfterOpeningMyValve + myTravelCost + TIME_TO_OPEN_VALVE
+      if (myTimeAtLocationAfterOpening < totalTimeAllowed) {
+        val myTunnel = tunnelMap[myValve.tunnelId]!!
+        val myMinutesToOpen = totalTimeAllowed - myTimeAtLocationAfterOpening
+        val myTotalPressureGained = myMinutesToOpen * myTunnel.flowRate
+
+        myTotalPressureGained + (elephantOptions.maxOfOrNull { (elephantValve, elephantTravelCost) ->
+          if (myValve == elephantValve) {
+            -1
+          } else {
+            // we are headed to different nodes!
+            val elephantTimeAtLocationAfterOpening = elephantTimeAfterOpeningTheirValve + elephantTravelCost + TIME_TO_OPEN_VALVE
+            if (elephantTimeAtLocationAfterOpening < totalTimeAllowed) {
+              val elephantTunnel = tunnelMap[elephantValve.tunnelId]!!
+              val elephantMinutesToOpen = totalTimeAllowed - elephantTimeAtLocationAfterOpening
+              val elephantTotalPressureGained = elephantMinutesToOpen * elephantTunnel.flowRate
+
+              elephantTotalPressureGained + findBestPressureTwo(
+                myLocation = myValve.tunnelId,
+                elephantLocation = elephantValve.tunnelId,
+                myTimeAfterOpeningMyValve = myTimeAtLocationAfterOpening,
+                elephantTimeAfterOpeningTheirValve = elephantTimeAtLocationAfterOpening,
+                totalTimeAllowed = totalTimeAllowed,
+                tunnelMap = tunnelMap,
+                paths = paths,
+                previouslyOpenedValues = previouslyOpenedValues.plus(myValve.tunnelId).plus(elephantValve.tunnelId),
+              )
+            } else { 0 } // going to and opening would take too long
+          }
+        } ?: 0)
+      } else { 0 } // going to and opening would take too long
+    } ?: 0
   }
 
   private fun tunnels(line: String): Tunnel {
