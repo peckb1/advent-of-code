@@ -1,11 +1,10 @@
-package me.peckb.aoc._2022.calendar.day16
+package me.peckb.aoc.generators
 
-
-internal object Combinations {
+internal object CombinationsGenerator {
   // Function to print all distinct combinations of length `k`
   private fun <T> findCombinations(
     A: Array<T>, i: Int, k: Int,
-    subarrays: MutableSet<List<T>?>,
+    subarrays: MutableSet<List<T>>,
     out: MutableList<T>
   ) {
     // invalid input
@@ -30,17 +29,8 @@ internal object Combinations {
   }
 
   fun <T> findCombinations(A: Array<T>, k: Int): Set<List<T>?> {
-    val subarrays: MutableSet<List<T>?> = HashSet()
+    val subarrays: MutableSet<List<T>> = HashSet()
     findCombinations(A, 0, k, subarrays, ArrayList())
     return subarrays
   }
-
-//  @JvmStatic
-//  fun main(args: Array<String>) {
-//    val A = intArrayOf(1, 2, 3)
-//    val k = 2
-//
-//    // process elements from left to right
-//    println(findCombinations(A, k))
-//  }
 }
