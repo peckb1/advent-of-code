@@ -10,25 +10,41 @@ class Day16 @Inject constructor(
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::tunnels) { input ->
     val (tunnelMap, paths) = preProcess(input)
-    findBestPressure("AA", 0, 30, tunnelMap, paths, emptySet())
+    findBestPressure(
+      currentLocation = "AA",
+      timeAtLocation = 0,
+      totalTimeAllowed = 30,
+      tunnelMap = tunnelMap,
+      paths = paths,
+      previouslyOpenedValues = emptySet()
+    )
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::tunnels) { input ->
     val (tunnelMap, paths) = preProcess(input)
-    findBestPressureTwo("AA", "AA", 0, 0, 26, tunnelMap, paths, emptySet())
+    findBestPressureTwo(
+      myLocation = "AA",
+      elephantLocation = "AA",
+      myTimeAfterOpeningMyValve = 0,
+      elephantTimeAfterOpeningTheirValve = 0,
+      totalTimeAllowed = 26,
+      tunnelMap = tunnelMap,
+      paths = paths,
+      previouslyOpenedValues = emptySet()
+    )
   }
 
-  private fun preProcess(input: Sequence<Tunnel>): Pair<Map<String, Tunnel>, Map<Tunnel, Map<TunnelNode, Int>>> {
+  private fun preProcess(input: Sequence<Tunnel>): Pair<Map<String, Tunnel>, Map<String, Map<Tunnel, Int>>> {
     val tunnelMap = mutableMapOf<String, Tunnel>().apply {
-      input.forEach { this[it.id] = it }
+      input.forEach { this[it.tunnelId] = it }
     }
 
     val solver = TunnelDijkstra()
     val paths = tunnelMap.values.associateWith {
-      solver.solve(TunnelNode(it.id).usingTunnels(tunnelMap))
-    }
+      solver.solve(tunnelMap[it.tunnelId]!!.usingTunnels(tunnelMap))
+    }.mapKeys { it.key.tunnelId }
 
-    return tunnelMap.filter { it.key == "AA" || it.value.flowRate > 0 } to paths
+    return tunnelMap.filter { it.value.flowRate > 0 } to paths
   }
 
   private fun findBestPressure(
@@ -36,11 +52,11 @@ class Day16 @Inject constructor(
     timeAtLocation: Int,
     totalTimeAllowed: Int,
     tunnelMap: Map<String, Tunnel>,
-    paths: Map<Tunnel, Map<TunnelNode, Int>>,
+    paths: Map<String, Map<Tunnel, Int>>,
     previouslyOpenedValues: Set<String>
   ): Int {
-    val tunnelOptions = paths[tunnelMap[currentLocation]!!]!!.filter { (tn, _) ->
-      (tunnelMap[tn.tunnelId]?.flowRate ?: 0) > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
+    val tunnelOptions = paths[currentLocation]!!.filter { (tn, _) ->
+      tunnelMap.containsKey(tn.tunnelId) && !previouslyOpenedValues.contains(tn.tunnelId)
     }
 
     return tunnelOptions.maxOfOrNull { (valveToOpen, costToTravelToNode) ->
@@ -71,14 +87,14 @@ class Day16 @Inject constructor(
     elephantTimeAfterOpeningTheirValve: Int,
     totalTimeAllowed: Int,
     tunnelMap: Map<String, Tunnel>,
-    paths: Map<Tunnel, Map<TunnelNode, Int>>,
+    paths: Map<String, Map<Tunnel, Int>>,
     previouslyOpenedValues: Set<String>
   ): Int {
-    val myOptions = paths[tunnelMap[myLocation]!!]!!.filter { (tn, _) ->
-      ((tunnelMap[tn.tunnelId]?.flowRate) ?: 0) > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
+    val myOptions = paths[myLocation]!!.filter { (tn, _) ->
+      tunnelMap.containsKey(tn.tunnelId) && !previouslyOpenedValues.contains(tn.tunnelId)
     }
-    val elephantOptions = paths[tunnelMap[elephantLocation]!!]!!.filter { (tn, _) ->
-      ((tunnelMap[tn.tunnelId]?.flowRate) ?: 0) > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
+    val elephantOptions = paths[elephantLocation]!!.filter { (tn, _) ->
+      tunnelMap.containsKey(tn.tunnelId) && !previouslyOpenedValues.contains(tn.tunnelId)
     }
 
     return myOptions.maxOfOrNull { (myValve, myTravelCost) ->
@@ -125,22 +141,25 @@ class Day16 @Inject constructor(
     return Tunnel(id, flowRate, neighboringTunnelIds)
   }
 
-  data class Tunnel(val id: String, val flowRate: Int, val neighboringTunnelIds: List<String>)
-
-  data class TunnelNode(val tunnelId: String) : GenericIntDijkstra.DijkstraNode<TunnelNode> {
+  data class Tunnel(
+    val tunnelId: String,
+    val flowRate: Int,
+    val neighboringTunnelIds: List<String>
+  ) : GenericIntDijkstra.DijkstraNode<Tunnel> {
     lateinit var tunnelMap: Map<String, Tunnel>
 
     fun usingTunnels(tunnelMap: Map<String, Tunnel>) = apply { this.tunnelMap = tunnelMap }
 
-    override fun neighbors(): Map<TunnelNode, Int> {
-      return tunnelMap[tunnelId]!!
-        .neighboringTunnelIds
-        .map { TunnelNode(it).usingTunnels(tunnelMap) }
-        .associateWith { 1 }
+    override fun neighbors(): Map<Tunnel, Int> {
+      return tunnelMap[tunnelId]
+        ?.neighboringTunnelIds
+        ?.mapNotNull { tunnelMap[it]?.usingTunnels(tunnelMap) }
+        ?.associateWith { 1 }
+        ?: emptyMap()
     }
   }
 
-  class TunnelDijkstra : GenericIntDijkstra<TunnelNode>()
+  class TunnelDijkstra : GenericIntDijkstra<Tunnel>()
 
   companion object {
     private const val TIME_TO_OPEN_VALVE = 1
