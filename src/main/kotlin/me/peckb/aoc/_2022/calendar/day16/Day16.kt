@@ -13,7 +13,12 @@ class Day16 @Inject constructor(
     findBestPressure("AA", 0, 30, tunnelMap, paths, emptySet())
   }
 
-  private fun preProcess(input: Sequence<Tunnel>): Pair<MutableMap<String, Tunnel>, Map<Tunnel, MutableMap<TunnelNode, Int>>> {
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::tunnels) { input ->
+    val (tunnelMap, paths) = preProcess(input)
+    findBestPressureTwo("AA", "AA", 0, 0, 26, tunnelMap, paths, emptySet())
+  }
+
+  private fun preProcess(input: Sequence<Tunnel>): Pair<Map<String, Tunnel>, Map<Tunnel, Map<TunnelNode, Int>>> {
     val tunnelMap = mutableMapOf<String, Tunnel>().apply {
       input.forEach { this[it.id] = it }
     }
@@ -23,24 +28,19 @@ class Day16 @Inject constructor(
       solver.solve(TunnelNode(it.id).usingTunnels(tunnelMap))
     }
 
-    return tunnelMap to paths
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::tunnels) { input ->
-    val (tunnelMap, paths) = preProcess(input)
-    findBestPressureTwo("AA", "AA", 0, 0, 26, tunnelMap, paths, emptySet())
+    return tunnelMap.filter { it.key == "AA" || it.value.flowRate > 0 } to paths
   }
 
   private fun findBestPressure(
     currentLocation: String,
     timeAtLocation: Int,
     totalTimeAllowed: Int,
-    tunnelMap: MutableMap<String, Tunnel>,
-    paths: Map<Tunnel, MutableMap<TunnelNode, Int>>,
+    tunnelMap: Map<String, Tunnel>,
+    paths: Map<Tunnel, Map<TunnelNode, Int>>,
     previouslyOpenedValues: Set<String>
   ): Int {
     val tunnelOptions = paths[tunnelMap[currentLocation]!!]!!.filter { (tn, _) ->
-      tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
+      (tunnelMap[tn.tunnelId]?.flowRate ?: 0) > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
     }
 
     return tunnelOptions.maxOfOrNull { (valveToOpen, costToTravelToNode) ->
@@ -70,15 +70,15 @@ class Day16 @Inject constructor(
     myTimeAfterOpeningMyValve: Int,
     elephantTimeAfterOpeningTheirValve: Int,
     totalTimeAllowed: Int,
-    tunnelMap: MutableMap<String, Tunnel>,
-    paths: Map<Tunnel, MutableMap<TunnelNode, Int>>,
+    tunnelMap: Map<String, Tunnel>,
+    paths: Map<Tunnel, Map<TunnelNode, Int>>,
     previouslyOpenedValues: Set<String>
   ): Int {
     val myOptions = paths[tunnelMap[myLocation]!!]!!.filter { (tn, _) ->
-      tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
+      ((tunnelMap[tn.tunnelId]?.flowRate) ?: 0) > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
     }
     val elephantOptions = paths[tunnelMap[elephantLocation]!!]!!.filter { (tn, _) ->
-      tunnelMap[tn.tunnelId]!!.flowRate > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
+      ((tunnelMap[tn.tunnelId]?.flowRate) ?: 0) > 0 && !previouslyOpenedValues.contains(tn.tunnelId)
     }
 
     return myOptions.maxOfOrNull { (myValve, myTravelCost) ->
@@ -92,7 +92,6 @@ class Day16 @Inject constructor(
           if (myValve == elephantValve) {
             -1
           } else {
-            // we are headed to different nodes!
             val elephantTimeAtLocationAfterOpening = elephantTimeAfterOpeningTheirValve + elephantTravelCost + TIME_TO_OPEN_VALVE
             if (elephantTimeAtLocationAfterOpening < totalTimeAllowed) {
               val elephantTunnel = tunnelMap[elephantValve.tunnelId]!!
