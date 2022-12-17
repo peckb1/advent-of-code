@@ -57,9 +57,9 @@ class Day17 @Inject constructor(
 
     val heightGrownEachCycle = sizeAtSecondCycle - sizeAtFirstCycle
 
-    val numberOfCycles = (1000000000000 - minRocksForCycle) / rocksCycleLength
+    val numberOfCycles = (ALL_THE_ROCKS - minRocksForCycle) / rocksCycleLength
     val rockCountBeforeACyclePushesUsOver = minRocksForCycle + (numberOfCycles * rocksCycleLength)
-    val rocksRemainingToPlace = 1000000000000 - rockCountBeforeACyclePushesUsOver
+    val rocksRemainingToPlace = ALL_THE_ROCKS - rockCountBeforeACyclePushesUsOver
 
     val cavesAfterAddingRemainingRocks = dropRocks(jetPushes, minRocksForCycle + rocksRemainingToPlace.toInt())
     val heightAdded = cavesAfterAddingRemainingRocks.first.size - sizeAtFirstCycle
@@ -227,6 +227,8 @@ class Day17 @Inject constructor(
 
   companion object {
     private const val MAX_CHAMBER_INDEX = 6
+
+    private const val ALL_THE_ROCKS = 1000000000000
 
     private val ROCKS = listOf(
       Rock(1, 4, listOf("1111")),
