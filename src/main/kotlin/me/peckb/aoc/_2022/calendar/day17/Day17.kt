@@ -12,7 +12,7 @@ class Day17 @Inject constructor(
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { input ->
     val jetPushes = asJetDirections(input)
-    dropRocks(jetPushes, 2022).size
+    dropRocks(jetPushes, 2022).first.size
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { input ->
@@ -21,27 +21,39 @@ class Day17 @Inject constructor(
     val rocks = 10000
     val cavesWithProbableCycle = dropRocks(jetPushes, rocks)
     var cycle: List<String> = emptyList()
-    (5000 downTo 1500).any { possibleCycleSize ->
-      (0 until (rocks/possibleCycleSize)).any { cycleStartPosition ->
-        val cavesToExplore = cavesWithProbableCycle.drop(cycleStartPosition)
-        cavesToExplore.chunked(possibleCycleSize).windowed(2).any { (first, last) ->
-          (first == last).also { if (it) { cycle = first } }
+    // there is "probably" a cycle in the 1k -> 5k range
+    run earlyReturn@ {
+      (5000 downTo 1000).forEach { possibleCycleSize ->
+        (0 until (rocks/possibleCycleSize)).forEach { cycleStartPosition ->
+          val cavesToExplore = cavesWithProbableCycle.first.drop(cycleStartPosition)
+          cavesToExplore.chunked(possibleCycleSize).windowed(2).forEach { (first, last) ->
+            if (first == last) { cycle = first; return@earlyReturn }
+          }
         }
       }
     }
 
-    val minRocksForCycle = (3000 until 10000).first { rocksToDrop ->
-      val caves = dropRocks(jetPushes, rocksToDrop)
-      caves.takeLast(cycle.size) == cycle
-    }
-    val nextRocksForCycle = ((minRocksForCycle + 1) until 10000).first { rocksToDrop ->
-      val caves = dropRocks(jetPushes, rocksToDrop)
-      caves.takeLast(cycle.size) == cycle
-    }
+    var previousCaves = mutableListOf<String>()
+    var previousJetIndex = 0
+    val minRocksForCycle = (0 until 10000).first { previouslyDroppedRocks ->
+      dropRocks(jetPushes, 1, previousCaves, previouslyDroppedRocks, previousJetIndex).also {
+        previousCaves = it.first
+        previousJetIndex = it.second
+      }
+      previousCaves.takeLast(cycle.size) == cycle
+    } + 1 // add one since the counter is technically the previously dropped rock count
+
+    val nextRocksForCycle = (minRocksForCycle until 10000).first { previouslyDroppedRocks ->
+      dropRocks(jetPushes, 1, previousCaves, previouslyDroppedRocks, previousJetIndex).also {
+        previousCaves = it.first
+        previousJetIndex = it.second
+      }
+      previousCaves.takeLast(cycle.size) == cycle
+    } + 1 // add one since the counter is technically the previously dropped rock count
 
     val rocksCycleLength = nextRocksForCycle - minRocksForCycle
-    val sizeAtFirstCycle = dropRocks(jetPushes, minRocksForCycle).size
-    val sizeAtSecondCycle = dropRocks(jetPushes, nextRocksForCycle).size
+    val sizeAtFirstCycle = dropRocks(jetPushes, minRocksForCycle).first.size
+    val sizeAtSecondCycle = dropRocks(jetPushes, nextRocksForCycle).first.size
 
     val heightGrownEachCycle = sizeAtSecondCycle - sizeAtFirstCycle
 
@@ -50,17 +62,22 @@ class Day17 @Inject constructor(
     val rocksRemainingToPlace = 1000000000000 - rockCountBeforeACyclePushesUsOver
 
     val cavesAfterAddingRemainingRocks = dropRocks(jetPushes, minRocksForCycle + rocksRemainingToPlace.toInt())
-    val heightAdded = cavesAfterAddingRemainingRocks.size - sizeAtFirstCycle
+    val heightAdded = cavesAfterAddingRemainingRocks.first.size - sizeAtFirstCycle
 
     sizeAtFirstCycle.toLong() + (heightGrownEachCycle * numberOfCycles) + heightAdded
   }
 
-  private fun dropRocks(jetPushes: List<Direction>, rocksToDrop: Int): List<String> {
-    var rockIndex = 0
-    var jetPushesIndex = 0
-    val cavern = mutableListOf<String>()
+  private fun dropRocks(
+    jetPushes: List<Direction>,
+    rocksToDrop: Int,
+    cavern: MutableList<String> = mutableListOf(),
+    previousRocksDropped: Int = 0,
+    previousJetsUsed: Int = 0
+  ): Pair<MutableList<String>, Int> {
+    var rockIndex = previousRocksDropped % ROCKS.size
+    var jetPushesIndex = previousJetsUsed % jetPushes.size
 
-    repeat(rocksToDrop) { rockCounter ->
+    repeat(rocksToDrop) {
       val nextRock = ROCKS[rockIndex]
       val rockEdges = RockEdges(
         leftEdgeIndexOfRock = 2,
@@ -95,7 +112,7 @@ class Day17 @Inject constructor(
       rockIndex = (rockIndex + 1) % ROCKS.size
     }
 
-    return cavern
+    return cavern to jetPushesIndex
   }
 
   private fun landRockInsideCavern(cavern: MutableList<String>, nextRock: Rock, rockEdges: RockEdges) {
