@@ -19,17 +19,19 @@ class Day17 @Inject constructor(
     val jetPushes = asJetDirections(input)
 
     val rocks = 10000
-    val cavesWithProbableCycle = dropRocks(jetPushes, rocks)
+    val cavesWithProbableCycle = dropRocks(jetPushes, rocks).first
     var cycle: List<String> = emptyList()
     // there is "probably" a cycle in the 1k -> 5k range
-    run earlyReturn@ {
+    run earlyReturn@{
       (5000 downTo 1000).forEach { possibleCycleSize ->
-        (0 until (rocks/possibleCycleSize)).forEach { cycleStartPosition ->
-          val cavesToExplore = cavesWithProbableCycle.first.drop(cycleStartPosition)
-          cavesToExplore.chunked(possibleCycleSize).windowed(2).forEach { (first, last) ->
-            if (first == last) { cycle = first; return@earlyReturn }
+        cavesWithProbableCycle.chunked(possibleCycleSize)
+          .windowed(2)
+          .forEach { (first, last) ->
+            if (first == last) {
+              cycle = first
+              return@earlyReturn
+            }
           }
-        }
       }
     }
 
