@@ -52,10 +52,10 @@ class Day18 @Inject constructor(
       ).count { !it }
     }
 
-    val airCubes = mutableSetOf<CubeLocation>()
+    val pocketCubes = mutableSetOf<CubeLocation>()
+    val outerAir = mutableSetOf<CubeLocation>()
 
     cubes.forEachIndexed { n, cube ->
-      println(n)
       val (x, y, z) = cube
       val front = CubeLocation(x, y, z + 1).withCubes(cube.cubes)
       val back = CubeLocation(x, y, z - 1).withCubes(cube.cubes)
@@ -67,15 +67,21 @@ class Day18 @Inject constructor(
       val solver = CubeDijkstra()
       listOf(front, back, up, down, right, left)
         .filter { !cubes.contains(it) }
-        .filter { airCube ->
-          val innerAir = solver.solve(airCube).keys
-          !innerAir.any { it.x == -1 || it.y == -1 || it.z == -1 } && !innerAir.any { it.x == 25 || it.y == 25 || it.z == 25 }
-        }.forEach {
-          airCubes.add(it)
+        .filter { !outerAir.contains(it) }
+        .filter { !pocketCubes.contains(it) }
+        .forEach { airCube ->
+          val airNeighbors = solver.solve(airCube).keys
+          val pocketCube = !airNeighbors.any { it.x == -1 || it.y == -1 || it.z == -1 } &&
+            !airNeighbors.any { it.x == 22 || it.y == 22 || it.z == 22 }
+          if (pocketCube) {
+            pocketCubes.addAll(airNeighbors)
+          } else {
+            outerAir.addAll(airNeighbors)
+          }
         }
     }
 
-    cubeSurfaceArea - airCubes.sumOf { airCube ->
+    cubeSurfaceArea - pocketCubes.sumOf { airCube ->
       val (x, y, z) = airCube
       val front = CubeLocation(x, y, z + 1)
       val back = CubeLocation(x, y, z - 1)
@@ -109,7 +115,8 @@ class Day18 @Inject constructor(
       val left = CubeLocation(x - 1, y, z).withCubes(cubes)
 
       return listOf(front, back, up, down, right, left)
-        .filter { it.x in (-1..25) && it.y in (-1..25) && it.z in (-1..25) }
+        // TODO: remove hard coded
+        .filter { it.x in (-1..22) && it.y in (-1..22) && it.z in (-1..22) }
         .filter { !cubes.contains(it) }.associateWith { 1 }
     }
   }
