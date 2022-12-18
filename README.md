@@ -79,7 +79,9 @@ as the value which passed the given day/phase combination
 * Day 03
   * A cute bit of set intersection
 * Day 13
-  * Realizing that part one was just a comparator for part two made me like the problem a lot more than I was when writing the comparator. 
+  * Realizing that part one was just a comparator for part two made me like the problem a lot more than I was when writing the comparator.
+* Day 18
+  * My first flood fill algorithm
 
 ### Interesting approaches:
 
