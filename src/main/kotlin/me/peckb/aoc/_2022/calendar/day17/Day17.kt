@@ -18,20 +18,23 @@ class Day17 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { input ->
     val jetPushes = asJetDirections(input)
 
-    val rocks = 10000
+    val rocks = 7500 // pick a large number of rocks to try and ensure that two cycles have occurred
     val cavesWithProbableCycle = dropRocks(jetPushes, rocks).first
     var cycle: List<String> = emptyList()
-    // there is "probably" a cycle in the 1k -> 5k range
+    // there is "probably" a cycle in the range of our size / 2 down to 1000
     run earlyReturn@{
-      (5000 downTo 1000).forEach { possibleCycleSize ->
-        cavesWithProbableCycle.chunked(possibleCycleSize)
-          .windowed(2)
-          .forEach { (first, last) ->
-            if (first == last) {
-              cycle = first
-              return@earlyReturn
-            }
+      (cavesWithProbableCycle.size / 2 downTo 1000).forEach { possibleCycleSize ->
+        val maxDrop = (cavesWithProbableCycle.size - (possibleCycleSize * 2))
+        (0 .. maxDrop).forEach { drop ->
+          val end = cavesWithProbableCycle.size - drop
+          val mid = end - possibleCycleSize
+          val front = mid - possibleCycleSize
+          val first = cavesWithProbableCycle.subList(mid, end)
+          val next = cavesWithProbableCycle.subList(front, mid)
+          if (first == next) {
+            cycle = first; return@earlyReturn
           }
+        }
       }
     }
 
