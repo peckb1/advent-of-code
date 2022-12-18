@@ -28,8 +28,6 @@ class Day18 @Inject constructor(
     min--
     max++
 
-    val cubeSurfaceArea = cubes.sumOf { cube -> cube.neighborCubes().count { !cubes.contains(it) } }
-
     val pocketCubes = mutableSetOf<CubeLocation>()
     val outerAir = mutableSetOf<CubeLocation>()
     val solver = CubeDijkstra()
@@ -51,11 +49,9 @@ class Day18 @Inject constructor(
         }
     }
 
-    val airBubbleSurfaceArea = pocketCubes.sumOf { airCube ->
+    outerAir.sumOf { airCube ->
       airCube.neighborCubes().count { cubes.contains(it) }
     }
-
-    cubeSurfaceArea - airBubbleSurfaceArea
   }
 
   private fun cubeLocation(line: String) : CubeLocation {
