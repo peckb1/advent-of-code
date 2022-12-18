@@ -18,7 +18,7 @@ class Day17 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { input ->
     val jetPushes = asJetDirections(input)
 
-    val rocks = 7500 // pick a large number of rocks to try and ensure that two cycles have occurred
+    val rocks = 10000 // pick a large number of rocks to try and ensure that two cycles have occurred
     val cavesWithProbableCycle = dropRocks(jetPushes, rocks).first
     var cycle: List<String> = emptyList()
     // there is "probably" a cycle in the range of our size / 2 down to 1000
