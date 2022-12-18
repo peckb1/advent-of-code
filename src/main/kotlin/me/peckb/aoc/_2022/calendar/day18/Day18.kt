@@ -42,12 +42,11 @@ class Day18 @Inject constructor(
         .filter { !pocketCubes.contains(it) }
         .forEach { unseenAirCube ->
           val airNeighbors = solver.solve(unseenAirCube).keys
-          val isInAPocket = !airNeighbors.any { it.x == min || it.y == min || it.z == min } &&
-            !airNeighbors.any { it.x == max || it.y == max || it.z == max }
-          if (isInAPocket) {
-            pocketCubes.addAll(airNeighbors)
-          } else {
+          val outsideAir = airNeighbors.any { it.touchesTheEdge() }
+          if (outsideAir) {
             outerAir.addAll(airNeighbors)
+          } else {
+            pocketCubes.addAll(airNeighbors)
           }
         }
     }
@@ -91,6 +90,10 @@ class Day18 @Inject constructor(
       val left = CubeLocation(x - 1, y, z)
 
       return listOf(front, back, up, down, right, left)
+    }
+
+    fun touchesTheEdge(): Boolean {
+      return x == min || y == min || z == min || x == max || y == max || z == max
     }
   }
 
