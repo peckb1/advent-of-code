@@ -40,76 +40,67 @@ class Day19 @Inject constructor(
       // if we somehow managed to create nonstop geodes from our current recursion
       // would it even be possible to eclipse our current maximum?
       // if not - then this branch is dead
-      if (bs.geodes + (bs.geodeRobots * bs.timeRemaining) + TRIANGLE_NUMBERS[ bs.timeRemaining ] <= maxGeodesSoFar) return 0
+      if (bs.geodes + (bs.geodeRobots * bs.timeRemaining) + TRIANGLE_NUMBERS[bs.timeRemaining] <= maxGeodesSoFar) return 0
 
       // since `eventually` we'll be able to build the robot we're after
       // we can keep track of how many minutes have passed as existing
       // robots mine up their resources
       var minutesPassed = 0
-      while (bs.timeRemaining - minutesPassed > 0) {
-        val currentTime = bs.timeRemaining - minutesPassed
-        val currentOre = bs.ore + (minutesPassed * bs.oreRobots)
-        val currentClay = bs.clay + (minutesPassed * bs.clayRobots)
-        val currentObsidian = bs.obsidian + (minutesPassed * bs.obsidianRobots)
-        val currentGeodes = bs.geodes + (minutesPassed * bs.geodeRobots)
+      while (bs.currentTime(minutesPassed) > 0) {
+        val currentOre = bs.currentOre(minutesPassed)
+        val currentClay = bs.currentClay(minutesPassed)
+        val currentObsidian = bs.currentObsidian(minutesPassed)
 
         when (bs.robotToMake) {
           ORE -> if (currentOre >= bp.oreRobotOreCost) {
             return Robot.values().maxOf { robot ->
               makeRobot(
-                bs.copy(
-                  timeRemaining = currentTime - 1,
-                  robotToMake = robot,
-                  oreRobots = bs.oreRobots + 1,
-                  ore = currentOre + bs.oreRobots - bp.oreRobotOreCost,
-                  clay = currentClay + bs.clayRobots,
-                  obsidian = currentObsidian + bs.obsidianRobots,
-                  geodes = currentGeodes + bs.geodeRobots
+                bs.advanceState(
+                  minutesPassed,
+                  robot,
+                  newOreRobots = bs.oreRobots + 1,
+                  newOre = currentOre + bs.oreRobots - bp.oreRobotOreCost
                 )
               )
             }.also { maxGeodesSoFar = max(maxGeodesSoFar, it) }
           }
+
           CLAY -> if (currentOre >= bp.clayRobotOreCost) {
             return Robot.values().maxOf { robot ->
               makeRobot(
-                bs.copy(
-                  timeRemaining = currentTime - 1,
-                  robotToMake = robot,
-                  clayRobots = bs.clayRobots + 1,
-                  ore = currentOre + bs.oreRobots - bp.clayRobotOreCost,
-                  clay = currentClay + bs.clayRobots,
-                  obsidian = currentObsidian + bs.obsidianRobots,
-                  geodes = currentGeodes + bs.geodeRobots
+                bs.advanceState(
+                  minutesPassed,
+                  robot,
+                  newClayRobots = bs.clayRobots + 1,
+                  newOre = currentOre + bs.oreRobots - bp.clayRobotOreCost
                 )
               )
             }.also { maxGeodesSoFar = max(maxGeodesSoFar, it) }
           }
+
           OBSIDIAN -> if (currentOre >= bp.obsidianRobotOreCost && currentClay >= bp.obsidianRobotClayCost) {
             return Robot.values().maxOf { robot ->
               makeRobot(
-                bs.copy(
-                  timeRemaining = currentTime - 1,
-                  robotToMake = robot,
-                  obsidianRobots = bs.obsidianRobots + 1,
-                  ore = currentOre + bs.oreRobots - bp.obsidianRobotOreCost,
-                  clay = currentClay + bs.clayRobots - bp.obsidianRobotClayCost,
-                  obsidian = currentObsidian + bs.obsidianRobots,
-                  geodes = currentGeodes + bs.geodeRobots
+                bs.advanceState(
+                  minutesPassed,
+                  robot,
+                  newObsidianRobots = bs.obsidianRobots + 1,
+                  newOre = currentOre + bs.oreRobots - bp.obsidianRobotOreCost,
+                  newClay = currentClay + bs.clayRobots - bp.obsidianRobotClayCost
                 )
               )
             }.also { maxGeodesSoFar = max(maxGeodesSoFar, it) }
           }
+
           GEODE -> if (currentOre >= bp.geodeRobotOreCost && currentObsidian >= bp.geodeRobotObsidianCost) {
             return Robot.values().maxOf { robot ->
               makeRobot(
-                bs.copy(
-                  timeRemaining = currentTime - 1,
-                  robotToMake = robot,
-                  geodeRobots = bs.geodeRobots + 1,
-                  ore = currentOre + bs.oreRobots - bp.geodeRobotOreCost,
-                  clay = currentClay + bs.clayRobots,
-                  obsidian = currentObsidian + bs.obsidianRobots - bp.geodeRobotObsidianCost,
-                  geodes = currentGeodes + bs.geodeRobots
+                bs.advanceState(
+                  minutesPassed,
+                  robot,
+                  newGeodeRobots = bs.geodeRobots + 1,
+                  newOre = currentOre + bs.oreRobots - bp.geodeRobotOreCost,
+                  newObsidian = currentObsidian + bs.obsidianRobots - bp.geodeRobotObsidianCost
                 )
               )
             }.also { maxGeodesSoFar = max(maxGeodesSoFar, it) }
@@ -171,7 +162,41 @@ class Day19 @Inject constructor(
     val clay: Int,
     val obsidian: Int,
     val geodes: Int
-  )
+  ) {
+    fun advanceState(
+      minutesSpent: Int,
+      newRobotToMake: Robot,
+      newOreRobots: Int = oreRobots,
+      newClayRobots: Int = clayRobots,
+      newObsidianRobots: Int = obsidianRobots,
+      newGeodeRobots: Int = geodeRobots,
+      newOre: Int = oreRobots + currentOre(minutesSpent),
+      newClay: Int = clayRobots + currentClay(minutesSpent),
+      newObsidian: Int = obsidianRobots + currentObsidian(minutesSpent),
+      newGeodes: Int = geodeRobots + currentGeodes(minutesSpent),
+    ) = BeachState(
+      currentTime(minutesSpent) - 1,
+      newRobotToMake,
+      newOreRobots,
+      newClayRobots,
+      newObsidianRobots,
+      newGeodeRobots,
+      newOre,
+      newClay,
+      newObsidian,
+      newGeodes,
+    )
+
+    fun currentTime(minutesPassed: Int) = timeRemaining - minutesPassed
+
+    fun currentOre(minutesPassed: Int) = ore + (minutesPassed * oreRobots)
+
+    fun currentClay(minutesPassed: Int) = clay + (minutesPassed * clayRobots)
+
+    fun currentObsidian(minutesPassed: Int) = obsidian + (minutesPassed * obsidianRobots)
+
+    fun currentGeodes(minutesPassed: Int) = geodes + (minutesPassed * geodeRobots)
+  }
 
   companion object {
     private val TRIANGLE_NUMBERS = (0..32).map { previousTriangleNumber(it) }
