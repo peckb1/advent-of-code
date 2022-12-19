@@ -1,45 +1,36 @@
 package me.peckb.aoc._2022.calendar.day19
 
-import me.peckb.aoc._2016.calendar.day03.Day03
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
 import kotlin.math.max
-import kotlin.math.min
 
 
 class Day19 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::blueprint) { input ->
-    input.toList().sumOf {
-      val max = maxGeode(it, 24, triangle24)
-      max * it.id
+    input.toList().fold(0) { acc, blueprint ->
+      acc + (maxGeode(blueprint, 24) * blueprint.id)
     }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::blueprint) { input ->
     input.toList().take(3).fold(1) { acc, blueprint ->
-      val max = maxGeode(blueprint, 32, triangle32)
-      acc * max
+      acc * maxGeode(blueprint, 32)
     }
   }
 
-  // o = [ ( t - 1 ) * t // 2 for t in range( 24 + 1 ) ]
-  val triangle24 = listOf(0, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136, 153, 171, 190, 210, 231, 253, 276)
-  val triangle32 = listOf(0, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136, 153, 171, 190, 210, 231, 253, 276, 300, 325, 351, 378, 406, 435, 465, 496)
+  fun maxGeode(blueprint: Blueprint, minutes: Int): Int {
+    val a = blueprint.oreRobotOreCost
+    val b = blueprint.clayRobotOreCost
+    val c = blueprint.obsidianRobotOreCost
+    val d = blueprint.obsidianRobotClayCost
+    val e = blueprint.geodeRobotOreCost
+    val f = blueprint.geodeRobotObsidianCost
 
-
-  fun maxGeode(blueprint: Blueprint, minutes: Int, triangle: List<Int>): Int {
-    var a = blueprint.oreRobotOreCost
-    var b = blueprint.clayRobotOreCost
-    var c = blueprint.obsidianRobotOreCost
-    var d = blueprint.obsidianRobotClayCost
-    var e = blueprint.geodeRobotOreCost
-    var f = blueprint.geodeRobotObsidianCost
-
-    var mi = maxOf(a, b, c, e)
-    var mj = d
-    var mk = f
+    val mi = maxOf(a, b, c, e)
+    val mj = d
+    val mk = f
 
     var m = 0
 
@@ -67,7 +58,7 @@ class Day19 @Inject constructor(
         (robot == Robot.CLAY && clayRobots >= mj) ||
         (robot == Robot.OBSIDIAN && (obsidianRobots >= mk || clayRobots == 0 )) ||
         (robot == Robot.GEODE && obsidianRobots == 0) ||
-        (z + geodeRobots * t + triangle[ t ] <= m)
+        (z + geodeRobots * t + TRIANGLE_NUMBERS[ t ] <= m)
       ) {
         return
       }
@@ -147,9 +138,7 @@ class Day19 @Inject constructor(
       m = max(m, z)
     }
 
-    Robot.values().forEach { robot ->
-      dfs(minutes , robot, 1, 0, 0, 0, 0, 0, 0, 0 )
-    }
+    dfs(minutes , Robot.ORE, 1, 0, 0, 0, 0, 0, 0, 0 )
 
     return m
   }
@@ -190,8 +179,14 @@ class Day19 @Inject constructor(
 
   data class RobotChoices(val oreRobots: Int?, val clayRobots: Int?, val obsidianRobots: Int?, val geodeRobots: Int?)
 
-  enum class Robot(robotIndex: Int) {
-    ORE(0), CLAY(1), OBSIDIAN(2), GEODE(3)
+  enum class Robot { ORE, CLAY, OBSIDIAN, GEODE }
+
+  companion object {
+    // easy lookup for short-circuiting the "if we could build a geode every minute, how many geodes could we make"
+    val TRIANGLE_NUMBERS = listOf(
+      0, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136,
+      153, 171, 190, 210, 231, 253, 276, 300, 325, 351, 378, 406, 435, 465, 496
+    )
   }
 }
 
