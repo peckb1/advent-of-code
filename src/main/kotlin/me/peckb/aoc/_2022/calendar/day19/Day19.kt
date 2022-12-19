@@ -1,8 +1,8 @@
 package me.peckb.aoc._2022.calendar.day19
 
+import me.peckb.aoc._2022.calendar.day19.Day19.Robot.*
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import javax.inject.Inject
-import kotlin.math.max
 
 
 class Day19 @Inject constructor(
@@ -20,127 +20,103 @@ class Day19 @Inject constructor(
     }
   }
 
-  fun maxGeode(blueprint: Blueprint, minutes: Int): Int {
-    val a = blueprint.oreRobotOreCost
-    val b = blueprint.clayRobotOreCost
-    val c = blueprint.obsidianRobotOreCost
-    val d = blueprint.obsidianRobotClayCost
-    val e = blueprint.geodeRobotOreCost
-    val f = blueprint.geodeRobotObsidianCost
-
-    val mi = maxOf(a, b, c, e)
-    val mj = d
-    val mk = f
-
-    var m = 0
-
-    fun dfs(
-      timeRemaining: Int,
-      robot: Robot,
-      oreRobots: Int, // i
-      clayRobots: Int, // j
-      obsidianRobots: Int, // k
-      geodeRobots: Int, // l
-      ore: Int,
-      clay: Int,
-      obsidian: Int,
-      geodes: Int
-    ) {
-
-      var t = timeRemaining
-      var w = ore
-      var x = clay
-      var y = obsidian
-      var z = geodes
-
-      if (
-        (robot == Robot.ORE && oreRobots >= mi) ||
-        (robot == Robot.CLAY && clayRobots >= mj) ||
-        (robot == Robot.OBSIDIAN && (obsidianRobots >= mk || clayRobots == 0 )) ||
-        (robot == Robot.GEODE && obsidianRobots == 0) ||
-        (z + geodeRobots * t + TRIANGLE_NUMBERS[ t ] <= m)
-      ) {
-        return
+  private fun maxGeode(blueprint: Blueprint, minutes: Int): Int {
+    fun makeRobot(
+      timeRemaining: Int, robotToMake: Robot,
+      oreRobots: Int, clayRobots: Int, obsidianRobots: Int, geodeRobots: Int,
+      ore: Int, clay: Int, obsidian: Int, geodes: Int
+    ): Int {
+      // we're trying to move forward by making `robotToMake`
+      // but don't bother going forward if we
+      //   (a) have too many (in the case of ore, clay, and obsidian)
+      //   (b) will never make enough (in the case of clay and obsidian)
+      when (robotToMake) {
+        ORE -> if (oreRobots >= blueprint.maxOre) return 0
+        CLAY -> if (clayRobots >= blueprint.obsidianRobotClayCost) return 0
+        OBSIDIAN -> if (obsidianRobots >= blueprint.geodeRobotObsidianCost || clayRobots == 0) return 0
+        GEODE -> if (obsidianRobots == 0) return 0
       }
 
-      while (t > 0) {
-        if (robot == Robot.ORE && w >= a) {
-          Robot.values().forEach {
-            dfs(
-              t-1,
+      // since `eventually` we'll be able to build the robot we're after
+      // we can keep track of how many minutes have passed as existing
+      // robots mine up their resources
+      var minutesPassed = 0
+      while (timeRemaining - minutesPassed > 0) {
+        val currentTime = timeRemaining - minutesPassed
+        val currentOre = ore + (minutesPassed * oreRobots)
+        val currentClay = clay + (minutesPassed * clayRobots)
+        val currentObsidian = obsidian + (minutesPassed * obsidianRobots)
+        val currentGeodes = geodes + (minutesPassed * geodeRobots)
+
+        if (robotToMake == ORE && currentOre >= blueprint.oreRobotOreCost) {
+          return Robot.values().maxOf {
+            makeRobot(
+              currentTime - 1,
               it,
               oreRobots + 1,
               clayRobots,
               obsidianRobots,
               geodeRobots,
-              w - a + oreRobots,
-              x + clayRobots,
-              y + obsidianRobots,
-              z + geodeRobots
+              currentOre - blueprint.oreRobotOreCost + oreRobots,
+              currentClay + clayRobots,
+              currentObsidian + obsidianRobots,
+              currentGeodes + geodeRobots
             )
           }
-          return
-        } else if (robot == Robot.CLAY && w >= b) {
-          Robot.values().forEach {
-            dfs(
-              t - 1,
+        } else if (robotToMake == CLAY && currentOre >= blueprint.clayRobotOreCost) {
+          return Robot.values().maxOf {
+            makeRobot(
+              currentTime - 1,
               it,
               oreRobots,
               clayRobots + 1,
               obsidianRobots,
               geodeRobots,
-              w - b + oreRobots,
-              x + clayRobots,
-              y + obsidianRobots,
-              z + geodeRobots
+              currentOre - blueprint.clayRobotOreCost + oreRobots,
+              currentClay + clayRobots,
+              currentObsidian + obsidianRobots,
+              currentGeodes + geodeRobots
             )
           }
-          return
-        } else if (robot == Robot.OBSIDIAN && w >= c && x >= d) {
-          Robot.values().forEach {
-            dfs(
-              t - 1,
+        } else if (robotToMake == OBSIDIAN && currentOre >= blueprint.obsidianRobotOreCost && currentClay >= blueprint.obsidianRobotClayCost) {
+          return Robot.values().maxOf {
+            makeRobot(
+              currentTime - 1,
               it,
               oreRobots,
               clayRobots,
               obsidianRobots + 1,
               geodeRobots,
-              w - c + oreRobots,
-              x - d + clayRobots,
-              y + obsidianRobots,
-              z + geodeRobots
+              currentOre - blueprint.obsidianRobotOreCost + oreRobots,
+              currentClay - blueprint.obsidianRobotClayCost + clayRobots,
+              currentObsidian + obsidianRobots,
+              currentGeodes + geodeRobots
             )
           }
-          return
-        } else if (robot == Robot.GEODE && w >= e && y >= f) {
-          Robot.values().forEach {
-            dfs(
-              t - 1,
+        } else if (robotToMake == GEODE && currentOre >= blueprint.geodeRobotOreCost && currentObsidian >= blueprint.geodeRobotObsidianCost) {
+          return Robot.values().maxOf {
+            makeRobot(
+              currentTime - 1,
               it,
               oreRobots,
               clayRobots,
               obsidianRobots,
               geodeRobots + 1,
-              w - e + oreRobots,
-              x + clayRobots,
-              y -f + obsidianRobots,
-              z + geodeRobots
+              currentOre - blueprint.geodeRobotOreCost + oreRobots,
+              currentClay + clayRobots,
+              currentObsidian - blueprint.geodeRobotObsidianCost + obsidianRobots,
+              currentGeodes + geodeRobots
             )
           }
-          return
         }
-        t = t - 1
-        w = w + oreRobots
-        x = x + clayRobots
-        y = y + obsidianRobots
-        z = z + geodeRobots
+        minutesPassed++
       }
-      m = max(m, z)
+      return geodes + (minutesPassed * geodeRobots)
     }
 
-    dfs(minutes , Robot.ORE, 1, 0, 0, 0, 0, 0, 0, 0 )
-
-    return m
+    return Robot.values().maxOf { robot ->
+      makeRobot(minutes, robot, 1, 0, 0, 0, 0, 0, 0, 0)
+    }
   }
 
 
@@ -177,16 +153,6 @@ class Day19 @Inject constructor(
     val maxOre = maxOf(oreRobotOreCost, clayRobotOreCost, obsidianRobotOreCost, geodeRobotOreCost)
   }
 
-  data class RobotChoices(val oreRobots: Int?, val clayRobots: Int?, val obsidianRobots: Int?, val geodeRobots: Int?)
-
   enum class Robot { ORE, CLAY, OBSIDIAN, GEODE }
-
-  companion object {
-    // easy lookup for short-circuiting the "if we could build a geode every minute, how many geodes could we make"
-    val TRIANGLE_NUMBERS = listOf(
-      0, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105, 120, 136,
-      153, 171, 190, 210, 231, 253, 276, 300, 325, 351, 378, 406, 435, 465, 496
-    )
-  }
 }
 
