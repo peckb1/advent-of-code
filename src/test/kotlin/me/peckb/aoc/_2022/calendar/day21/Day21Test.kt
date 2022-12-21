@@ -19,12 +19,11 @@ internal class Day21Test {
 
   @Test
   fun testDay21PartOne() {
-    assertEquals(70674280581468.toBigDecimal(), day21.partOne(DAY_21))
+    assertEquals(70674280581468.0, day21.partOne(DAY_21))
   }
 
   @Test
   fun testDay21PartTwo() {
-    // 3243420789724 too high?
     assertEquals(3243420789721, day21.partTwo(DAY_21))
   }
 
