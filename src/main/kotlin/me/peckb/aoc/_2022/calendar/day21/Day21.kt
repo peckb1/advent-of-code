@@ -5,6 +5,7 @@ import javax.inject.Inject
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.lang.IllegalArgumentException
 import java.math.BigDecimal
+import java.math.BigDecimal.ZERO
 
 class Day21 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -13,73 +14,60 @@ class Day21 @Inject constructor(
     val monkeyJobs = mutableMapOf<String, MonkeyJob>()
     input.forEach { monkeyJobs[it.name] = it }
 
-    monkeyJobs["root"]?.getData(monkeyJobs)
+    monkeyJobs[ROOT_NAME]?.getData(monkeyJobs)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::monkeyJob) { input ->
     val monkeyJobs = mutableMapOf<String, MonkeyJob>()
-    input.forEach {
-      monkeyJobs[it.name] = it
-    }
-
-    val root = (monkeyJobs["root"] as MonkeyJob.ResultOperation).let {
-      MonkeyJob.ResultOperation("root", it.first, it.second) { a, b ->
-        a.compareTo(b).toBigDecimal()
-      }
-    }.also { monkeyJobs["root"] = it }
+    input.forEach { monkeyJobs[it.name] = it }
 
     var max = Long.MAX_VALUE
     var min = 0L
+    var answer: PartTwoResult? = null
 
-    var answer: List<Any?>? = null
     while (answer == null) {
-      println("$min -> $max")
       val mid = max - (max - min) / 2
 
-      val results = listOf(min, mid, max).map { exp ->
-        monkeyJobs["humn"] = MonkeyJob.YellNumber("humn", exp.toBigDecimal())
-        monkeyJobs["root"]!!.let { root ->
-          (monkeyJobs["root"]!! as MonkeyJob.ResultOperation).let { resultOp ->
-            val xx = monkeyJobs[resultOp.first]?.getData(monkeyJobs)!!
-            val yy = monkeyJobs[resultOp.second]?.getData(monkeyJobs)!!
-            listOf<Any>((xx - yy).abs(), exp, xx, yy, xx.compareTo(yy))
-          }
+      val results = listOf(min, mid, max).map { yellValue ->
+        monkeyJobs[HUMAN_NAME] = MonkeyJob.YellNumber(HUMAN_NAME, yellValue.toBigDecimal())
+        (monkeyJobs[ROOT_NAME] as MonkeyJob.ResultOperation).let { resultOp ->
+          val xx = monkeyJobs[resultOp.first]?.getData(monkeyJobs)!!
+          val yy = monkeyJobs[resultOp.second]?.getData(monkeyJobs)!!
+          PartTwoResult(yellValue, (xx - yy).abs())
         }
-      }.sortedBy { it.first() as BigDecimal }
+      }.sortedBy { it.distanceFromAnswer }
 
-      val maybeResult = results.firstOrNull() { it.last() == 0 }
+      val maybeResult = results.firstOrNull { it.distanceFromAnswer == ZERO }
       if (maybeResult != null) {
         answer = maybeResult
       } else {
         val bestTwo = results.take(2)
-        min = kotlin.math.min(bestTwo.first()[1] as Long, bestTwo.last()[1] as Long)
-        max = kotlin.math.max(bestTwo.first()[1] as Long, bestTwo.last()[1] as Long)
+        min = kotlin.math.min(bestTwo.first().yellNumber, bestTwo.last().yellNumber)
+        max = kotlin.math.max(bestTwo.first().yellNumber, bestTwo.last().yellNumber)
       }
     }
 
-    answer[1]
+    answer.yellNumber
   }
 
   private fun monkeyJob(line: String): MonkeyJob {
-    // root: pppw + sjmn
-    // dbpl: 5
     val mainParts = line.split(": ")
     val monkeyName = mainParts[0]
     val remainingParts = mainParts[1].split(" ")
-    if (remainingParts.size == 3) {
+    return if (remainingParts.size == 3) {
       val firstMonkey = remainingParts[0]
       val secondMonkey = remainingParts[2]
       val operation: (BigDecimal, BigDecimal) -> BigDecimal = when (remainingParts[1]) {
-        "+" -> BigDecimal::plus // { a, b -> a + b }
-        "*" -> BigDecimal::times // { a, b -> a * b }
-        "-" -> BigDecimal::minus // { a, b -> a - b }
-        "/" -> BigDecimal::div // { a, b -> a / b }
+        "+" -> BigDecimal::plus
+        "*" -> BigDecimal::times
+        "-" -> BigDecimal::minus
+        "/" -> BigDecimal::div
         else -> throw IllegalArgumentException("Unknown operation ${remainingParts[1]}")
       }
 
-      return MonkeyJob.ResultOperation(monkeyName, firstMonkey, secondMonkey, operation)
+      MonkeyJob.ResultOperation(monkeyName, firstMonkey, secondMonkey, operation)
     } else {
-      return MonkeyJob.YellNumber(monkeyName, remainingParts[0].toBigDecimal())
+      MonkeyJob.YellNumber(monkeyName, remainingParts[0].toBigDecimal())
     }
   }
 
@@ -87,13 +75,7 @@ class Day21 @Inject constructor(
     abstract fun getData(monkeyJobs: MutableMap<String, MonkeyJob>): BigDecimal
 
     class YellNumber(name: String, val number: BigDecimal) : MonkeyJob(name) {
-      override fun getData(monkeyJobs: MutableMap<String, MonkeyJob>): BigDecimal {
-        return number
-      }
-
-      override fun toString(): String {
-        return "$name yelling $number"
-      }
+      override fun getData(monkeyJobs: MutableMap<String, MonkeyJob>): BigDecimal = number
     }
 
     class ResultOperation(
@@ -102,16 +84,18 @@ class Day21 @Inject constructor(
       val second: String,
       val operation: (BigDecimal, BigDecimal) -> BigDecimal
     ) : MonkeyJob(name) {
-      override fun getData(monkeyJobs: MutableMap<String, MonkeyJob>): BigDecimal {
-        val a = monkeyJobs[first]!!.getData(monkeyJobs)
-        val b = monkeyJobs[second]!!.getData(monkeyJobs)
-        return operation(a, b)
-      }
-
-      override fun toString(): String {
-        return "$name yelling $first $operation $second"
-      }
+      override fun getData(monkeyJobs: MutableMap<String, MonkeyJob>): BigDecimal = operation(
+        monkeyJobs[first]!!.getData(monkeyJobs),
+        monkeyJobs[second]!!.getData(monkeyJobs)
+      )
     }
+  }
+
+  data class PartTwoResult(val yellNumber: Long, val distanceFromAnswer: BigDecimal)
+
+  companion object {
+    private const val HUMAN_NAME = "humn"
+    private const val ROOT_NAME = "root"
   }
 }
 
