@@ -24,9 +24,7 @@ internal class Day22Test {
 
   @Test
   fun testDay22PartTwo() {
-    // NOT 7242 (too low)
-    // NOT 187122 (too high)
-    assertEquals(-1, day22.partTwo(DAY_22))
+    assertEquals(55267, day22.partTwo(DAY_22))
   }
 
   companion object {

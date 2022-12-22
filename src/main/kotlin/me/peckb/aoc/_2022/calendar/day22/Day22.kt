@@ -31,7 +31,6 @@ class Day22 @Inject constructor(
               LEFT -> {
                 var wantedX = x - 1
                 if (wantedX < 0 || caves[y][wantedX] == VOID) {
-                  // loop around
                   wantedX = caves[y].indexOfLast { it != VOID }
                 }
                 if (caves[y][wantedX] == EMPTY) {
@@ -41,7 +40,6 @@ class Day22 @Inject constructor(
               RIGHT -> {
                 var wantedX = x + 1
                 if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
-                  // loop around
                   wantedX = caves[y].indexOfFirst { it != VOID }
                 }
                 if (caves[y][wantedX] == EMPTY) {
@@ -75,9 +73,7 @@ class Day22 @Inject constructor(
     }
 
     // DEV NOTE: index things start at (1, 1)
-    (1000 * (y + 1)) +
-      (4 * (x + 1)) +
-      direction.score
+    (1000 * (y + 1)) + (4 * (x + 1)) + direction.score
   }
 
   private fun loadArea(input: Sequence<String>): Pair<MutableList<MutableList<Area>>, MutableList<Movement>> {
@@ -143,7 +139,7 @@ class Day22 @Inject constructor(
 
     var y = 0
     var x = caves[y].indexOf(EMPTY)
-    var direction = RIGHT
+//    var direction = RIGHT
     var relativeDirection = RIGHT
     var cubeFaceNumber = 1
 
@@ -154,14 +150,14 @@ class Day22 @Inject constructor(
     movements.forEach { movement ->
       when (movement) {
         LeftTurn -> {
-          println("turn left")
-          direction = direction.turnLeft()
+//          direction = direction.turnLeft()
           relativeDirection = relativeDirection.turnLeft()
+          println("turn left, now I face $relativeDirection")
         }
         RightTurn -> {
-          println("turn right")
-          direction = direction.turnRight()
+//          direction = direction.turnRight()
           relativeDirection = relativeDirection.turnRight()
+          println("turn right, now I face $relativeDirection")
         }
         is Movement.Walk -> {
           println("At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber about to walk ${movement.steps} steps")
@@ -172,12 +168,18 @@ class Day22 @Inject constructor(
                 var wantedY = y
                 var wantedRelativeDirection = relativeDirection
                 var wantedCubeNumber = cubeFaceNumber
-                if (wantedX < 0 || caves[y][wantedX] == VOID) {
+                if (wantedX < 0 || caves[wantedY][wantedX] == VOID) {
+                  if (wantedX < 0) {
+                    println("Falling off the map to the left")
+                  } else {
+                    println("Falling off the left to the void")
+                  }
+
                   // loop around
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 4
-                      wantedX = 0
+                      wantedX = faceFour.minX
                       wantedY = faceFour.maxY - (y - faceOne.minY)
                       wantedRelativeDirection = RIGHT
                       wantedCubeNumber = 4
@@ -215,7 +217,7 @@ class Day22 @Inject constructor(
                 } else {
                   when (cubeFaceNumber) {
                     2 -> if (wantedX < faceTwo.minX) wantedCubeNumber = 1
-                    5 -> if (wantedX < faceTwo.minX) wantedCubeNumber = 4
+                    5 -> if (wantedX < faceFive.minX) wantedCubeNumber = 4
                   }
                 }
                 if (cubeFaceNumber != wantedCubeNumber) {
@@ -234,7 +236,12 @@ class Day22 @Inject constructor(
                 var wantedY = y
                 var wantedRelativeDirection = relativeDirection
                 var wantedCubeNumber = cubeFaceNumber
-                if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
+                if (wantedX >= caves[wantedY].size || caves[wantedY][wantedX] == VOID) {
+                  if (wantedX >= caves[wantedY].size) {
+                    println("Falling off the map to the right")
+                  } else {
+                    println("Falling off the right into the void")
+                  }
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 2
@@ -294,7 +301,12 @@ class Day22 @Inject constructor(
                 var wantedY = y - 1
                 var wantedRelativeDirection = relativeDirection
                 var wantedCubeNumber = cubeFaceNumber
-                if (wantedY < 0 || caves[wantedY][x] == VOID) {
+                if (wantedY < 0 || caves[wantedY][wantedX] == VOID) {
+                  if (wantedY < 0) {
+                    println("Falling off the map to the top")
+                  } else {
+                    println("Falling off the top into the void")
+                  }
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 6
@@ -352,7 +364,12 @@ class Day22 @Inject constructor(
                 var wantedY = y + 1
                 var wantedRelativeDirection = relativeDirection
                 var wantedCubeNumber = cubeFaceNumber
-                if (wantedY >= caves.size || caves[wantedY][x] == VOID) {
+                if (wantedY >= caves.size || caves[wantedY][wantedX] == VOID) {
+                  if (wantedY >= caves.size) {
+                    println("Falling off the map to the bottom")
+                  } else {
+                    println("Falling off the bottom into the void")
+                  }
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 3
@@ -407,6 +424,7 @@ class Day22 @Inject constructor(
               }
             }
           }
+          println("Stopped At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber")
         }
       }
     }
@@ -414,7 +432,7 @@ class Day22 @Inject constructor(
     // DEV NOTE: index things start at (1, 1)
     (1000 * (y + 1)) +
       (4 * (x + 1)) +
-      direction.score
+      relativeDirection.score
   }
 
   enum class Area(private val representation: String) {
@@ -453,12 +471,5 @@ class Day22 @Inject constructor(
     abstract fun turnRight(): Direction
   }
 
-  data class CubeFace(val minX: Int, val maxX: Int, val minY: Int, val maxY: Int) {
-//    class One(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
-//    class Two(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
-//    class Three(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
-//    class Four(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
-//    class Five(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
-//    class Six(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
-  }
+  data class CubeFace(val minX: Int, val maxX: Int, val minY: Int, val maxY: Int)
 }
