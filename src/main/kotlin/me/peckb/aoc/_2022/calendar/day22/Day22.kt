@@ -151,7 +151,6 @@ class Day22 @Inject constructor(
     // TODO: second debug/cleanup is to throw exceptions from states that should not be
     //       such as having a VOID when going from 3 -> 1
 
-    println("At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber")
     movements.forEach { movement ->
       when (movement) {
         LeftTurn -> {
@@ -165,7 +164,7 @@ class Day22 @Inject constructor(
           relativeDirection = relativeDirection.turnRight()
         }
         is Movement.Walk -> {
-          println("At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber")
+          println("At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber about to walk ${movement.steps} steps")
           repeat(movement.steps) {
             when (relativeDirection) {
               LEFT -> {
@@ -179,7 +178,7 @@ class Day22 @Inject constructor(
                     1 -> {
                       // going from 1 -> 4
                       wantedX = 0
-                      wantedY = faceFour.minY + (faceOne.maxY - y)
+                      wantedY = faceFour.maxY - (y - faceOne.minY)
                       wantedRelativeDirection = RIGHT
                       wantedCubeNumber = 4
                     }
@@ -189,15 +188,15 @@ class Day22 @Inject constructor(
                     }
                     3 -> {
                       // going from 3 -> 4
-                      wantedX = faceFour.maxX - (faceThree.maxY - y)
+                      wantedX = faceFour.minX + (y - faceThree.minY)
                       wantedY = faceFour.minY
                       wantedRelativeDirection = DOWN
                       wantedCubeNumber = 4
                     }
                     4 -> {
                       // going from 4 -> 1
-                      wantedX = faceOne.minY
-                      wantedY = faceOne.minY + (faceFour.maxY - y)
+                      wantedX = faceOne.minX
+                      wantedY = faceOne.maxY - (y - faceFour.minY)
                       wantedRelativeDirection = RIGHT
                       wantedCubeNumber = 1
                     }
@@ -207,7 +206,7 @@ class Day22 @Inject constructor(
                     }
                     6 -> {
                       // going from 6 -> 1
-                      wantedX = faceOne.minX + (faceSix.maxY - y)
+                      wantedX = faceOne.minX + (y - faceSix.minY)
                       wantedY = faceOne.minY
                       wantedRelativeDirection = DOWN
                       wantedCubeNumber = 1
@@ -244,13 +243,13 @@ class Day22 @Inject constructor(
                     2 -> {
                       // going from 2 -> 5
                       wantedX = faceFive.maxX
-                      wantedY = faceFive.minY + (faceTwo.maxY - y)
+                      wantedY = faceFive.maxY - (y - faceTwo.minY)
                       wantedRelativeDirection = LEFT
                       wantedCubeNumber = 5
                     }
                     3 -> {
                       // going from 3 -> 2
-                      wantedX = faceTwo.maxX - (faceThree.maxY - y)
+                      wantedX = faceTwo.minX + (y - faceThree.minY)
                       wantedY = faceTwo.maxY
                       wantedRelativeDirection = UP
                       wantedCubeNumber = 2
@@ -262,13 +261,13 @@ class Day22 @Inject constructor(
                     5 -> {
                       // going from 5 -> 2
                       wantedX = faceTwo.maxX
-                      wantedY = faceTwo.minY + (faceFive.maxY - y)
-                      wantedRelativeDirection = RIGHT
+                      wantedY = faceTwo.maxY - (y - faceFive.minY)
+                      wantedRelativeDirection = LEFT
                       wantedCubeNumber = 2
                     }
                     6 -> {
                       // going from 6 -> 5
-                      wantedX = faceFive.maxX - (faceSix.maxY - y)
+                      wantedX = faceFive.minX + (y - faceSix.minY)
                       wantedY = faceFive.maxY
                       wantedRelativeDirection = UP
                       wantedCubeNumber = 5
@@ -279,6 +278,9 @@ class Day22 @Inject constructor(
                     1 -> if (wantedX > faceOne.maxX) wantedCubeNumber = 2
                     4 -> if (wantedX > faceFour.maxX) wantedCubeNumber = 5
                   }
+                }
+                if (cubeFaceNumber != wantedCubeNumber) {
+                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
                 }
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
@@ -297,13 +299,13 @@ class Day22 @Inject constructor(
                     1 -> {
                       // going from 1 -> 6
                       wantedX = faceSix.minX
-                      wantedY = faceSix.minY + (faceOne.maxX - x)
+                      wantedY = faceSix.minY + (x - faceOne.minX)
                       wantedRelativeDirection = RIGHT
                       wantedCubeNumber = 6
                     }
                     2 -> {
                       // going from 2 -> 6
-                      wantedX = faceSix.maxX - (faceTwo.maxX - x)
+                      wantedX = faceSix.minX + (x - faceTwo.minX)
                       wantedY = faceSix.maxY
                       wantedRelativeDirection = UP
                       wantedCubeNumber = 6
@@ -315,7 +317,7 @@ class Day22 @Inject constructor(
                     4 -> {
                       // going from 4 -> 3
                       wantedX = faceThree.minX
-                      wantedY = faceThree.maxY - (faceFour.maxX - x)
+                      wantedY = faceThree.minY + (x - faceFour.minX)
                       wantedRelativeDirection = RIGHT
                       wantedCubeNumber = 3
                     }
@@ -334,6 +336,9 @@ class Day22 @Inject constructor(
                     5 -> if (wantedY < faceFive.minY) wantedCubeNumber = 3
                     6 -> if (wantedY < faceSix.minY) wantedCubeNumber = 4
                   }
+                }
+                if (cubeFaceNumber != wantedCubeNumber) {
+                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
                 }
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
@@ -355,8 +360,8 @@ class Day22 @Inject constructor(
                     }
                     2 -> {
                       // going from 2 -> 3
-                      wantedX = faceThree.maxX - (faceTwo.maxX - x)
-                      wantedY = faceThree.maxY
+                      wantedX = faceThree.maxX
+                      wantedY = faceThree.minY + (x - faceTwo.minX)
                       wantedRelativeDirection = LEFT
                       wantedCubeNumber = 3
                     }
@@ -371,13 +376,13 @@ class Day22 @Inject constructor(
                     5 -> {
                       // going from 5 -> 6
                       wantedX = faceSix.maxX
-                      wantedY = faceSix.maxY - (faceFive.maxX - x)
+                      wantedY = faceSix.minY + (x - faceFive.minX)
                       wantedRelativeDirection = LEFT
                       wantedCubeNumber = 6
                     }
                     6 -> {
                       // going from 6 -> 2
-                      wantedX = faceTwo.maxX - (faceSix.maxX - x)
+                      wantedX = faceTwo.minX + (x - faceSix.minX)
                       wantedY = faceTwo.minY
                       wantedRelativeDirection = DOWN
                       wantedCubeNumber = 2
@@ -385,10 +390,13 @@ class Day22 @Inject constructor(
                   }
                 } else {
                   when (cubeFaceNumber) {
-                    1 -> if (wantedY > faceOne.maxY) wantedCubeNumber = 1
+                    1 -> if (wantedY > faceOne.maxY) wantedCubeNumber = 3
                     3 -> if (wantedY > faceThree.maxY) wantedCubeNumber = 5
                     4 -> if (wantedY > faceFour.maxY) wantedCubeNumber = 6
                   }
+                }
+                if (cubeFaceNumber != wantedCubeNumber) {
+                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
                 }
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
