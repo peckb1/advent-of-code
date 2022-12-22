@@ -30,43 +30,26 @@ class Day22 @Inject constructor(
             when (direction) {
               LEFT -> {
                 var wantedX = x - 1
-                if (wantedX < 0 || caves[y][wantedX] == VOID) {
-                  wantedX = caves[y].indexOfLast { it != VOID }
-                }
-                if (caves[y][wantedX] == EMPTY) {
-                  x = wantedX
-                }
+                if (wantedX < 0 || caves[y][wantedX] == VOID) wantedX = caves[y].indexOfLast { it != VOID }
+                if (caves[y][wantedX] == EMPTY) x = wantedX
               }
 
               RIGHT -> {
                 var wantedX = x + 1
-                if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
-                  wantedX = caves[y].indexOfFirst { it != VOID }
-                }
-                if (caves[y][wantedX] == EMPTY) {
-                  x = wantedX
-                }
+                if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) wantedX = caves[y].indexOfFirst { it != VOID }
+                if (caves[y][wantedX] == EMPTY) x = wantedX
               }
 
               UP -> {
                 var wantedY = y - 1
-                if (wantedY < 0 || caves[wantedY][x] == VOID) {
-                  // loop around
-                  wantedY = (caves.size - 1 downTo 1).first { caves[it][x] != VOID }
-                }
-                if (caves[wantedY][x] == EMPTY) {
-                  y = wantedY
-                }
+                if (wantedY < 0 || caves[wantedY][x] == VOID) wantedY = (caves.size - 1 downTo 1).first { caves[it][x] != VOID }
+                if (caves[wantedY][x] == EMPTY) y = wantedY
               }
 
               DOWN -> {
                 var wantedY = y + 1
-                if (wantedY >= caves.size || caves[wantedY][x] == VOID) {
-                  wantedY = (0 until caves.size - 1).first { caves[it][x] != VOID }
-                }
-                if (caves[wantedY][x] == EMPTY) {
-                  y = wantedY
-                }
+                if (wantedY >= caves.size || caves[wantedY][x] == VOID) wantedY = (0 until caves.size - 1).first { caves[it][x] != VOID }
+                if (caves[wantedY][x] == EMPTY) y = wantedY
               }
             }
           }
@@ -92,8 +75,6 @@ class Day22 @Inject constructor(
     var direction = RIGHT
     var cubeFace = faceOne
 
-    // TODO: first debug/cleanup step is to put the walk over faces data into functions taking in the two sides as input
-
     movements.forEach { movement ->
       when (movement) {
         LeftTurn -> direction = direction.turnLeft()
@@ -103,55 +84,25 @@ class Day22 @Inject constructor(
           repeat(movement.steps) {
             when (direction) {
               LEFT -> {
-                var wantedX = x - 1
-                var wantedY = y
-                var wantedDirection = direction
-                var wantedFace = cubeFace
-                if (wantedX < 0 || caves[wantedY][wantedX] == VOID) {
+                var transition = FaceTransition(x - 1, y, direction, cubeFace)
+                if (transition.newX < 0 || caves[transition.newY][transition.newX] == VOID) {
                   when (cubeFace) {
-                    faceOne -> {
-                      // going from 1 -> 4
-                      wantedX = faceFour.minX
-                      wantedY = faceFour.maxY - (y - faceOne.minY)
-                      wantedDirection = RIGHT
-                      wantedFace = faceFour
-                    }
-
-                    faceThree -> {
-                      // going from 3 -> 4
-                      wantedX = faceFour.minX + (y - faceThree.minY)
-                      wantedY = faceFour.minY
-                      wantedDirection = DOWN
-                      wantedFace = faceFour
-                    }
-
-                    faceFour -> {
-                      // going from 4 -> 1
-                      wantedX = faceOne.minX
-                      wantedY = faceOne.maxY - (y - faceFour.minY)
-                      wantedDirection = RIGHT
-                      wantedFace = faceOne
-                    }
-
-                    faceSix -> {
-                      // going from 6 -> 1
-                      wantedX = faceOne.minX + (y - faceSix.minY)
-                      wantedY = faceOne.minY
-                      wantedDirection = DOWN
-                      wantedFace = faceOne
-                    }
+                    faceOne -> transition = leftToRight(y, cubeFace, faceFour)
+                    faceThree -> transition = leftToDown(y, cubeFace, faceFour)
+                    faceFour -> transition = leftToRight(y, cubeFace, faceOne)
+                    faceSix -> transition = leftToDown(y, faceSix, faceOne)
                   }
                 } else {
                   when (cubeFace) {
-                    faceTwo -> if (wantedX < faceTwo.minX) wantedFace = faceOne
-                    faceFive -> if (wantedX < faceFive.minX) wantedFace = faceFour
+                    faceTwo -> if (transition.newX < cubeFace.minX) transition = transition.copy(newFace = faceOne)
+                    faceFive -> if (transition.newX < cubeFace.minX) transition = transition.copy(newFace = faceFour)
                   }
                 }
-                if (caves[wantedY][wantedX] == EMPTY) {
-                  x = wantedX
-                  y = wantedY
-                  direction = wantedDirection
-                  cubeFace = wantedFace
+                if (caves[transition.newY][transition.newX] == EMPTY) {
+                  x = transition.newX
+                  y = transition.newY
+                  direction = transition.newDirection
+                  cubeFace = transition.newFace
                 }
               }
 
@@ -352,7 +303,25 @@ class Day22 @Inject constructor(
     return caves to movements
   }
 
+  private fun leftToRight(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
+    val newX = destination.minX
+    val newY = destination.maxY - (y - source.minY)
+    val newDirection = RIGHT
+
+    return FaceTransition(newX, newY, newDirection, destination)
+  }
+
+  private fun leftToDown(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
+    val newX = destination.minX + (y - source.minY)
+    val newY = destination.minY
+    val newDirection = DOWN
+
+    return FaceTransition(newX, newY, newDirection, destination)
+  }
+
   private fun findPassword(x: Int, y: Int, direction: Direction) = (1000 * (y + 1)) + (4 * (x + 1)) + direction.score
+
+  data class FaceTransition(val newX: Int, val newY: Int, val newDirection: Direction, val newFace: CubeFace)
 
   enum class Area { WALL, EMPTY, VOID }
 
