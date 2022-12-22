@@ -45,19 +45,16 @@ class Day22 @Inject constructor(
                 if (wantedX < 0 || caves[y][wantedX] == VOID) wantedX = caves[y].indexOfLast { it != VOID }
                 if (caves[y][wantedX] == EMPTY) x = wantedX
               }
-
               RIGHT -> {
                 var wantedX = x + 1
                 if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) wantedX = caves[y].indexOfFirst { it != VOID }
                 if (caves[y][wantedX] == EMPTY) x = wantedX
               }
-
               UP -> {
                 var wantedY = y - 1
                 if (wantedY < 0 || caves[wantedY][x] == VOID) wantedY = (caves.size - 1 downTo 1).first { caves[it][x] != VOID }
                 if (caves[wantedY][x] == EMPTY) y = wantedY
               }
-
               DOWN -> {
                 var wantedY = y + 1
                 if (wantedY >= caves.size || caves[wantedY][x] == VOID) wantedY = (0 until caves.size - 1).first { caves[it][x] != VOID }
@@ -86,102 +83,17 @@ class Day22 @Inject constructor(
         RightTurn -> direction = direction.turnRight()
         is Walk -> {
           repeat(movement.steps) {
-            when (direction) {
-              LEFT -> {
-                var transition = FaceTransition(x - 1, y, direction, cubeFace)
-                if (transition.newX < 0 || caves[transition.newY][transition.newX] == VOID) {
-                  when (cubeFace) {
-                    FACE_ONE -> transition = leftToRight(y, cubeFace, FACE_FOUR)
-                    FACE_THREE -> transition = leftToDown(y, cubeFace, FACE_FOUR)
-                    FACE_FOUR -> transition = leftToRight(y, cubeFace, FACE_ONE)
-                    FACE_SIX -> transition = leftToDown(y, cubeFace, FACE_ONE)
-                  }
-                } else {
-                  when (cubeFace) {
-                    FACE_TWO -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_ONE
-                    FACE_FIVE -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_FOUR
-                  }
-                }
-                // TODO: move this to a common location
-                if (caves[transition.newY][transition.newX] == EMPTY) {
-                  x = transition.newX
-                  y = transition.newY
-                  direction = transition.newDirection
-                  cubeFace = transition.newFace
-                }
-              }
-
-              RIGHT -> {
-                var transition = FaceTransition(x + 1, y, direction, cubeFace)
-                if (transition.newX >= caves[transition.newY].size || caves[transition.newY][transition.newX] == VOID) {
-                  when (cubeFace) {
-                    FACE_TWO -> transition = rightToLeft(y, cubeFace, FACE_FIVE)
-                    FACE_THREE -> transition = rightToUp(y, cubeFace, FACE_TWO)
-                    FACE_FIVE -> transition = rightToLeft(y, cubeFace, FACE_TWO)
-                    FACE_SIX -> transition = rightToUp(y, cubeFace, FACE_FIVE)
-                  }
-                } else {
-                  when (cubeFace) {
-                    FACE_ONE -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_TWO
-                    FACE_FOUR -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_FIVE
-                  }
-                }
-                // TODO: move this to a common location
-                if (caves[transition.newY][transition.newX] == EMPTY) {
-                  x = transition.newX
-                  y = transition.newY
-                  direction = transition.newDirection
-                  cubeFace = transition.newFace
-                }
-              }
-
-              UP -> {
-                var transition = FaceTransition(x, y - 1, direction, cubeFace)
-                if (transition.newY < 0 || caves[transition.newY][transition.newX] == VOID) {
-                  when (cubeFace) {
-                    FACE_ONE -> transition = upToRight(x, cubeFace, FACE_SIX)
-                    FACE_TWO -> transition = upToUp(x, cubeFace, FACE_SIX)
-                    FACE_FOUR -> transition = upToRight(x, cubeFace, FACE_THREE)
-                  }
-                } else {
-                  when (cubeFace) {
-                    FACE_THREE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_ONE
-                    FACE_FIVE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_THREE
-                    FACE_SIX -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_FOUR
-                  }
-                }
-                // TODO: move this to a common location
-                if (caves[transition.newY][transition.newX] == EMPTY) {
-                  x = transition.newX
-                  y = transition.newY
-                  direction = transition.newDirection
-                  cubeFace = transition.newFace
-                }
-              }
-
-              DOWN -> {
-                var transition = FaceTransition(x, y + 1, direction, cubeFace)
-                if (transition.newY >= caves.size || caves[transition.newY][transition.newX] == VOID) {
-                  when (cubeFace) {
-                    FACE_TWO -> transition = downToLeft(x, cubeFace, FACE_THREE)
-                    FACE_FIVE -> transition = downToLeft(x, cubeFace, FACE_SIX)
-                    FACE_SIX -> transition = downToDown(x, cubeFace, FACE_TWO)
-                  }
-                } else {
-                  when (cubeFace) {
-                    FACE_ONE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_THREE
-                    FACE_THREE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_FIVE
-                    FACE_FOUR -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_SIX
-                  }
-                }
-                // TODO: move this to a common location
-                if (caves[transition.newY][transition.newX] == EMPTY) {
-                  x = transition.newX
-                  y = transition.newY
-                  direction = transition.newDirection
-                  cubeFace = transition.newFace
-                }
-              }
+            val transition: FaceTransition = when (direction) {
+              LEFT -> moveLeft(caves, x, y, direction, cubeFace)
+              RIGHT -> moveRight(caves, x, y, direction, cubeFace)
+              UP -> moveUp(caves, x, y, direction, cubeFace)
+              DOWN -> moveDown(caves, x, y, direction, cubeFace)
+            }
+            if (caves[transition.newY][transition.newX] == EMPTY) {
+              x = transition.newX
+              y = transition.newY
+              direction = transition.newDirection
+              cubeFace = transition.newFace
             }
           }
         }
@@ -191,7 +103,79 @@ class Day22 @Inject constructor(
     findPassword(x, y, direction)
   }
 
-  private fun loadArea(input: Sequence<String>): Pair<MutableList<MutableList<Area>>, MutableList<Movement>> {
+  private fun moveLeft(caves: List<List<Area>>, x: Int, y: Int, direction: Direction, cubeFace: CubeFace): FaceTransition {
+    var transition = FaceTransition(x - 1, y, direction, cubeFace)
+    if (transition.newX < 0 || caves[transition.newY][transition.newX] == VOID) {
+      when (cubeFace) {
+        FACE_ONE -> transition = leftToRight(y, cubeFace, FACE_FOUR)
+        FACE_THREE -> transition = leftToDown(y, cubeFace, FACE_FOUR)
+        FACE_FOUR -> transition = leftToRight(y, cubeFace, FACE_ONE)
+        FACE_SIX -> transition = leftToDown(y, cubeFace, FACE_ONE)
+      }
+    } else {
+      when (cubeFace) {
+        FACE_TWO -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_ONE
+        FACE_FIVE -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_FOUR
+      }
+    }
+    return transition
+  }
+
+  private fun moveRight(caves: List<List<Area>>, x: Int, y: Int, direction: Direction, cubeFace: CubeFace): FaceTransition {
+    var transition = FaceTransition(x + 1, y, direction, cubeFace)
+    if (transition.newX >= caves[transition.newY].size || caves[transition.newY][transition.newX] == VOID) {
+      when (cubeFace) {
+        FACE_TWO -> transition = rightToLeft(y, cubeFace, FACE_FIVE)
+        FACE_THREE -> transition = rightToUp(y, cubeFace, FACE_TWO)
+        FACE_FIVE -> transition = rightToLeft(y, cubeFace, FACE_TWO)
+        FACE_SIX -> transition = rightToUp(y, cubeFace, FACE_FIVE)
+      }
+    } else {
+      when (cubeFace) {
+        FACE_ONE -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_TWO
+        FACE_FOUR -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_FIVE
+      }
+    }
+    return transition
+  }
+
+  private fun moveUp(caves: List<List<Area>>, x: Int, y: Int, direction: Direction, cubeFace: CubeFace): FaceTransition {
+    var transition = FaceTransition(x, y - 1, direction, cubeFace)
+    if (transition.newY < 0 || caves[transition.newY][transition.newX] == VOID) {
+      when (cubeFace) {
+        FACE_ONE -> transition = upToRight(x, cubeFace, FACE_SIX)
+        FACE_TWO -> transition = upToUp(x, cubeFace, FACE_SIX)
+        FACE_FOUR -> transition = upToRight(x, cubeFace, FACE_THREE)
+      }
+    } else {
+      when (cubeFace) {
+        FACE_THREE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_ONE
+        FACE_FIVE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_THREE
+        FACE_SIX -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_FOUR
+      }
+    }
+    return transition
+  }
+
+  private fun moveDown(caves: List<List<Area>>, x: Int, y: Int, direction: Direction, cubeFace: CubeFace): FaceTransition {
+    var transition = FaceTransition(x, y + 1, direction, cubeFace)
+    if (transition.newY >= caves.size || caves[transition.newY][transition.newX] == VOID) {
+      when (cubeFace) {
+        FACE_TWO -> transition = downToLeft(x, cubeFace, FACE_THREE)
+        FACE_FIVE -> transition = downToLeft(x, cubeFace, FACE_SIX)
+        FACE_SIX -> transition = downToDown(x, cubeFace, FACE_TWO)
+      }
+    } else {
+      when (cubeFace) {
+        FACE_ONE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_THREE
+        FACE_THREE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_FIVE
+        FACE_FOUR -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_SIX
+      }
+    }
+    return transition
+  }
+
+  private fun loadArea(input: Sequence<String>): Pair<List<List<Area>>, MutableList<Movement>> {
     var map = true
 
     val caves = mutableListOf<MutableList<Area>>()
