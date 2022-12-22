@@ -24,6 +24,7 @@ internal class Day22Test {
 
   @Test
   fun testDay22PartTwo() {
+    // NOT 7242 (too low)
     assertEquals(-1, day22.partTwo(DAY_22))
   }
 

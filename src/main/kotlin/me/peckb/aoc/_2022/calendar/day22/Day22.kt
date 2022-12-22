@@ -3,6 +3,7 @@ package me.peckb.aoc._2022.calendar.day22
 import me.peckb.aoc._2022.calendar.day22.Day22.Area.EMPTY
 import me.peckb.aoc._2022.calendar.day22.Day22.Area.WALL
 import me.peckb.aoc._2022.calendar.day22.Day22.Area.VOID
+import me.peckb.aoc._2022.calendar.day22.Day22.Direction.*
 import me.peckb.aoc._2022.calendar.day22.Day22.Movement.LeftTurn
 import me.peckb.aoc._2022.calendar.day22.Day22.Movement.RightTurn
 import javax.inject.Inject
@@ -18,7 +19,7 @@ class Day22 @Inject constructor(
 
     var y = 0
     var x = caves[y].indexOf(EMPTY)
-    var direction = Direction.RIGHT
+    var direction = RIGHT
 
     movements.forEach { movement ->
       when (movement) {
@@ -27,7 +28,7 @@ class Day22 @Inject constructor(
         is Movement.Walk -> {
           repeat(movement.steps) {
             when (direction) {
-              Direction.LEFT -> {
+              LEFT -> {
                 var wantedX = x - 1
                 if (wantedX < 0 || caves[y][wantedX] == VOID) {
                   // loop around
@@ -37,7 +38,7 @@ class Day22 @Inject constructor(
                   x = wantedX
                 }
               }
-              Direction.RIGHT -> {
+              RIGHT -> {
                 var wantedX = x + 1
                 if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
                   // loop around
@@ -47,7 +48,7 @@ class Day22 @Inject constructor(
                   x = wantedX
                 }
               }
-              Direction.UP -> {
+              UP -> {
                 var wantedY = y - 1
                 if (wantedY < 0 || caves[wantedY][x] == VOID) {
                   // loop around
@@ -57,7 +58,7 @@ class Day22 @Inject constructor(
                   y = wantedY
                 }
               }
-              Direction.DOWN -> {
+              DOWN -> {
                 var wantedY = y + 1
                 if (wantedY >= caves.size || caves[wantedY][x] == VOID) {
                   // loop around
@@ -123,11 +124,290 @@ class Day22 @Inject constructor(
     return caves to movements
   }
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day22) { input ->
-    -1
-  }
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val (caves, movements) = loadArea(input)
 
-  private fun day22(line: String) = 4
+    /*
+       X 1 2
+       X 3 X
+       4 5 X
+       6 X X
+     */
+
+    val faceOne = CubeFace(50, 99, 0, 49)
+    val faceTwo = CubeFace(100, 149, 0, 49)
+    val faceThree = CubeFace(50, 99, 50, 99)
+    val faceFour = CubeFace(0, 49, 100, 149)
+    val faceFive = CubeFace(50, 99, 100, 149)
+    val faceSix = CubeFace(0, 49, 150, 199)
+
+    var y = 0
+    var x = caves[y].indexOf(EMPTY)
+    var direction = RIGHT
+    var relativeDirection = RIGHT
+    var cubeFaceNumber = 1
+
+    // TODO: first debug/cleanup step is to put the walk over faces data into functions taking in the two sides as input
+    // TODO: second debug/cleanup is to throw exceptions from states that should not be
+    //       such as having a VOID when going from 3 -> 1
+
+    println("At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber")
+    movements.forEach { movement ->
+      when (movement) {
+        LeftTurn -> {
+          println("turn left")
+          direction = direction.turnLeft()
+          relativeDirection = relativeDirection.turnLeft()
+        }
+        RightTurn -> {
+          println("turn right")
+          direction = direction.turnRight()
+          relativeDirection = relativeDirection.turnRight()
+        }
+        is Movement.Walk -> {
+          println("At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber")
+          repeat(movement.steps) {
+            when (relativeDirection) {
+              LEFT -> {
+                var wantedX = x - 1
+                var wantedY = y
+                var wantedRelativeDirection = relativeDirection
+                var wantedCubeNumber = cubeFaceNumber
+                if (wantedX < 0 || caves[y][wantedX] == VOID) {
+                  // loop around
+                  when (cubeFaceNumber) {
+                    1 -> {
+                      // going from 1 -> 4
+                      wantedX = 0
+                      wantedY = faceFour.minY + (faceOne.maxY - y)
+                      wantedRelativeDirection = RIGHT
+                      wantedCubeNumber = 4
+                    }
+                    2 -> {
+                      // going from 2 -> 1
+                      wantedCubeNumber = 1
+                    }
+                    3 -> {
+                      // going from 3 -> 4
+                      wantedX = faceFour.maxX - (faceThree.maxY - y)
+                      wantedY = faceFour.minY
+                      wantedRelativeDirection = DOWN
+                      wantedCubeNumber = 4
+                    }
+                    4 -> {
+                      // going from 4 -> 1
+                      wantedX = faceOne.minY
+                      wantedY = faceOne.minY + (faceFour.maxY - y)
+                      wantedRelativeDirection = RIGHT
+                      wantedCubeNumber = 1
+                    }
+                    5 -> {
+                      // going from 5 -> 4
+                      wantedCubeNumber = 4
+                    }
+                    6 -> {
+                      // going from 6 -> 1
+                      wantedX = faceOne.minX + (faceSix.maxY - y)
+                      wantedY = faceOne.minY
+                      wantedRelativeDirection = DOWN
+                      wantedCubeNumber = 1
+                    }
+                  }
+                } else {
+                  when (cubeFaceNumber) {
+                    2 -> if (wantedX < faceTwo.minX) wantedCubeNumber = 1
+                    5 -> if (wantedX < faceTwo.minX) wantedCubeNumber = 4
+                  }
+                }
+                if (cubeFaceNumber != wantedCubeNumber) {
+                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
+                }
+
+                if (caves[wantedY][wantedX] == EMPTY) {
+                  x = wantedX
+                  y = wantedY
+                  relativeDirection = wantedRelativeDirection
+                  cubeFaceNumber = wantedCubeNumber
+                }
+              }
+              RIGHT -> {
+                var wantedX = x + 1
+                var wantedY = y
+                var wantedRelativeDirection = relativeDirection
+                var wantedCubeNumber = cubeFaceNumber
+                if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
+                  when (cubeFaceNumber) {
+                    1 -> {
+                      // going from 1 -> 2
+                      wantedCubeNumber = 2
+                    }
+                    2 -> {
+                      // going from 2 -> 5
+                      wantedX = faceFive.maxX
+                      wantedY = faceFive.minY + (faceTwo.maxY - y)
+                      wantedRelativeDirection = LEFT
+                      wantedCubeNumber = 5
+                    }
+                    3 -> {
+                      // going from 3 -> 2
+                      wantedX = faceTwo.maxX - (faceThree.maxY - y)
+                      wantedY = faceTwo.maxY
+                      wantedRelativeDirection = UP
+                      wantedCubeNumber = 2
+                    }
+                    4 -> {
+                      // going from 4 -> 5
+                      wantedCubeNumber = 5
+                    }
+                    5 -> {
+                      // going from 5 -> 2
+                      wantedX = faceTwo.maxX
+                      wantedY = faceTwo.minY + (faceFive.maxY - y)
+                      wantedRelativeDirection = RIGHT
+                      wantedCubeNumber = 2
+                    }
+                    6 -> {
+                      // going from 6 -> 5
+                      wantedX = faceFive.maxX - (faceSix.maxY - y)
+                      wantedY = faceFive.maxY
+                      wantedRelativeDirection = UP
+                      wantedCubeNumber = 5
+                    }
+                  }
+                } else {
+                  when (cubeFaceNumber) {
+                    1 -> if (wantedX > faceOne.maxX) wantedCubeNumber = 2
+                    4 -> if (wantedX > faceFour.maxX) wantedCubeNumber = 5
+                  }
+                }
+                if (caves[wantedY][wantedX] == EMPTY) {
+                  x = wantedX
+                  y = wantedY
+                  relativeDirection = wantedRelativeDirection
+                  cubeFaceNumber = wantedCubeNumber
+                }
+              }
+              UP -> {
+                var wantedX = x
+                var wantedY = y - 1
+                var wantedRelativeDirection = relativeDirection
+                var wantedCubeNumber = cubeFaceNumber
+                if (wantedY < 0 || caves[wantedY][x] == VOID) {
+                  when (cubeFaceNumber) {
+                    1 -> {
+                      // going from 1 -> 6
+                      wantedX = faceSix.minX
+                      wantedY = faceSix.minY + (faceOne.maxX - x)
+                      wantedRelativeDirection = RIGHT
+                      wantedCubeNumber = 6
+                    }
+                    2 -> {
+                      // going from 2 -> 6
+                      wantedX = faceSix.maxX - (faceTwo.maxX - x)
+                      wantedY = faceSix.maxY
+                      wantedRelativeDirection = UP
+                      wantedCubeNumber = 6
+                    }
+                    3 -> {
+                      // going from 3 -> 1
+                      wantedCubeNumber = 1
+                    }
+                    4 -> {
+                      // going from 4 -> 3
+                      wantedX = faceThree.minX
+                      wantedY = faceThree.maxY - (faceFour.maxX - x)
+                      wantedRelativeDirection = RIGHT
+                      wantedCubeNumber = 3
+                    }
+                    5 -> {
+                      // going from 5 -> 3
+                      wantedCubeNumber = 3
+                    }
+                    6 -> {
+                      // going from 6 -> 4
+                      wantedCubeNumber = 4
+                    }
+                  }
+                } else {
+                  when (cubeFaceNumber) {
+                    3 -> if (wantedY < faceThree.minY) wantedCubeNumber = 1
+                    5 -> if (wantedY < faceFive.minY) wantedCubeNumber = 3
+                    6 -> if (wantedY < faceSix.minY) wantedCubeNumber = 4
+                  }
+                }
+                if (caves[wantedY][wantedX] == EMPTY) {
+                  x = wantedX
+                  y = wantedY
+                  relativeDirection = wantedRelativeDirection
+                  cubeFaceNumber = wantedCubeNumber
+                }
+              }
+              DOWN -> {
+                var wantedX = x
+                var wantedY = y + 1
+                var wantedRelativeDirection = relativeDirection
+                var wantedCubeNumber = cubeFaceNumber
+                if (wantedY >= caves.size || caves[wantedY][x] == VOID) {
+                  when (cubeFaceNumber) {
+                    1 -> {
+                      // going from 1 -> 3
+                      wantedCubeNumber = 3
+                    }
+                    2 -> {
+                      // going from 2 -> 3
+                      wantedX = faceThree.maxX - (faceTwo.maxX - x)
+                      wantedY = faceThree.maxY
+                      wantedRelativeDirection = LEFT
+                      wantedCubeNumber = 3
+                    }
+                    3 -> {
+                      // going from 3 -> 5
+                      wantedCubeNumber = 5
+                    }
+                    4 -> {
+                      // going from 4 -> 6
+                      wantedCubeNumber = 6
+                    }
+                    5 -> {
+                      // going from 5 -> 6
+                      wantedX = faceSix.maxX
+                      wantedY = faceSix.maxY - (faceFive.maxX - x)
+                      wantedRelativeDirection = LEFT
+                      wantedCubeNumber = 6
+                    }
+                    6 -> {
+                      // going from 6 -> 2
+                      wantedX = faceTwo.maxX - (faceSix.maxX - x)
+                      wantedY = faceTwo.minY
+                      wantedRelativeDirection = DOWN
+                      wantedCubeNumber = 2
+                    }
+                  }
+                } else {
+                  when (cubeFaceNumber) {
+                    1 -> if (wantedY > faceOne.maxY) wantedCubeNumber = 1
+                    3 -> if (wantedY > faceThree.maxY) wantedCubeNumber = 5
+                    4 -> if (wantedY > faceFour.maxY) wantedCubeNumber = 6
+                  }
+                }
+                if (caves[wantedY][wantedX] == EMPTY) {
+                  x = wantedX
+                  y = wantedY
+                  relativeDirection = wantedRelativeDirection
+                  cubeFaceNumber = wantedCubeNumber
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // DEV NOTE: index things start at (1, 1)
+    (1000 * (y + 1)) +
+      (4 * (x + 1)) +
+      direction.score
+  }
 
   enum class Area(private val representation: String) {
     WALL("#"), EMPTY("."), VOID(" ");
@@ -163,5 +443,14 @@ class Day22 @Inject constructor(
 
     abstract fun turnLeft(): Direction
     abstract fun turnRight(): Direction
+  }
+
+  data class CubeFace(val minX: Int, val maxX: Int, val minY: Int, val maxY: Int) {
+//    class One(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
+//    class Two(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
+//    class Three(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
+//    class Four(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
+//    class Five(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
+//    class Six(minX: Int, maxX: Int, minY: Int, maxY: Int) : CubeFace(minX, maxX, minY, maxY)
   }
 }
