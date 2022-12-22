@@ -41,22 +41,25 @@ class Day22 @Inject constructor(
 
     var y = 0
     var x = caves[y].indexOf(EMPTY)
-    var dir = RIGHT
+    var direction = RIGHT
 
     movements.forEach { movement ->
       when (movement) {
-        LeftTurn -> dir = dir.turnLeft()
-        RightTurn -> dir = dir.turnRight()
+        LeftTurn -> direction = direction.turnLeft()
+        RightTurn -> direction = direction.turnRight()
         is Walk -> {
           repeat(movement.steps) {
-            val dx = dir.dX(x)
-            val dy = dir.dY(y)
-            val (newX: Int, newY: Int) = when (dir) {
-              LEFT -> if (dx < 0 || caves[dy][dx] == VOID) { xRanges[dy]!!.second to dy } else { dx to dy }
-              RIGHT -> if (dx >= caves[dy].size || caves[dy][dx] == VOID) { xRanges[dy]!!.first to y } else { dx to dy }
-              UP -> if (dy < 0 || caves[dy][dx] == VOID) { x to yRanges[dx]!!.second } else { dx to dy }
-              DOWN -> if (dy >= caves.size || caves[dy][dx] == VOID) { x to yRanges[dx]!!.first } else { dx to dy }
-            }
+            val dx = direction.dX(x)
+            val dy = direction.dY(y)
+            val isVoid by lazy { caves[dy][dx] == VOID }
+
+            val (newX, newY) = when (direction) {
+              LEFT  -> (xRanges[dy]!!.second to dy).takeIf { dx < 0               || isVoid }
+              RIGHT -> (xRanges[dy]!!.first  to dy).takeIf { dx >= caves[dy].size || isVoid }
+              UP    -> (dx to yRanges[dx]!!.second).takeIf { dy < 0               || isVoid }
+              DOWN  -> (dx to yRanges[dx]!!.first ).takeIf { dy >= caves.size     || isVoid }
+            } ?: (dx to dy)
+
             if (caves[newY][newX] == EMPTY) {
               x = newX
               y = newY
@@ -66,7 +69,7 @@ class Day22 @Inject constructor(
       }
     }
 
-    findPassword(x, y, dir)
+    findPassword(x, y, direction)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
