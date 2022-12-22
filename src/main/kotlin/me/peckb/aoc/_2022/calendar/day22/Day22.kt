@@ -87,10 +87,10 @@ class Day22 @Inject constructor(
         is Walk -> {
           repeat(movement.steps) {
             val transition: FaceTransition = when (direction) {
-              LEFT -> moveLeft(caves, x, y, direction, cubeFace)
+              LEFT  -> moveLeft( caves, x, y, direction, cubeFace)
               RIGHT -> moveRight(caves, x, y, direction, cubeFace)
-              UP -> moveUp(caves, x, y, direction, cubeFace)
-              DOWN -> moveDown(caves, x, y, direction, cubeFace)
+              UP    -> moveUp(   caves, x, y, direction, cubeFace)
+              DOWN  -> moveDown( caves, x, y, direction, cubeFace)
             }
             if (caves[transition.newY][transition.newX] == EMPTY) {
               x = transition.newX
@@ -110,14 +110,14 @@ class Day22 @Inject constructor(
     var transition = FaceTransition(x - 1, y, direction, cubeFace)
     if (transition.newX < 0 || caves[transition.newY][transition.newX] == VOID) {
       when (cubeFace) {
-        FACE_ONE -> transition = leftToRight(y, cubeFace, FACE_FOUR)
-        FACE_THREE -> transition = leftToDown(y, cubeFace, FACE_FOUR)
-        FACE_FOUR -> transition = leftToRight(y, cubeFace, FACE_ONE)
-        FACE_SIX -> transition = leftToDown(y, cubeFace, FACE_ONE)
+        FACE_ONE   -> transition = leftToRight(y, cubeFace, FACE_FOUR)
+        FACE_THREE -> transition = leftToDown( y, cubeFace, FACE_FOUR)
+        FACE_FOUR  -> transition = leftToRight(y, cubeFace, FACE_ONE)
+        FACE_SIX   -> transition = leftToDown( y, cubeFace, FACE_ONE)
       }
     } else {
       when (cubeFace) {
-        FACE_TWO -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_ONE
+        FACE_TWO  -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_ONE
         FACE_FIVE -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_FOUR
       }
     }
@@ -128,14 +128,14 @@ class Day22 @Inject constructor(
     var transition = FaceTransition(x + 1, y, direction, cubeFace)
     if (transition.newX >= caves[transition.newY].size || caves[transition.newY][transition.newX] == VOID) {
       when (cubeFace) {
-        FACE_TWO -> transition = rightToLeft(y, cubeFace, FACE_FIVE)
-        FACE_THREE -> transition = rightToUp(y, cubeFace, FACE_TWO)
-        FACE_FIVE -> transition = rightToLeft(y, cubeFace, FACE_TWO)
-        FACE_SIX -> transition = rightToUp(y, cubeFace, FACE_FIVE)
+        FACE_TWO   -> transition = rightToLeft(y, cubeFace, FACE_FIVE)
+        FACE_THREE -> transition = rightToUp(  y, cubeFace, FACE_TWO)
+        FACE_FIVE  -> transition = rightToLeft(y, cubeFace, FACE_TWO)
+        FACE_SIX   -> transition = rightToUp(  y, cubeFace, FACE_FIVE)
       }
     } else {
       when (cubeFace) {
-        FACE_ONE -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_TWO
+        FACE_ONE  -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_TWO
         FACE_FOUR -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_FIVE
       }
     }
@@ -146,15 +146,15 @@ class Day22 @Inject constructor(
     var transition = FaceTransition(x, y - 1, direction, cubeFace)
     if (transition.newY < 0 || caves[transition.newY][transition.newX] == VOID) {
       when (cubeFace) {
-        FACE_ONE -> transition = upToRight(x, cubeFace, FACE_SIX)
-        FACE_TWO -> transition = upToUp(x, cubeFace, FACE_SIX)
+        FACE_ONE  -> transition = upToRight(x, cubeFace, FACE_SIX)
+        FACE_TWO  -> transition = upToUp(x, cubeFace, FACE_SIX)
         FACE_FOUR -> transition = upToRight(x, cubeFace, FACE_THREE)
       }
     } else {
       when (cubeFace) {
         FACE_THREE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_ONE
-        FACE_FIVE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_THREE
-        FACE_SIX -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_FOUR
+        FACE_FIVE  -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_THREE
+        FACE_SIX   -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_FOUR
       }
     }
     return transition
@@ -164,15 +164,15 @@ class Day22 @Inject constructor(
     var transition = FaceTransition(x, y + 1, direction, cubeFace)
     if (transition.newY >= caves.size || caves[transition.newY][transition.newX] == VOID) {
       when (cubeFace) {
-        FACE_TWO -> transition = downToLeft(x, cubeFace, FACE_THREE)
+        FACE_TWO  -> transition = downToLeft(x, cubeFace, FACE_THREE)
         FACE_FIVE -> transition = downToLeft(x, cubeFace, FACE_SIX)
-        FACE_SIX -> transition = downToDown(x, cubeFace, FACE_TWO)
+        FACE_SIX  -> transition = downToDown(x, cubeFace, FACE_TWO)
       }
     } else {
       when (cubeFace) {
-        FACE_ONE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_THREE
+        FACE_ONE   -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_THREE
         FACE_THREE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_FIVE
-        FACE_FOUR -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_SIX
+        FACE_FOUR  -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_SIX
       }
     }
     return transition
