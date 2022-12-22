@@ -29,43 +29,33 @@ class Day22 @Inject constructor(
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val (caves, movements) = loadArea(input)
 
+    val xRanges = mutableMapOf<Int, Pair<Int, Int>>()
+    caves.indices.forEach { y ->
+      xRanges[y] = caves[y].indexOfFirst { it != VOID } to caves[y].indexOfLast { it != VOID }
+    }
+
+    val yRanges = mutableMapOf<Int, Pair<Int, Int>>()
+    caves[0].indices.forEach { x ->
+      yRanges[x] = caves.indices.first { caves[it][x] != VOID } to caves.indices.last { caves[it][x] != VOID }
+    }
+
     var y = 0
     var x = caves[y].indexOf(EMPTY)
-    var direction = RIGHT
+    var dir = RIGHT
 
     movements.forEach { movement ->
       when (movement) {
-        LeftTurn -> direction = direction.turnLeft()
-        RightTurn -> direction = direction.turnRight()
+        LeftTurn -> dir = dir.turnLeft()
+        RightTurn -> dir = dir.turnRight()
         is Walk -> {
           repeat(movement.steps) {
-            var newX = x
-            var newY = y
-            when (direction) {
-              LEFT -> {
-                val wantedX = x - 1
-                newX = if (wantedX < 0 || caves[y][wantedX] == VOID) {
-                  caves[y].indexOfLast { it != VOID }
-                } else { wantedX }
-              }
-              RIGHT -> {
-                val wantedX = x + 1
-                newX = if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
-                  caves[y].indexOfFirst { it != VOID }
-                } else { wantedX }
-              }
-              UP -> {
-                val wantedY = y - 1
-                newY = if (wantedY < 0 || caves[wantedY][x] == VOID) {
-                  (caves.size - 1 downTo 1).first { caves[it][x] != VOID }
-                } else { wantedY }
-              }
-              DOWN -> {
-                val wantedY = y + 1
-                newY = if (wantedY >= caves.size || caves[wantedY][x] == VOID) {
-                  (0 until caves.size - 1).first { caves[it][x] != VOID }
-                } else { wantedY }
-              }
+            val dx = dir.dX(x)
+            val dy = dir.dY(y)
+            val (newX: Int, newY: Int) = when (dir) {
+              LEFT -> if (dx < 0 || caves[dy][dx] == VOID) { xRanges[dy]!!.second to dy } else { dx to dy }
+              RIGHT -> if (dx >= caves[dy].size || caves[dy][dx] == VOID) { xRanges[dy]!!.first to y } else { dx to dy }
+              UP -> if (dy < 0 || caves[dy][dx] == VOID) { x to yRanges[dx]!!.second } else { dx to dy }
+              DOWN -> if (dy >= caves.size || caves[dy][dx] == VOID) { x to yRanges[dx]!!.first } else { dx to dy }
             }
             if (caves[newY][newX] == EMPTY) {
               x = newX
@@ -76,7 +66,7 @@ class Day22 @Inject constructor(
       }
     }
 
-    findPassword(x, y, direction)
+    findPassword(x, y, dir)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
