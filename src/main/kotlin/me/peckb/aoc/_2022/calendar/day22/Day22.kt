@@ -121,49 +121,26 @@ class Day22 @Inject constructor(
               }
 
               UP -> {
-                var wantedX = x
-                var wantedY = y - 1
-                var wantedRelativeDirection = direction
-                var wantedCubeNumber = cubeFace
-                if (wantedY < 0 || caves[wantedY][wantedX] == VOID) {
+                var transition = FaceTransition(x, y - 1, direction, cubeFace)
+                if (transition.newY < 0 || caves[transition.newY][transition.newX] == VOID) {
                   when (cubeFace) {
-                    FACE_ONE -> {
-                      // going from 1 -> 6
-                      wantedX = FACE_SIX.minX
-                      wantedY = FACE_SIX.minY + (x - FACE_ONE.minX)
-                      wantedRelativeDirection = RIGHT
-                      wantedCubeNumber = FACE_SIX
-                    }
-
-                    FACE_TWO -> {
-                      // going from 2 -> 6
-                      wantedX = FACE_SIX.minX + (x - FACE_TWO.minX)
-                      wantedY = FACE_SIX.maxY
-                      wantedRelativeDirection = UP
-                      wantedCubeNumber = FACE_SIX
-                    }
-
-                    FACE_FOUR -> {
-                      // going from 4 -> 3
-                      wantedX = FACE_THREE.minX
-                      wantedY = FACE_THREE.minY + (x - FACE_FOUR.minX)
-                      wantedRelativeDirection = RIGHT
-                      wantedCubeNumber = FACE_THREE
-                    }
+                    FACE_ONE -> transition = upToRight(x, cubeFace, FACE_SIX)
+                    FACE_TWO -> transition = upToUp(x, cubeFace, FACE_SIX)
+                    FACE_FOUR -> transition = upToRight(x, cubeFace, FACE_THREE)
                   }
                 } else {
                   when (cubeFace) {
-                    FACE_THREE -> if (wantedY < FACE_THREE.minY) wantedCubeNumber = FACE_ONE
-                    FACE_FIVE -> if (wantedY < FACE_FIVE.minY) wantedCubeNumber = FACE_THREE
-                    FACE_SIX -> if (wantedY < FACE_SIX.minY) wantedCubeNumber = FACE_FOUR
+                    FACE_THREE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_ONE
+                    FACE_FIVE -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_THREE
+                    FACE_SIX -> if (transition.newY < cubeFace.minY) transition.newFace = FACE_FOUR
                   }
                 }
                 // TODO: move this to a common location
-                if (caves[wantedY][wantedX] == EMPTY) {
-                  x = wantedX
-                  y = wantedY
-                  direction = wantedRelativeDirection
-                  cubeFace = wantedCubeNumber
+                if (caves[transition.newY][transition.newX] == EMPTY) {
+                  x = transition.newX
+                  y = transition.newY
+                  direction = transition.newDirection
+                  cubeFace = transition.newFace
                 }
               }
 
@@ -292,6 +269,22 @@ class Day22 @Inject constructor(
 
   private fun rightToUp(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
     val newX = destination.minX + (y - source.minY)
+    val newY = destination.maxY
+    val newDirection = UP
+
+    return FaceTransition(newX, newY, newDirection, destination)
+  }
+
+  private fun upToRight(x: Int, source: CubeFace, destination: CubeFace): FaceTransition {
+    val newX = destination.minX
+    val newY = destination.minY + (x - source.minX)
+    val newDirection = RIGHT
+
+    return FaceTransition(newX, newY, newDirection, destination)
+  }
+
+  private fun upToUp(x: Int, source: CubeFace, destination: CubeFace): FaceTransition {
+    val newX = destination.minX + (x - source.minX)
     val newY = destination.maxY
     val newDirection = UP
 
