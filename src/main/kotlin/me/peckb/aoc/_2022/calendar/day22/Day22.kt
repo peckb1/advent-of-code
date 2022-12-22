@@ -39,27 +39,37 @@ class Day22 @Inject constructor(
         RightTurn -> direction = direction.turnRight()
         is Walk -> {
           repeat(movement.steps) {
+            var newX = x
+            var newY = y
             when (direction) {
               LEFT -> {
-                var wantedX = x - 1
-                if (wantedX < 0 || caves[y][wantedX] == VOID) wantedX = caves[y].indexOfLast { it != VOID }
-                if (caves[y][wantedX] == EMPTY) x = wantedX
+                val wantedX = x - 1
+                newX = if (wantedX < 0 || caves[y][wantedX] == VOID) {
+                  caves[y].indexOfLast { it != VOID }
+                } else { wantedX }
               }
               RIGHT -> {
-                var wantedX = x + 1
-                if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) wantedX = caves[y].indexOfFirst { it != VOID }
-                if (caves[y][wantedX] == EMPTY) x = wantedX
+                val wantedX = x + 1
+                newX = if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
+                  caves[y].indexOfFirst { it != VOID }
+                } else { wantedX }
               }
               UP -> {
-                var wantedY = y - 1
-                if (wantedY < 0 || caves[wantedY][x] == VOID) wantedY = (caves.size - 1 downTo 1).first { caves[it][x] != VOID }
-                if (caves[wantedY][x] == EMPTY) y = wantedY
+                val wantedY = y - 1
+                newY = if (wantedY < 0 || caves[wantedY][x] == VOID) {
+                  (caves.size - 1 downTo 1).first { caves[it][x] != VOID }
+                } else { wantedY }
               }
               DOWN -> {
-                var wantedY = y + 1
-                if (wantedY >= caves.size || caves[wantedY][x] == VOID) wantedY = (0 until caves.size - 1).first { caves[it][x] != VOID }
-                if (caves[wantedY][x] == EMPTY) y = wantedY
+                val wantedY = y + 1
+                newY = if (wantedY >= caves.size || caves[wantedY][x] == VOID) {
+                  (0 until caves.size - 1).first { caves[it][x] != VOID }
+                } else { wantedY }
               }
+            }
+            if (caves[newY][newX] == EMPTY) {
+              x = newX
+              y = newY
             }
           }
         }
