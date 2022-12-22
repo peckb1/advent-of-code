@@ -1,11 +1,8 @@
 package me.peckb.aoc._2022.calendar.day22
 
-import me.peckb.aoc._2022.calendar.day22.Day22.Area.EMPTY
-import me.peckb.aoc._2022.calendar.day22.Day22.Area.WALL
-import me.peckb.aoc._2022.calendar.day22.Day22.Area.VOID
+import me.peckb.aoc._2022.calendar.day22.Day22.Area.*
 import me.peckb.aoc._2022.calendar.day22.Day22.Direction.*
-import me.peckb.aoc._2022.calendar.day22.Day22.Movement.LeftTurn
-import me.peckb.aoc._2022.calendar.day22.Day22.Movement.RightTurn
+import me.peckb.aoc._2022.calendar.day22.Day22.Movement.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -25,7 +22,7 @@ class Day22 @Inject constructor(
       when (movement) {
         LeftTurn -> direction = direction.turnLeft()
         RightTurn -> direction = direction.turnRight()
-        is Movement.Walk -> {
+        is Walk -> {
           repeat(movement.steps) {
             when (direction) {
               LEFT -> {
@@ -63,41 +60,34 @@ class Day22 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     val (caves, movements) = loadArea(input)
 
-    val faceOne = CubeFace(50, 99, 0, 49)
-    val faceTwo = CubeFace(100, 149, 0, 49)
-    val faceThree = CubeFace(50, 99, 50, 99)
-    val faceFour = CubeFace(0, 49, 100, 149)
-    val faceFive = CubeFace(50, 99, 100, 149)
-    val faceSix = CubeFace(0, 49, 150, 199)
-
     var y = 0
     var x = caves[y].indexOf(EMPTY)
     var direction = RIGHT
-    var cubeFace = faceOne
+    var cubeFace = FACE_ONE
 
     movements.forEach { movement ->
       when (movement) {
         LeftTurn -> direction = direction.turnLeft()
         RightTurn -> direction = direction.turnRight()
-
-        is Movement.Walk -> {
+        is Walk -> {
           repeat(movement.steps) {
             when (direction) {
               LEFT -> {
                 var transition = FaceTransition(x - 1, y, direction, cubeFace)
                 if (transition.newX < 0 || caves[transition.newY][transition.newX] == VOID) {
                   when (cubeFace) {
-                    faceOne -> transition = leftToRight(y, cubeFace, faceFour)
-                    faceThree -> transition = leftToDown(y, cubeFace, faceFour)
-                    faceFour -> transition = leftToRight(y, cubeFace, faceOne)
-                    faceSix -> transition = leftToDown(y, faceSix, faceOne)
+                    FACE_ONE -> transition = leftToRight(y, cubeFace, FACE_FOUR)
+                    FACE_THREE -> transition = leftToDown(y, cubeFace, FACE_FOUR)
+                    FACE_FOUR -> transition = leftToRight(y, cubeFace, FACE_ONE)
+                    FACE_SIX -> transition = leftToDown(y, cubeFace, FACE_ONE)
                   }
                 } else {
                   when (cubeFace) {
-                    faceTwo -> if (transition.newX < cubeFace.minX) transition = transition.copy(newFace = faceOne)
-                    faceFive -> if (transition.newX < cubeFace.minX) transition = transition.copy(newFace = faceFour)
+                    FACE_TWO -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_ONE
+                    FACE_FIVE -> if (transition.newX < cubeFace.minX) transition.newFace = FACE_FOUR
                   }
                 }
+                // TODO: move this to a common location
                 if (caves[transition.newY][transition.newX] == EMPTY) {
                   x = transition.newX
                   y = transition.newY
@@ -107,55 +97,26 @@ class Day22 @Inject constructor(
               }
 
               RIGHT -> {
-                var wantedX = x + 1
-                var wantedY = y
-                var wantedRelativeDirection = direction
-                var wantedCubeNumber = cubeFace
-                if (wantedX >= caves[wantedY].size || caves[wantedY][wantedX] == VOID) {
+                var transition = FaceTransition(x + 1, y, direction, cubeFace)
+                if (transition.newX >= caves[transition.newY].size || caves[transition.newY][transition.newX] == VOID) {
                   when (cubeFace) {
-                    faceTwo -> {
-                      // going from 2 -> 5
-                      wantedX = faceFive.maxX
-                      wantedY = faceFive.maxY - (y - faceTwo.minY)
-                      wantedRelativeDirection = LEFT
-                      wantedCubeNumber = faceFive
-                    }
-
-                    faceThree -> {
-                      // going from 3 -> 2
-                      wantedX = faceTwo.minX + (y - faceThree.minY)
-                      wantedY = faceTwo.maxY
-                      wantedRelativeDirection = UP
-                      wantedCubeNumber = faceTwo
-                    }
-
-                    faceFive -> {
-                      // going from 5 -> 2
-                      wantedX = faceTwo.maxX
-                      wantedY = faceTwo.maxY - (y - faceFive.minY)
-                      wantedRelativeDirection = LEFT
-                      wantedCubeNumber = faceTwo
-                    }
-
-                    faceSix -> {
-                      // going from 6 -> 5
-                      wantedX = faceFive.minX + (y - faceSix.minY)
-                      wantedY = faceFive.maxY
-                      wantedRelativeDirection = UP
-                      wantedCubeNumber = faceFive
-                    }
+                    FACE_TWO -> transition = rightToLeft(y, cubeFace, FACE_FIVE)
+                    FACE_THREE -> transition = rightToUp(y, cubeFace, FACE_TWO)
+                    FACE_FIVE -> transition = rightToLeft(y, cubeFace, FACE_TWO)
+                    FACE_SIX -> transition = rightToUp(y, cubeFace, FACE_FIVE)
                   }
                 } else {
                   when (cubeFace) {
-                    faceOne -> if (wantedX > faceOne.maxX) wantedCubeNumber = faceTwo
-                    faceFour -> if (wantedX > faceFour.maxX) wantedCubeNumber = faceFive
+                    FACE_ONE -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_TWO
+                    FACE_FOUR -> if (transition.newX > cubeFace.maxX) transition.newFace = FACE_FIVE
                   }
                 }
-                if (caves[wantedY][wantedX] == EMPTY) {
-                  x = wantedX
-                  y = wantedY
-                  direction = wantedRelativeDirection
-                  cubeFace = wantedCubeNumber
+                // TODO: move this to a common location
+                if (caves[transition.newY][transition.newX] == EMPTY) {
+                  x = transition.newX
+                  y = transition.newY
+                  direction = transition.newDirection
+                  cubeFace = transition.newFace
                 }
               }
 
@@ -166,37 +127,38 @@ class Day22 @Inject constructor(
                 var wantedCubeNumber = cubeFace
                 if (wantedY < 0 || caves[wantedY][wantedX] == VOID) {
                   when (cubeFace) {
-                    faceOne -> {
+                    FACE_ONE -> {
                       // going from 1 -> 6
-                      wantedX = faceSix.minX
-                      wantedY = faceSix.minY + (x - faceOne.minX)
+                      wantedX = FACE_SIX.minX
+                      wantedY = FACE_SIX.minY + (x - FACE_ONE.minX)
                       wantedRelativeDirection = RIGHT
-                      wantedCubeNumber = faceSix
+                      wantedCubeNumber = FACE_SIX
                     }
 
-                    faceTwo -> {
+                    FACE_TWO -> {
                       // going from 2 -> 6
-                      wantedX = faceSix.minX + (x - faceTwo.minX)
-                      wantedY = faceSix.maxY
+                      wantedX = FACE_SIX.minX + (x - FACE_TWO.minX)
+                      wantedY = FACE_SIX.maxY
                       wantedRelativeDirection = UP
-                      wantedCubeNumber = faceSix
+                      wantedCubeNumber = FACE_SIX
                     }
 
-                    faceFour -> {
+                    FACE_FOUR -> {
                       // going from 4 -> 3
-                      wantedX = faceThree.minX
-                      wantedY = faceThree.minY + (x - faceFour.minX)
+                      wantedX = FACE_THREE.minX
+                      wantedY = FACE_THREE.minY + (x - FACE_FOUR.minX)
                       wantedRelativeDirection = RIGHT
-                      wantedCubeNumber = faceThree
+                      wantedCubeNumber = FACE_THREE
                     }
                   }
                 } else {
                   when (cubeFace) {
-                    faceThree -> if (wantedY < faceThree.minY) wantedCubeNumber = faceOne
-                    faceFive -> if (wantedY < faceFive.minY) wantedCubeNumber = faceThree
-                    faceSix -> if (wantedY < faceSix.minY) wantedCubeNumber = faceFour
+                    FACE_THREE -> if (wantedY < FACE_THREE.minY) wantedCubeNumber = FACE_ONE
+                    FACE_FIVE -> if (wantedY < FACE_FIVE.minY) wantedCubeNumber = FACE_THREE
+                    FACE_SIX -> if (wantedY < FACE_SIX.minY) wantedCubeNumber = FACE_FOUR
                   }
                 }
+                // TODO: move this to a common location
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
                   y = wantedY
@@ -212,37 +174,38 @@ class Day22 @Inject constructor(
                 var wantedCubeNumber = cubeFace
                 if (wantedY >= caves.size || caves[wantedY][wantedX] == VOID) {
                   when (cubeFace) {
-                    faceTwo -> {
+                    FACE_TWO -> {
                       // going from 2 -> 3
-                      wantedX = faceThree.maxX
-                      wantedY = faceThree.minY + (x - faceTwo.minX)
+                      wantedX = FACE_THREE.maxX
+                      wantedY = FACE_THREE.minY + (x - FACE_TWO.minX)
                       wantedRelativeDirection = LEFT
-                      wantedCubeNumber = faceThree
+                      wantedCubeNumber = FACE_THREE
                     }
 
-                    faceFive -> {
+                    FACE_FIVE -> {
                       // going from 5 -> 6
-                      wantedX = faceSix.maxX
-                      wantedY = faceSix.minY + (x - faceFive.minX)
+                      wantedX = FACE_SIX.maxX
+                      wantedY = FACE_SIX.minY + (x - FACE_FIVE.minX)
                       wantedRelativeDirection = LEFT
-                      wantedCubeNumber = faceSix
+                      wantedCubeNumber = FACE_SIX
                     }
 
-                    faceSix -> {
+                    FACE_SIX -> {
                       // going from 6 -> 2
-                      wantedX = faceTwo.minX + (x - faceSix.minX)
-                      wantedY = faceTwo.minY
+                      wantedX = FACE_TWO.minX + (x - FACE_SIX.minX)
+                      wantedY = FACE_TWO.minY
                       wantedRelativeDirection = DOWN
-                      wantedCubeNumber = faceTwo
+                      wantedCubeNumber = FACE_TWO
                     }
                   }
                 } else {
                   when (cubeFace) {
-                    faceOne -> if (wantedY > faceOne.maxY) wantedCubeNumber = faceThree
-                    faceThree -> if (wantedY > faceThree.maxY) wantedCubeNumber = faceFive
-                    faceFour -> if (wantedY > faceFour.maxY) wantedCubeNumber = faceSix
+                    FACE_ONE -> if (wantedY > FACE_ONE.maxY) wantedCubeNumber = FACE_THREE
+                    FACE_THREE -> if (wantedY > FACE_THREE.maxY) wantedCubeNumber = FACE_FIVE
+                    FACE_FOUR -> if (wantedY > FACE_FOUR.maxY) wantedCubeNumber = FACE_SIX
                   }
                 }
+                // TODO: move this to a common location
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
                   y = wantedY
@@ -285,7 +248,7 @@ class Day22 @Inject constructor(
         var currentIndex = 0
         var nextTurn = line.drop(currentIndex).indexOfFirst { it == 'L' || it == 'R' }
         while (nextTurn != -1) {
-          movements.add(Movement.Walk(line.substring(currentIndex, nextTurn).toInt()))
+          movements.add(Walk(line.substring(currentIndex, nextTurn).toInt()))
           when (line[nextTurn]) {
             'L' -> movements.add(LeftTurn)
             'R' -> movements.add(RightTurn)
@@ -296,7 +259,7 @@ class Day22 @Inject constructor(
             if (it != -1) it + currentIndex else it
           }
         }
-        movements.add(Movement.Walk(line.substring(currentIndex).toInt()))
+        movements.add(Walk(line.substring(currentIndex).toInt()))
       }
     }
 
@@ -319,9 +282,25 @@ class Day22 @Inject constructor(
     return FaceTransition(newX, newY, newDirection, destination)
   }
 
+  private fun rightToLeft(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
+    val newX = destination.maxX
+    val newY = destination.maxY - (y - source.minY)
+    val newDirection = LEFT
+
+    return FaceTransition(newX, newY, newDirection, destination)
+  }
+
+  private fun rightToUp(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
+    val newX = destination.minX + (y - source.minY)
+    val newY = destination.maxY
+    val newDirection = UP
+
+    return FaceTransition(newX, newY, newDirection, destination)
+  }
+
   private fun findPassword(x: Int, y: Int, direction: Direction) = (1000 * (y + 1)) + (4 * (x + 1)) + direction.score
 
-  data class FaceTransition(val newX: Int, val newY: Int, val newDirection: Direction, val newFace: CubeFace)
+  data class FaceTransition(val newX: Int, val newY: Int, val newDirection: Direction, var newFace: CubeFace)
 
   enum class Area { WALL, EMPTY, VOID }
 
@@ -354,4 +333,13 @@ class Day22 @Inject constructor(
   }
 
   data class CubeFace(val minX: Int, val maxX: Int, val minY: Int, val maxY: Int)
+
+  companion object {
+    private val FACE_ONE = CubeFace(50, 99, 0, 49)
+    private val FACE_TWO = CubeFace(100, 149, 0, 49)
+    private val FACE_THREE = CubeFace(50, 99, 50, 99)
+    private val FACE_FOUR = CubeFace(0, 49, 100, 149)
+    private val FACE_FIVE = CubeFace(50, 99, 100, 149)
+    private val FACE_SIX = CubeFace(0, 49, 150, 199)
+  }
 }
