@@ -37,6 +37,7 @@ class Day22 @Inject constructor(
                   x = wantedX
                 }
               }
+
               RIGHT -> {
                 var wantedX = x + 1
                 if (wantedX >= caves[y].size || caves[y][wantedX] == VOID) {
@@ -46,6 +47,7 @@ class Day22 @Inject constructor(
                   x = wantedX
                 }
               }
+
               UP -> {
                 var wantedY = y - 1
                 if (wantedY < 0 || caves[wantedY][x] == VOID) {
@@ -56,10 +58,10 @@ class Day22 @Inject constructor(
                   y = wantedY
                 }
               }
+
               DOWN -> {
                 var wantedY = y + 1
                 if (wantedY >= caves.size || caves[wantedY][x] == VOID) {
-                  // loop around
                   wantedY = (0 until caves.size - 1).first { caves[it][x] != VOID }
                 }
                 if (caves[wantedY][x] == EMPTY) {
@@ -72,8 +74,7 @@ class Day22 @Inject constructor(
       }
     }
 
-    // DEV NOTE: index things start at (1, 1)
-    (1000 * (y + 1)) + (4 * (x + 1)) + direction.score
+    findPassword(x, y, direction)
   }
 
   private fun loadArea(input: Sequence<String>): Pair<MutableList<MutableList<Area>>, MutableList<Movement>> {
@@ -101,7 +102,7 @@ class Day22 @Inject constructor(
       } else {
         var currentIndex = 0
         var nextTurn = line.drop(currentIndex).indexOfFirst { it == 'L' || it == 'R' }
-        while(nextTurn != -1) {
+        while (nextTurn != -1) {
           movements.add(Movement.Walk(line.substring(currentIndex, nextTurn).toInt()))
           when (line[nextTurn]) {
             'L' -> movements.add(LeftTurn)
@@ -123,13 +124,6 @@ class Day22 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     val (caves, movements) = loadArea(input)
 
-    /*
-       X 1 2
-       X 3 X
-       4 5 X
-       6 X X
-     */
-
     val faceOne = CubeFace(50, 99, 0, 49)
     val faceTwo = CubeFace(100, 149, 0, 49)
     val faceThree = CubeFace(50, 99, 50, 99)
@@ -139,8 +133,7 @@ class Day22 @Inject constructor(
 
     var y = 0
     var x = caves[y].indexOf(EMPTY)
-//    var direction = RIGHT
-    var relativeDirection = RIGHT
+    var direction = RIGHT
     var cubeFaceNumber = 1
 
     // TODO: first debug/cleanup step is to put the walk over faces data into functions taking in the two sides as input
@@ -149,104 +142,87 @@ class Day22 @Inject constructor(
 
     movements.forEach { movement ->
       when (movement) {
-        LeftTurn -> {
-//          direction = direction.turnLeft()
-          relativeDirection = relativeDirection.turnLeft()
-          println("turn left, now I face $relativeDirection")
-        }
-        RightTurn -> {
-//          direction = direction.turnRight()
-          relativeDirection = relativeDirection.turnRight()
-          println("turn right, now I face $relativeDirection")
-        }
+        LeftTurn -> direction = direction.turnLeft()
+        RightTurn -> direction = direction.turnRight()
+
         is Movement.Walk -> {
-          println("At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber about to walk ${movement.steps} steps")
           repeat(movement.steps) {
-            when (relativeDirection) {
+            when (direction) {
               LEFT -> {
                 var wantedX = x - 1
                 var wantedY = y
-                var wantedRelativeDirection = relativeDirection
-                var wantedCubeNumber = cubeFaceNumber
+                var wantedDirection = direction
+                var wantedFace = cubeFaceNumber
                 if (wantedX < 0 || caves[wantedY][wantedX] == VOID) {
-                  if (wantedX < 0) {
-                    println("Falling off the map to the left")
-                  } else {
-                    println("Falling off the left to the void")
-                  }
-
-                  // loop around
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 4
                       wantedX = faceFour.minX
                       wantedY = faceFour.maxY - (y - faceOne.minY)
-                      wantedRelativeDirection = RIGHT
-                      wantedCubeNumber = 4
+                      wantedDirection = RIGHT
+                      wantedFace = 4
                     }
+
                     2 -> {
                       // going from 2 -> 1
-                      wantedCubeNumber = 1
+                      wantedFace = 1
                     }
+
                     3 -> {
                       // going from 3 -> 4
                       wantedX = faceFour.minX + (y - faceThree.minY)
                       wantedY = faceFour.minY
-                      wantedRelativeDirection = DOWN
-                      wantedCubeNumber = 4
+                      wantedDirection = DOWN
+                      wantedFace = 4
                     }
+
                     4 -> {
                       // going from 4 -> 1
                       wantedX = faceOne.minX
                       wantedY = faceOne.maxY - (y - faceFour.minY)
-                      wantedRelativeDirection = RIGHT
-                      wantedCubeNumber = 1
+                      wantedDirection = RIGHT
+                      wantedFace = 1
                     }
+
                     5 -> {
                       // going from 5 -> 4
-                      wantedCubeNumber = 4
+                      wantedFace = 4
                     }
+
                     6 -> {
                       // going from 6 -> 1
                       wantedX = faceOne.minX + (y - faceSix.minY)
                       wantedY = faceOne.minY
-                      wantedRelativeDirection = DOWN
-                      wantedCubeNumber = 1
+                      wantedDirection = DOWN
+                      wantedFace = 1
                     }
                   }
                 } else {
                   when (cubeFaceNumber) {
-                    2 -> if (wantedX < faceTwo.minX) wantedCubeNumber = 1
-                    5 -> if (wantedX < faceFive.minX) wantedCubeNumber = 4
+                    2 -> if (wantedX < faceTwo.minX) wantedFace = 1
+                    5 -> if (wantedX < faceFive.minX) wantedFace = 4
                   }
                 }
-                if (cubeFaceNumber != wantedCubeNumber) {
-                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
-                }
-
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
                   y = wantedY
-                  relativeDirection = wantedRelativeDirection
-                  cubeFaceNumber = wantedCubeNumber
+                  direction = wantedDirection
+                  cubeFaceNumber = wantedFace
                 }
               }
+
               RIGHT -> {
                 var wantedX = x + 1
                 var wantedY = y
-                var wantedRelativeDirection = relativeDirection
+                var wantedRelativeDirection = direction
                 var wantedCubeNumber = cubeFaceNumber
                 if (wantedX >= caves[wantedY].size || caves[wantedY][wantedX] == VOID) {
-                  if (wantedX >= caves[wantedY].size) {
-                    println("Falling off the map to the right")
-                  } else {
-                    println("Falling off the right into the void")
-                  }
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 2
                       wantedCubeNumber = 2
                     }
+
                     2 -> {
                       // going from 2 -> 5
                       wantedX = faceFive.maxX
@@ -254,6 +230,7 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = LEFT
                       wantedCubeNumber = 5
                     }
+
                     3 -> {
                       // going from 3 -> 2
                       wantedX = faceTwo.minX + (y - faceThree.minY)
@@ -261,10 +238,12 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = UP
                       wantedCubeNumber = 2
                     }
+
                     4 -> {
                       // going from 4 -> 5
                       wantedCubeNumber = 5
                     }
+
                     5 -> {
                       // going from 5 -> 2
                       wantedX = faceTwo.maxX
@@ -272,6 +251,7 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = LEFT
                       wantedCubeNumber = 2
                     }
+
                     6 -> {
                       // going from 6 -> 5
                       wantedX = faceFive.minX + (y - faceSix.minY)
@@ -286,27 +266,20 @@ class Day22 @Inject constructor(
                     4 -> if (wantedX > faceFour.maxX) wantedCubeNumber = 5
                   }
                 }
-                if (cubeFaceNumber != wantedCubeNumber) {
-                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
-                }
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
                   y = wantedY
-                  relativeDirection = wantedRelativeDirection
+                  direction = wantedRelativeDirection
                   cubeFaceNumber = wantedCubeNumber
                 }
               }
+
               UP -> {
                 var wantedX = x
                 var wantedY = y - 1
-                var wantedRelativeDirection = relativeDirection
+                var wantedRelativeDirection = direction
                 var wantedCubeNumber = cubeFaceNumber
                 if (wantedY < 0 || caves[wantedY][wantedX] == VOID) {
-                  if (wantedY < 0) {
-                    println("Falling off the map to the top")
-                  } else {
-                    println("Falling off the top into the void")
-                  }
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 6
@@ -315,6 +288,7 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = RIGHT
                       wantedCubeNumber = 6
                     }
+
                     2 -> {
                       // going from 2 -> 6
                       wantedX = faceSix.minX + (x - faceTwo.minX)
@@ -322,10 +296,12 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = UP
                       wantedCubeNumber = 6
                     }
+
                     3 -> {
                       // going from 3 -> 1
                       wantedCubeNumber = 1
                     }
+
                     4 -> {
                       // going from 4 -> 3
                       wantedX = faceThree.minX
@@ -333,10 +309,12 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = RIGHT
                       wantedCubeNumber = 3
                     }
+
                     5 -> {
                       // going from 5 -> 3
                       wantedCubeNumber = 3
                     }
+
                     6 -> {
                       // going from 6 -> 4
                       wantedCubeNumber = 4
@@ -349,32 +327,26 @@ class Day22 @Inject constructor(
                     6 -> if (wantedY < faceSix.minY) wantedCubeNumber = 4
                   }
                 }
-                if (cubeFaceNumber != wantedCubeNumber) {
-                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
-                }
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
                   y = wantedY
-                  relativeDirection = wantedRelativeDirection
+                  direction = wantedRelativeDirection
                   cubeFaceNumber = wantedCubeNumber
                 }
               }
+
               DOWN -> {
                 var wantedX = x
                 var wantedY = y + 1
-                var wantedRelativeDirection = relativeDirection
+                var wantedRelativeDirection = direction
                 var wantedCubeNumber = cubeFaceNumber
                 if (wantedY >= caves.size || caves[wantedY][wantedX] == VOID) {
-                  if (wantedY >= caves.size) {
-                    println("Falling off the map to the bottom")
-                  } else {
-                    println("Falling off the bottom into the void")
-                  }
                   when (cubeFaceNumber) {
                     1 -> {
                       // going from 1 -> 3
                       wantedCubeNumber = 3
                     }
+
                     2 -> {
                       // going from 2 -> 3
                       wantedX = faceThree.maxX
@@ -382,14 +354,17 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = LEFT
                       wantedCubeNumber = 3
                     }
+
                     3 -> {
                       // going from 3 -> 5
                       wantedCubeNumber = 5
                     }
+
                     4 -> {
                       // going from 4 -> 6
                       wantedCubeNumber = 6
                     }
+
                     5 -> {
                       // going from 5 -> 6
                       wantedX = faceSix.maxX
@@ -397,6 +372,7 @@ class Day22 @Inject constructor(
                       wantedRelativeDirection = LEFT
                       wantedCubeNumber = 6
                     }
+
                     6 -> {
                       // going from 6 -> 2
                       wantedX = faceTwo.minX + (x - faceSix.minX)
@@ -412,36 +388,25 @@ class Day22 @Inject constructor(
                     4 -> if (wantedY > faceFour.maxY) wantedCubeNumber = 6
                   }
                 }
-                if (cubeFaceNumber != wantedCubeNumber) {
-                  println("I want to go from $cubeFaceNumber to $wantedCubeNumber")
-                }
                 if (caves[wantedY][wantedX] == EMPTY) {
                   x = wantedX
                   y = wantedY
-                  relativeDirection = wantedRelativeDirection
+                  direction = wantedRelativeDirection
                   cubeFaceNumber = wantedCubeNumber
                 }
               }
             }
           }
-          println("Stopped At ${x + 1}, ${y + 1} Looking $relativeDirection on $cubeFaceNumber")
         }
       }
     }
 
-    // DEV NOTE: index things start at (1, 1)
-    (1000 * (y + 1)) +
-      (4 * (x + 1)) +
-      relativeDirection.score
+    findPassword(x, y, direction)
   }
 
-  enum class Area(private val representation: String) {
-    WALL("#"), EMPTY("."), VOID(" ");
+  private fun findPassword(x: Int, y: Int, direction: Direction) = (1000 * (y + 1)) + (4 * (x + 1)) + direction.score
 
-    override fun toString(): String {
-      return representation
-    }
-  }
+  enum class Area { WALL, EMPTY, VOID }
 
   sealed class Movement {
     object LeftTurn : Movement()
