@@ -1,7 +1,22 @@
 package me.peckb.aoc._2022.calendar.day22
 
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.FACE_ONE
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.FACE_TWO
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.FACE_THREE
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.FACE_FOUR
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.FACE_FIVE
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.FACE_SIX
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.downToDown
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.downToLeft
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.leftToDown
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.leftToRight
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.rightToLeft
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.rightToUp
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.upToRight
+import me.peckb.aoc._2022.calendar.day22.CubeFace.Companion.upToUp
+import me.peckb.aoc._2022.calendar.day22.CubeFace.FaceTransition
 import me.peckb.aoc._2022.calendar.day22.Day22.Area.*
-import me.peckb.aoc._2022.calendar.day22.Day22.Direction.*
+import me.peckb.aoc._2022.calendar.day22.Direction.*
 import me.peckb.aoc._2022.calendar.day22.Day22.Movement.*
 import javax.inject.Inject
 
@@ -145,49 +160,26 @@ class Day22 @Inject constructor(
               }
 
               DOWN -> {
-                var wantedX = x
-                var wantedY = y + 1
-                var wantedRelativeDirection = direction
-                var wantedCubeNumber = cubeFace
-                if (wantedY >= caves.size || caves[wantedY][wantedX] == VOID) {
+                var transition = FaceTransition(x, y + 1, direction, cubeFace)
+                if (transition.newY >= caves.size || caves[transition.newY][transition.newX] == VOID) {
                   when (cubeFace) {
-                    FACE_TWO -> {
-                      // going from 2 -> 3
-                      wantedX = FACE_THREE.maxX
-                      wantedY = FACE_THREE.minY + (x - FACE_TWO.minX)
-                      wantedRelativeDirection = LEFT
-                      wantedCubeNumber = FACE_THREE
-                    }
-
-                    FACE_FIVE -> {
-                      // going from 5 -> 6
-                      wantedX = FACE_SIX.maxX
-                      wantedY = FACE_SIX.minY + (x - FACE_FIVE.minX)
-                      wantedRelativeDirection = LEFT
-                      wantedCubeNumber = FACE_SIX
-                    }
-
-                    FACE_SIX -> {
-                      // going from 6 -> 2
-                      wantedX = FACE_TWO.minX + (x - FACE_SIX.minX)
-                      wantedY = FACE_TWO.minY
-                      wantedRelativeDirection = DOWN
-                      wantedCubeNumber = FACE_TWO
-                    }
+                    FACE_TWO -> transition = downToLeft(x, cubeFace, FACE_THREE)
+                    FACE_FIVE -> transition = downToLeft(x, cubeFace, FACE_SIX)
+                    FACE_SIX -> transition = downToDown(x, cubeFace, FACE_TWO)
                   }
                 } else {
                   when (cubeFace) {
-                    FACE_ONE -> if (wantedY > FACE_ONE.maxY) wantedCubeNumber = FACE_THREE
-                    FACE_THREE -> if (wantedY > FACE_THREE.maxY) wantedCubeNumber = FACE_FIVE
-                    FACE_FOUR -> if (wantedY > FACE_FOUR.maxY) wantedCubeNumber = FACE_SIX
+                    FACE_ONE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_THREE
+                    FACE_THREE -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_FIVE
+                    FACE_FOUR -> if (transition.newY > cubeFace.maxY) transition.newFace = FACE_SIX
                   }
                 }
                 // TODO: move this to a common location
-                if (caves[wantedY][wantedX] == EMPTY) {
-                  x = wantedX
-                  y = wantedY
-                  direction = wantedRelativeDirection
-                  cubeFace = wantedCubeNumber
+                if (caves[transition.newY][transition.newX] == EMPTY) {
+                  x = transition.newX
+                  y = transition.newY
+                  direction = transition.newDirection
+                  cubeFace = transition.newFace
                 }
               }
             }
@@ -243,57 +235,7 @@ class Day22 @Inject constructor(
     return caves to movements
   }
 
-  private fun leftToRight(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
-    val newX = destination.minX
-    val newY = destination.maxY - (y - source.minY)
-    val newDirection = RIGHT
-
-    return FaceTransition(newX, newY, newDirection, destination)
-  }
-
-  private fun leftToDown(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
-    val newX = destination.minX + (y - source.minY)
-    val newY = destination.minY
-    val newDirection = DOWN
-
-    return FaceTransition(newX, newY, newDirection, destination)
-  }
-
-  private fun rightToLeft(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
-    val newX = destination.maxX
-    val newY = destination.maxY - (y - source.minY)
-    val newDirection = LEFT
-
-    return FaceTransition(newX, newY, newDirection, destination)
-  }
-
-  private fun rightToUp(y: Int, source: CubeFace, destination: CubeFace): FaceTransition {
-    val newX = destination.minX + (y - source.minY)
-    val newY = destination.maxY
-    val newDirection = UP
-
-    return FaceTransition(newX, newY, newDirection, destination)
-  }
-
-  private fun upToRight(x: Int, source: CubeFace, destination: CubeFace): FaceTransition {
-    val newX = destination.minX
-    val newY = destination.minY + (x - source.minX)
-    val newDirection = RIGHT
-
-    return FaceTransition(newX, newY, newDirection, destination)
-  }
-
-  private fun upToUp(x: Int, source: CubeFace, destination: CubeFace): FaceTransition {
-    val newX = destination.minX + (x - source.minX)
-    val newY = destination.maxY
-    val newDirection = UP
-
-    return FaceTransition(newX, newY, newDirection, destination)
-  }
-
   private fun findPassword(x: Int, y: Int, direction: Direction) = (1000 * (y + 1)) + (4 * (x + 1)) + direction.score
-
-  data class FaceTransition(val newX: Int, val newY: Int, val newDirection: Direction, var newFace: CubeFace)
 
   enum class Area { WALL, EMPTY, VOID }
 
@@ -301,38 +243,5 @@ class Day22 @Inject constructor(
     object LeftTurn : Movement()
     object RightTurn : Movement()
     data class Walk(val steps: Int) : Movement()
-  }
-
-  enum class Direction(val score: Int) {
-    LEFT(2) {
-      override fun turnLeft() = DOWN
-      override fun turnRight() = UP
-    },
-    RIGHT(0) {
-      override fun turnLeft() = UP
-      override fun turnRight() = DOWN
-    },
-    UP(3) {
-      override fun turnLeft() = LEFT
-      override fun turnRight() = RIGHT
-    },
-    DOWN(1) {
-      override fun turnLeft() = RIGHT
-      override fun turnRight() = LEFT
-    };
-
-    abstract fun turnLeft(): Direction
-    abstract fun turnRight(): Direction
-  }
-
-  data class CubeFace(val minX: Int, val maxX: Int, val minY: Int, val maxY: Int)
-
-  companion object {
-    private val FACE_ONE = CubeFace(50, 99, 0, 49)
-    private val FACE_TWO = CubeFace(100, 149, 0, 49)
-    private val FACE_THREE = CubeFace(50, 99, 50, 99)
-    private val FACE_FOUR = CubeFace(0, 49, 100, 149)
-    private val FACE_FIVE = CubeFace(50, 99, 100, 149)
-    private val FACE_SIX = CubeFace(0, 49, 150, 199)
   }
 }
