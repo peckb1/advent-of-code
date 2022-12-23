@@ -1,5 +1,6 @@
 package me.peckb.aoc._2022.calendar.day23
 
+import me.peckb.aoc._2022.calendar.day23.Movement.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -22,75 +23,67 @@ class Day23 @Inject constructor(
 
     input.forEachIndexed { y, line ->
       line.forEachIndexed { x, c ->
-        if (c == '#') elfLocations.add(Elf(x, y).also { it.movement = Movement.North })
+        if (c == '#') elfLocations.add(Elf(x, y).also { it.movement = North })
       }
-    }
-
-    fun round () : Boolean {
-      // first half consider positions
-      // key = new location
-      // map = elves proposing the change
-      val proposedLocations = mutableMapOf <Elf, List<Elf>>()
-
-      elfLocations.forEach loop@ { elf ->
-        val neighbor: Elf? = elf.neighbors().firstOrNull { elfLocations.contains(it) }
-        if (neighbor == null) {
-          elf.movement = elf.movement.next()
-          return@loop
-        }
-
-        val recommendedMovement: Movement? = elf.movement.movements().firstOrNull { movement ->
-          movement.missingElfRelativePositions.none { (dx, dy) ->
-            elfLocations.contains(Elf(elf.x + dx, elf.y + dy))
-          }
-        }
-
-        recommendedMovement?.also { recommended ->
-          val newLocation = when (recommended) {
-            Movement.East  -> Elf(elf.x + 1, elf.y)
-            Movement.North -> Elf(elf.x, elf.y - 1)
-            Movement.South -> Elf(elf.x, elf.y + 1)
-            Movement.West  -> Elf(elf.x - 1, elf.y)
-          }.also { it.movement = elf.movement.next()}
-
-          proposedLocations.merge(newLocation, listOf(elf)) { listA, listB ->
-            listA.plus(listB)
-          }
-        }
-
-        if (recommendedMovement == null) {
-          elf.movement = elf.movement.next()
-        }
-      }
-
-      if (proposedLocations.isEmpty()) return false
-
-      // second half each elf simultaneously move
-      // if solo move, you can move, else if shared move, don't move
-      var someoneMoved = false
-      proposedLocations.forEach { (newLocation, elvesWhoWantToMoveThere) ->
-        if (elvesWhoWantToMoveThere.size == 1) {
-          someoneMoved = true
-          elfLocations.remove(elvesWhoWantToMoveThere.first())
-          elfLocations.add(newLocation)
-        } else {
-          elvesWhoWantToMoveThere.forEach { e ->
-            e.also { it.movement = e.movement.next() }
-          }
-        }
-      }
-
-      return someoneMoved
     }
 
     var move = 0
     var someoneMoved = true
-    while(someoneMoved && move < maxRounds) {
-      someoneMoved = round()
+    while (someoneMoved && move < maxRounds) {
+      someoneMoved = round(elfLocations)
       move++
     }
 
     return emptyCounts(elfLocations) to move
+  }
+
+  private fun round(elfLocations: HashSet<Elf>): Boolean {
+    // first half consider positions
+    // key = new location
+    // map = elves proposing the change
+    val proposedLocations = mutableMapOf<Elf, MutableList<Elf>>()
+
+    elfLocations.forEach elfCheck@ { elf ->
+      if (elf.neighbors().none { elfLocations.contains(it) }) {
+        elf.movement = elf.movement.next
+        return@elfCheck
+      }
+
+      // do we have a recommended movement?
+      val recommendedMovement: Movement? = elf.movement.movements
+        .firstOrNull { movement ->
+          movement.exclusionPositions.none { (dx, dy) ->
+            elfLocations.contains(Elf(elf.x + dx, elf.y + dy))
+          }
+        }
+
+      // if we do, update the proposedLocations map
+      recommendedMovement?.also { recommended ->
+        val (newX, newY) = recommended.move(elf.x, elf.y)
+
+        proposedLocations.merge(Elf(newX, newY), mutableListOf(elf)) { a, b ->
+          a.also { it.add(b.first()) }
+        }
+      } ?: run { elf.movement = elf.movement.next }
+    }
+
+    // second half each elf simultaneously move
+    // if solo move, you can move, else if shared move, don't move
+    var someoneMoved = false
+    proposedLocations.forEach { (newLocation, elvesWhoWantToMoveThere) ->
+      if (elvesWhoWantToMoveThere.size == 1) {
+        someoneMoved = true
+        val elfWhoMoved = elvesWhoWantToMoveThere.first()
+        elfLocations.remove(elfWhoMoved)
+        elfLocations.add(newLocation.also { it.movement = elfWhoMoved.movement.next })
+      } else {
+        elvesWhoWantToMoveThere.forEach { e ->
+          e.also { it.movement = e.movement.next }
+        }
+      }
+    }
+
+    return someoneMoved
   }
 
   private fun emptyCounts(elfLocations: HashSet<Elf>): Int {
@@ -106,6 +99,8 @@ class Day23 @Inject constructor(
       maxY = max(it.y, maxY)
     }
 
+    // this could also just check the size of the box - elf counts
+    // but since I used it for pretty printing, so I'm keeping it :D
     return (minY..maxY).sumOf { y ->
       (minX..maxX).count { x ->
         !elfLocations.contains(Elf(x, y))
@@ -116,46 +111,16 @@ class Day23 @Inject constructor(
   data class Elf(val x: Int, val y: Int) {
     lateinit var movement: Movement
 
-    fun neighbors(): List<Elf> =
-      (-1..1).flatMap { dy ->
+    fun neighbors(): List<Elf> = neighborLocations.map { (dx, dy) -> Elf(x + dx, y + dy) }
+
+    companion object {
+      private val neighborLocations = (-1..1).flatMap { dy ->
         (-1..1).mapNotNull { dx ->
-          if (dx == 0 && dy == 0) null else Elf(x + dx, y + dy)
+          if (dx == 0 && dy == 0) null else (dx to dy)
         }
       }
+    }
   }
 
   data class Delta(val dx: Int, val dy: Int)
-
-  sealed class Movement(val missingElfRelativePositions: List<Delta>) {
-    abstract fun next(): Movement
-    abstract fun movements(): List<Movement>
-
-    object North : Movement(
-      listOf(Delta(-1, -1), Delta(0, -1), Delta(1, -1))
-    ) {
-      override fun next(): Movement = South
-      override fun movements() = listOf(North, South, West, East)
-    }
-
-    object South : Movement(
-      listOf(Delta(-1, 1), Delta(0, 1), Delta(1, 1))
-    ) {
-      override fun next(): Movement = West
-      override fun movements() = listOf(South, West, East, North)
-    }
-
-    object West : Movement(
-      listOf(Delta(-1, -1), Delta(-1, 0), Delta(-1, 1))
-    ) {
-      override fun next(): Movement = East
-      override fun movements() = listOf(West, East, North, South)
-    }
-
-    object East : Movement(
-      listOf(Delta(1, -1), Delta(1, 0), Delta(1, 1))
-    ) {
-      override fun next(): Movement = North
-      override fun movements() = listOf(East, North, South, West)
-    }
-  }
 }
