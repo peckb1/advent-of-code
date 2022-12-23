@@ -10,98 +10,14 @@ class Day23 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val elfLocations: HashSet<Elf> = hashSetOf()
-
-    input.forEachIndexed { y, line ->
-      line.forEachIndexed { x, c ->
-        if (c == '#') elfLocations.add(Elf(x, y).also { it.movement = Movement.North })
-      }
-    }
-
-    fun round () : Boolean {
-      // first half consider positions
-      // key = new location
-      // map = elves proposing the change
-      val proposedLocations = mutableMapOf <Elf, List<Elf>>()
-
-      elfLocations.forEach loop@ { elf ->
-//        println("I'm $elf")
-
-        val neighbor: Elf? = elf.neighbors().firstOrNull { elfLocations.contains(it) }
-        if (neighbor == null) {
-//          println("\tI had no neighbors so I propose nothing")
-          elf.movement = elf.movement.next()
-          return@loop
-        } else {
-//          println("\tI had a neighbor at $neighbor")
-        }
-
-        val recommendedMovement: Movement? = elf.movement.movements().firstOrNull { movement ->
-//          println("\tmy current movement to check is $movement")
-          movement.missingElfRelativePositions.none { (dx, dy) ->
-            elfLocations.contains(Elf(elf.x + dx, elf.y + dy)).also {
-              if (it) {
-//                println("\tElf found at delta [$dx, $dy] from me")
-              } else {
-//                println("\tElf NOT found at delta [$dx, $dy] from me")
-              }
-            }
-          }
-        }
-
-        recommendedMovement?.also { recommended ->
-          val newLocation = when (recommended) {
-            Movement.East  -> Elf(elf.x + 1, elf.y)
-            Movement.North -> Elf(elf.x, elf.y - 1)
-            Movement.South -> Elf(elf.x, elf.y + 1)
-            Movement.West  -> Elf(elf.x - 1, elf.y)
-          }.also { it.movement = elf.movement.next()}
-
-          proposedLocations.merge(newLocation, listOf(elf)) { listA, listB ->
-            listA.plus(listB)
-          }
-        }
-
-//        println("\tI propose $recommendedMovement which makes all locations proposed $proposedLocations")
-        if (recommendedMovement == null) {
-          elf.movement = elf.movement.next()
-        }
-      }
-
-      if (proposedLocations.isEmpty()) return false
-
-      // second half each elf simultaneously move
-      // if solo move, you can move, else if shared move, don't move
-      var someoneMoved = false
-      proposedLocations.forEach { (newLocation, elvesWhoWantToMoveThere) ->
-        if (elvesWhoWantToMoveThere.size == 1) {
-          someoneMoved = true
-          elfLocations.remove(elvesWhoWantToMoveThere.first())
-          elfLocations.add(newLocation)
-        } else {
-          elvesWhoWantToMoveThere.forEach { e ->
-            e.also { it.movement = e.movement.next() }
-          }
-        }
-      }
-
-      return someoneMoved
-    }
-
-    println("===== INITIAL =====")
-    printElves(elfLocations)
-    repeat(10) {
-      round()
-//      println("===== AFTER ROUND ${it + 1} =====")
-//      printElves(elfLocations)
-//      elfLocations.forEach {  e ->
-//        println("$e - ${e.movement}")
-//      }
-    }
-    printElves(elfLocations)
+    runExpansion(input, 10).first
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    runExpansion(input, Int.MAX_VALUE).second
+  }
+
+  private fun runExpansion(input: Sequence<String>, maxRounds: Int): Pair<Int, Int> {
     val elfLocations: HashSet<Elf> = hashSetOf()
 
     input.forEachIndexed { y, line ->
@@ -169,16 +85,15 @@ class Day23 @Inject constructor(
 
     var move = 0
     var someoneMoved = true
-    while(someoneMoved) {
+    while(someoneMoved && move < maxRounds) {
       someoneMoved = round()
       move++
     }
-    move
+
+    return emptyCounts(elfLocations) to move
   }
 
-  private fun printElves(elfLocations: HashSet<Elf>): Int {
-    var counter = 0
-
+  private fun emptyCounts(elfLocations: HashSet<Elf>): Int {
     var minX = Int.MAX_VALUE
     var minY = Int.MAX_VALUE
     var maxX = Int.MIN_VALUE
@@ -191,15 +106,11 @@ class Day23 @Inject constructor(
       maxY = max(it.y, maxY)
     }
 
-    (minY..maxY).forEach { y ->
-      (minX..maxX).forEach { x ->
-        if (elfLocations.contains(Elf(x, y))) print('#') else print('.').also { counter++ }
+    return (minY..maxY).sumOf { y ->
+      (minX..maxX).count { x ->
+        !elfLocations.contains(Elf(x, y))
       }
-      println()
     }
-    println()
-
-    return counter
   }
 
   data class Elf(val x: Int, val y: Int) {
