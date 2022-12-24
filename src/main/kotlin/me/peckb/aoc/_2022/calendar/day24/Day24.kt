@@ -153,14 +153,10 @@ class Day24 @Inject constructor(
   }
 
   private fun blankVersion(height: Int, width: Int): ExtractionArea {
-    return mutableListOf<MutableList<MutableList<Area>>>().also { new ->
+    return mutableListOf<List<MutableList<Area>>>().also { new ->
       repeat(height) {
         new.add(
-          mutableListOf<MutableList<Area>>().also { row ->
-            repeat(width) {
-              row.add(mutableListOf())
-            }
-          }
+          (0 until width).map { mutableListOf() }
         )
       }
     }
