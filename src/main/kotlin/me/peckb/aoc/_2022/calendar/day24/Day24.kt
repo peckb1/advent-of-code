@@ -122,43 +122,24 @@ class Day24 @Inject constructor(
 
     val newState = blankVersion(height, width)
 
+    fun updateState(area: Blizzard, stepX: Int, stepY: Int, edgeX: Int, edgeY: Int) {
+      if (this[stepY][stepX].first() is Wall) {
+        newState[edgeY][edgeX].add(area)
+      } else {
+        newState[stepY][stepX].add(area)
+      }
+    }
+
     forEachIndexed { y, currentRow ->
       currentRow.forEachIndexed { x, areas ->
         areas.forEach { area ->
           when (area) {
             is Blizzard -> {
               when (area.direction) {
-                NORTH -> {
-                  if (this[y - 1][x].first() is Wall) {
-                    newState[height - 2][x].add(area)
-                  } else {
-                    newState[y - 1][x].add(area)
-                  }
-                }
-
-                SOUTH -> {
-                  if (this[y + 1][x].first() is Wall) {
-                    newState[1][x].add(area)
-                  } else {
-                    newState[y + 1][x].add(area)
-                  }
-                }
-
-                EAST -> {
-                  if (this[y][x + 1].first() is Wall) {
-                    newState[y][1].add(area)
-                  } else {
-                    newState[y][x + 1].add(area)
-                  }
-                }
-
-                WEST -> {
-                  if (this[y][x - 1].first() is Wall) {
-                    newState[y][width - 2].add(area)
-                  } else {
-                    newState[y][x - 1].add(area)
-                  }
-                }
+                NORTH -> updateState(area, x, y - 1, x, height - 2)
+                SOUTH -> updateState(area, x, y + 1, x, 1)
+                EAST  -> updateState(area, x + 1, y, 1, y)
+                WEST  -> updateState(area, x - 1, y, width - 2, y)
               }
             }
             Wall -> newState[y][x].add(area)
