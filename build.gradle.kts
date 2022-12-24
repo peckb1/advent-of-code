@@ -52,7 +52,7 @@ tasks.test {
         events("SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
         exceptionFormat = FULL
     }
-//    finalizedBy(tasks.jacocoTestReport)
+    finalizedBy(tasks.jacocoTestReport)
     maxParallelForks = ((Runtime.getRuntime().availableProcessors() / 3.0) * 2.0).toInt()
 }
 tasks.jacocoTestReport {
