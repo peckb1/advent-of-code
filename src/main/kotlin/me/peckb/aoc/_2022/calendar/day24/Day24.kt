@@ -1,6 +1,7 @@
 package me.peckb.aoc._2022.calendar.day24
 
 import arrow.core.Tuple4
+import me.peckb.aoc._2022.calendar.day24.Day24.Area
 import me.peckb.aoc._2022.calendar.day24.Day24.Area.*
 import me.peckb.aoc._2022.calendar.day24.Day24.Direction.*
 import javax.inject.Inject
@@ -8,7 +9,7 @@ import javax.inject.Inject
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import kotlin.math.min
 
-typealias ExtractionArea = List<List<MutableList<Day24.Area>>>
+typealias ExtractionArea = List<List<MutableList<Area>>>
 
 class Day24 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -54,7 +55,7 @@ class Day24 @Inject constructor(
       line.forEach { c ->
         when (c) {
           '#' -> row.add(mutableListOf(Wall))
-          '.' -> row.add(mutableListOf(Empty))
+          '.' -> row.add(mutableListOf())
           '^' -> row.add(mutableListOf(Blizzard(NORTH)))
           'v' -> row.add(mutableListOf(Blizzard(SOUTH)))
           '>' -> row.add(mutableListOf(Blizzard(EAST)))
@@ -91,7 +92,7 @@ class Day24 @Inject constructor(
           val newX = x + dx
           val newY = y + dy
           if (newX in 0 until width && newY in 0 until height) {
-            if (extractionArea[newY][newX].size == 1 && extractionArea[newY][newX].first() is Empty) {
+            if (extractionArea[newY][newX].size == 0) {
               proposedMovements.merge(newX to newY, cost + 1) { a, b -> min(a, b) }
             }
           }
@@ -111,8 +112,8 @@ class Day24 @Inject constructor(
     return Tuple4(
       height,
       width,
-      extractionArea[0].indexOfFirst { it[0] is Empty } to 0,
-      extractionArea[height - 1].indexOfFirst { it[0] is Empty } to height - 1
+      extractionArea[0].indexOfFirst { it.isEmpty() } to 0,
+      extractionArea[height - 1].indexOfFirst { it.isEmpty() } to height - 1
     )
   }
 
@@ -123,7 +124,7 @@ class Day24 @Inject constructor(
     val newState = blankVersion(height, width)
 
     fun updateState(area: Blizzard, stepX: Int, stepY: Int, edgeX: Int, edgeY: Int) {
-      if (this[stepY][stepX].first() is Wall) {
+      if (this[stepY][stepX].firstOrNull() is Wall) {
         newState[edgeY][edgeX].add(area)
       } else {
         newState[stepY][stepX].add(area)
@@ -143,15 +144,8 @@ class Day24 @Inject constructor(
               }
             }
             Wall -> newState[y][x].add(area)
-            Empty -> { /* */ }
           }
         }
-      }
-    }
-
-    forEachIndexed { y, currentRow ->
-      currentRow.forEachIndexed { x, _ ->
-        if (newState[y][x].isEmpty()) newState[y][x].add(Empty)
       }
     }
 
@@ -159,14 +153,10 @@ class Day24 @Inject constructor(
   }
 
   private fun blankVersion(height: Int, width: Int): ExtractionArea {
-    return mutableListOf<MutableList<MutableList<Area>>>().also { new ->
+    return mutableListOf<List<MutableList<Area>>>().also { new ->
       repeat(height) {
         new.add(
-          mutableListOf<MutableList<Area>>().also { row ->
-            repeat(width) {
-              row.add(mutableListOf())
-            }
-          }
+          (0 until width).map { mutableListOf() }
         )
       }
     }
@@ -174,7 +164,6 @@ class Day24 @Inject constructor(
 
   sealed class Area {
     object Wall : Area()
-    object Empty : Area()
     data class Blizzard(val direction: Direction) : Area()
   }
 
