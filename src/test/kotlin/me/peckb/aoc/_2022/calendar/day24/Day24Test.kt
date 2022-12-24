@@ -19,13 +19,12 @@ internal class Day24Test {
 
   @Test
   fun testDay24PartOne() {
-    // not 214 (213 + 1)
-    assertEquals(-1, day24.partOne(DAY_24))
+    assertEquals(266, day24.partOne(DAY_24))
   }
 
   @Test
   fun testDay24PartTwo() {
-    assertEquals(-1, day24.partTwo(DAY_24))
+    assertEquals(853, day24.partTwo(DAY_24))
   }
 
   companion object {

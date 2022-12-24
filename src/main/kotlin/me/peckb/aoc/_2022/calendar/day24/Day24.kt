@@ -11,62 +11,14 @@ class Day24 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    var extractionArea = mutableListOf<MutableList<MutableList<Area>>>()
-
-    input.forEach { line ->
-      val row = mutableListOf<MutableList<Area>>()
-      line.forEach { c ->
-        when (c) {
-          '#' -> row.add(mutableListOf(Wall))
-          '.' -> row.add(mutableListOf(Empty))
-          '^' -> row.add(mutableListOf(Blizzard(NORTH)))
-          'v' -> row.add(mutableListOf(Blizzard(SOUTH)))
-          '>' -> row.add(mutableListOf(Blizzard(EAST)))
-          '<' -> row.add(mutableListOf(Blizzard(WEST)))
-        }
-      }
-      extractionArea.add(row)
-    }
+    val extractionArea = populateArea(input)
 
     val height = extractionArea.size
     val width = extractionArea[0].size
     val startLocation = extractionArea[0].indexOfFirst { it[0] is Empty } to 0
     val endLocation = extractionArea[height - 1].indexOfFirst { it[0] is Empty } to height - 1
 
-    // locations to steps to get there
-    var currentLocations: MutableMap<Pair<Int, Int>, Int> = mutableMapOf(startLocation to 0)
-
-    while(!currentLocations.containsKey(endLocation)) {
-      // advance the blizzards
-      extractionArea = extractionArea.advanceBlizzards()
-
-      val proposedMovements: MutableMap<Pair<Int, Int>, Int> = mutableMapOf()
-
-      // for every location we're in, wait, and move them
-      currentLocations.forEach { (location: Pair<Int, Int>, cost: Int) ->
-        val (x, y) = location
-        // current spot
-        if (extractionArea[y][x].first() is Empty) {
-          proposedMovements.merge(location, cost + 1) { a, b -> min(a, b) }
-        }
-        // n, s, e, w
-        listOf(
-          -1 to 0, 1 to 0, 0 to -1, 0 to 1
-        ).forEach { (dx, dy) ->
-          val newX = x + dx
-          val newY = y + dy
-          if (newX in 0 until width && newY in 0 until height) {
-            if (extractionArea[newY][newX].size == 1 && extractionArea[newY][newX].first() is Empty) {
-              proposedMovements.merge(newX to newY, cost + 1) { a, b -> min(a, b) }
-            }
-          }
-        }
-      }
-
-      currentLocations = proposedMovements
-    }
-
-    currentLocations[endLocation]
+    findTravelTime(extractionArea, height, width, startLocation, endLocation)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
@@ -204,6 +156,68 @@ class Day24 @Inject constructor(
     startToEndCost + endToStartCost + (currentLocations[endLocation] ?: 0)
   }
 
+  private fun populateArea(input: Sequence<String>): MutableList<MutableList<MutableList<Area>>> {
+    val extractionArea = mutableListOf<MutableList<MutableList<Area>>>()
+
+    input.forEach { line ->
+      val row = mutableListOf<MutableList<Area>>()
+      line.forEach { c ->
+        when (c) {
+          '#' -> row.add(mutableListOf(Wall))
+          '.' -> row.add(mutableListOf(Empty))
+          '^' -> row.add(mutableListOf(Blizzard(NORTH)))
+          'v' -> row.add(mutableListOf(Blizzard(SOUTH)))
+          '>' -> row.add(mutableListOf(Blizzard(EAST)))
+          '<' -> row.add(mutableListOf(Blizzard(WEST)))
+        }
+      }
+      extractionArea.add(row)
+    }
+
+    return extractionArea
+  }
+
+  private fun findTravelTime(
+    area: MutableList<MutableList<MutableList<Area>>>,
+    height: Int,
+    width: Int,
+    startLocation: Pair<Int, Int>,
+    endLocation: Pair<Int, Int>
+  ): Int? {
+    // locations to steps to get there
+    var currentLocations: MutableMap<Pair<Int, Int>, Int> = mutableMapOf(startLocation to 0)
+    var extractionArea = area
+
+    while(!currentLocations.containsKey(endLocation)) {
+      // advance the blizzards
+      extractionArea = extractionArea.advanceBlizzards()
+
+      val proposedMovements: MutableMap<Pair<Int, Int>, Int> = mutableMapOf()
+
+      // for every location we're in, wait, and move them
+      currentLocations.forEach { (location: Pair<Int, Int>, cost: Int) ->
+        val (x, y) = location
+        // current spot
+        if (extractionArea[y][x].first() is Empty) {
+          proposedMovements.merge(location, cost + 1) { a, b -> min(a, b) }
+        }
+        // n, s, e, w
+        listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1).forEach { (dx, dy) ->
+          val newX = x + dx
+          val newY = y + dy
+          if (newX in 0 until width && newY in 0 until height) {
+            if (extractionArea[newY][newX].size == 1 && extractionArea[newY][newX].first() is Empty) {
+              proposedMovements.merge(newX to newY, cost + 1) { a, b -> min(a, b) }
+            }
+          }
+        }
+      }
+
+      currentLocations = proposedMovements
+    }
+
+    return currentLocations[endLocation]
+  }
 
   private fun MutableList<MutableList<MutableList<Area>>>.advanceBlizzards(): MutableList<MutableList<MutableList<Area>>> {
     val height = this.size
