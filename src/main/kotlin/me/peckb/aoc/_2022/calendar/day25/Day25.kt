@@ -42,35 +42,25 @@ class Day25 @Inject constructor(
       maxSums.add(digitMax)
     }
 
-    var res = this
+    var remaining = this
     (maxDigit downTo 1).forEach { digit ->
+      if (remaining == 0.0) { snafu.append("0"); return@forEach }
+
       val index = digit - 1
-      if (res == 0.0) {
-        snafu.append("0")
-        return@forEach
-      }
       val maxAdjustment = maxSums.take(index).sum()
 
-      if (res > 0) {
-        if (abs(res - maxSums[index]) <= maxAdjustment) {
-          snafu.append("2")
-          res -= maxSums[index]
-        } else if (abs(res - (maxSums[index] / 2)) <= maxAdjustment) {
-          snafu.append("1")
-          res -= maxSums[index] / 2
-        } else {
-          snafu.append("0")
-        }
-      } else if (res < 0) {
-        if (abs(abs(res) - maxSums[index]) <= maxAdjustment) {
-          snafu.append("=")
-          res += maxSums[index]
-        } else if (abs(abs(res) - (maxSums[index] / 2)) <= maxAdjustment) {
-          snafu.append("-")
-          res += maxSums[index] / 2
-        } else {
-          snafu.append("0")
-        }
+      fun canTwo(n: Double) = abs(n -  maxSums[index]     ) <= maxAdjustment
+      fun canOne(n: Double) = abs(n - (maxSums[index] / 2)) <= maxAdjustment
+
+      if (remaining > 0) {
+        if      (canTwo(remaining)) { snafu.append("2"); remaining -= maxSums[index] }
+        else if (canOne(remaining)) { snafu.append("1"); remaining -= maxSums[index] / 2 }
+        else                        { snafu.append("0") }
+      } else if (remaining < 0) {
+        val absRes = abs(remaining)
+        if      (canTwo(absRes)) { snafu.append("="); remaining += maxSums[index] }
+        else if (canOne(absRes)) { snafu.append("-"); remaining += maxSums[index] / 2 }
+        else                     { snafu.append("0") }
       }
     }
 
