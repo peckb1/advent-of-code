@@ -11,14 +11,14 @@ class Snafu private constructor(val number: List<SnafuDigit>) {
     val result = StringBuilder()
 
     number.reversed().padZip(other.number.reversed()) { d1, d2 ->
-      val a = (d1 ?: ZERO) + (d2 ?: ZERO)
-      val b = a.first + carry
-      val c = b.second + a.second
+      val addResult = (d1 ?: ZERO) + (d2 ?: ZERO)
+      val addResultWithCarry = addResult.result + carry
+      val carrySum = addResultWithCarry.carry + addResult.carry
 
-      if (c.second != ZERO) throw IllegalStateException("There should never be a double carry")
+      if (carrySum.carry != ZERO) throw IllegalStateException("There should never be a double carry")
 
-      result.append(b.first.c)
-      carry = c.first
+      result.append(addResultWithCarry.result.c)
+      carry = carrySum.result
     }
 
     if (carry != ZERO) result.append(carry.c)

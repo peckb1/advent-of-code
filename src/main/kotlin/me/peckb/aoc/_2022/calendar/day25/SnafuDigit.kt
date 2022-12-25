@@ -9,7 +9,7 @@ enum class SnafuDigit(val c: Char) {
         ZERO         -> TWO          to ZERO
         MINUS        -> ONE          to ZERO
         DOUBLE_MINUS -> ZERO         to ZERO
-      }
+      }.let { AddResult(it.first, it.second) }
   },
   ONE('1') {
     override fun plus(other: SnafuDigit) =
@@ -19,10 +19,10 @@ enum class SnafuDigit(val c: Char) {
         ZERO         -> ONE          to ZERO
         MINUS        -> ZERO         to ZERO
         DOUBLE_MINUS -> MINUS        to ZERO
-      }
+      }.let { AddResult(it.first, it.second) }
   },
   ZERO('0') {
-    override fun plus(other: SnafuDigit) = other to ZERO
+    override fun plus(other: SnafuDigit) = AddResult(other, ZERO)
   },
   MINUS('-') {
     override fun plus(other: SnafuDigit) =
@@ -32,7 +32,7 @@ enum class SnafuDigit(val c: Char) {
         ZERO         -> MINUS        to ZERO
         MINUS        -> DOUBLE_MINUS to ZERO
         DOUBLE_MINUS -> TWO          to MINUS
-      }
+      }.let { AddResult(it.first, it.second) }
   },
   DOUBLE_MINUS('=') {
     override fun plus(other: SnafuDigit) =
@@ -42,12 +42,14 @@ enum class SnafuDigit(val c: Char) {
         ZERO         -> DOUBLE_MINUS to ZERO
         MINUS        -> TWO          to MINUS
         DOUBLE_MINUS -> ONE          to MINUS
-      }
+      }.let { AddResult(it.first, it.second) }
   };
 
-  abstract infix operator fun plus(other: SnafuDigit) : Pair<SnafuDigit, SnafuDigit>
+  abstract infix operator fun plus(other: SnafuDigit) : AddResult
 
   companion object {
     fun fromChar(c: Char): SnafuDigit = values().first { c == it.c }
   }
 }
+
+data class AddResult(val result: SnafuDigit, val carry: SnafuDigit)
