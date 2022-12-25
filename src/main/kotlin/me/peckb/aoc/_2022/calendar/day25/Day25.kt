@@ -3,12 +3,18 @@ package me.peckb.aoc._2022.calendar.day25
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import java.lang.StringBuilder
 import kotlin.math.*
+import kotlin.text.StringBuilder
 
 class Day25 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
+  fun partZero(filename: String) = generatorFactory.forFile(filename).read { input ->
+    input.map { Snafu.fromString(it) }
+      .fold(SNAFU_ZERO) { acc, nextSnafu -> acc + nextSnafu }
+      .toString()
+  }
+
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::snafu) { input ->
     input.sum().toSnafu()
   }
@@ -19,7 +25,7 @@ class Day25 @Inject constructor(
       val digit = 5.0.pow(d.toDouble())
       when (c) {
         '2' -> { sum += 2 * digit }
-        '1' -> { sum += digit}
+        '1' -> { sum += digit }
         '0' -> { /* */ }
         '-' -> { sum -= digit }
         '=' -> { sum -= 2 * digit }
@@ -28,14 +34,14 @@ class Day25 @Inject constructor(
     return sum
   }
 
-  private fun Double.toSnafu() : String {
+  private fun Double.toSnafu(): String {
     val snafu = StringBuilder()
 
     var sum = 0.0
     var maxDigit = 0
     val maxSums = mutableListOf<Double>()
 
-    while(sum < this) {
+    while (sum < this) {
       maxDigit++
       val digitMax = (2 * 5.0.pow(maxDigit - 1))
       sum += digitMax
@@ -65,5 +71,9 @@ class Day25 @Inject constructor(
     }
 
     return snafu.toString()
+  }
+
+  companion object {
+    private val SNAFU_ZERO = Snafu.fromString("0")
   }
 }

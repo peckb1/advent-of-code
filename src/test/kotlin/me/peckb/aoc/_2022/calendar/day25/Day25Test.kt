@@ -18,6 +18,11 @@ internal class Day25Test {
   }
 
   @Test
+  fun testDay25PartZero() {
+    assertEquals("2=2-1-010==-0-1-=--2", day25.partZero(DAY_25))
+  }
+
+  @Test
   fun testDay25PartOne() {
     assertEquals("2=2-1-010==-0-1-=--2", day25.partOne(DAY_25))
   }
