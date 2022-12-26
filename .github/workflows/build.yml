@@ -74,7 +74,7 @@ jobs:
             key: "build"
 
         - name: Test 2015
-          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2015**'
+          run: ./gradlew test --tests 'me.peckb.aoc._2015**'
 
     test-2016:
       needs: build
@@ -109,7 +109,7 @@ jobs:
             key: "build"
 
         - name: Test 2016
-          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2016**'
+          run: ./gradlew test --tests 'me.peckb.aoc._2016**'
 
     test-2017:
       needs: build
@@ -144,7 +144,7 @@ jobs:
             key: "build"
 
         - name: Test 2017
-          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2017**'
+          run: ./gradlew test --tests 'me.peckb.aoc._2017**'
 
     test-2018:
       needs: build
@@ -179,7 +179,7 @@ jobs:
             key: "build"
 
         - name: Test 2018
-          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2018**'
+          run: ./gradlew test --tests 'me.peckb.aoc._2018**'
 
     test-2019:
       needs: build
@@ -214,7 +214,7 @@ jobs:
             key: "build"
 
         - name: Test 2019
-          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2019**'
+          run: ./gradlew test --tests 'me.peckb.aoc._2019**'
 
     test-2021:
       needs: build
@@ -249,7 +249,7 @@ jobs:
             key: "build"
 
         - name: Test 2021
-          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2021**'
+          run: ./gradlew test --tests 'me.peckb.aoc._2021**'
 
     test-2022:
       needs: build
@@ -284,7 +284,7 @@ jobs:
             key: "build"
 
         - name: Test 2022
-          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2022**'
+          run: ./gradlew test --tests 'me.peckb.aoc._2022**'
 
 
 #          - name: Publish Unit Test Results
