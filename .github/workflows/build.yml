@@ -36,7 +36,7 @@ jobs:
           - uses: actions/cache@v3
             with:
               path: build  # Note that this path is not influenced by working-directory set in defaults, for example
-              key: "build"
+              key: "build-${GITHUB_REF}"
 
           - name: Build the code
             run: ./gradlew clean build -x test
@@ -71,7 +71,7 @@ jobs:
         - uses: actions/cache@v3
           with:
             path: build
-            key: "build"
+            key: "build-${GITHUB_REF}"
 
         - name: Test 2015
           run: ./gradlew test --tests 'me.peckb.aoc._2015**'
@@ -106,7 +106,7 @@ jobs:
         - uses: actions/cache@v3
           with:
             path: build
-            key: "build"
+            key: "build-${GITHUB_REF}"
 
         - name: Test 2016
           run: ./gradlew test --tests 'me.peckb.aoc._2016**'
@@ -141,7 +141,7 @@ jobs:
         - uses: actions/cache@v3
           with:
             path: build
-            key: "build"
+            key: "build-${GITHUB_REF}"
 
         - name: Test 2017
           run: ./gradlew test --tests 'me.peckb.aoc._2017**'
@@ -176,7 +176,7 @@ jobs:
         - uses: actions/cache@v3
           with:
             path: build
-            key: "build"
+            key: "build-${GITHUB_REF}"
 
         - name: Test 2018
           run: ./gradlew test --tests 'me.peckb.aoc._2018**'
@@ -211,7 +211,7 @@ jobs:
         - uses: actions/cache@v3
           with:
             path: build
-            key: "build"
+            key: "build-${GITHUB_REF}"
 
         - name: Test 2019
           run: ./gradlew test --tests 'me.peckb.aoc._2019**'
@@ -246,7 +246,7 @@ jobs:
         - uses: actions/cache@v3
           with:
             path: build
-            key: "build"
+            key: "build-${GITHUB_REF}"
 
         - name: Test 2021
           run: ./gradlew test --tests 'me.peckb.aoc._2021**'
@@ -281,7 +281,7 @@ jobs:
         - uses: actions/cache@v3
           with:
             path: build
-            key: "build"
+            key: "build-${GITHUB_REF}"
 
         - name: Test 2022
           run: ./gradlew test --tests 'me.peckb.aoc._2022**'
