@@ -49,6 +49,19 @@ enum class SnafuDigit(val c: Char) {
 
   companion object {
     fun fromChar(c: Char): SnafuDigit = values().first { c == it.c }
+
+    fun add(sd1: SnafuDigit, sd2: SnafuDigit, sd3: SnafuDigit): AddResult {
+      return (sd1 + sd2).let { firstResult ->
+        (firstResult.result + sd3).let { resultAfterCarryAdd ->
+          AddResult(
+            resultAfterCarryAdd.result,
+            // DEV NOTE: since the carry of an addition must be within [MINUS, ZERO, ONE] bounds
+            //           adding two carry together will themselves never have a carry
+            (firstResult.carry + resultAfterCarryAdd.carry).result
+          )
+        }
+      }
+    }
   }
 }
 
