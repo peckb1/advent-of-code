@@ -33,20 +33,271 @@ jobs:
           - name: Grant execute permission for gradlew
             run: chmod +x gradlew
 
-          - name: Build with Gradle jacocoTestReport
-            run: ./gradlew --no-daemon build
-
-          - name: Publish Unit Test Results
-            uses: EnricoMi/publish-unit-test-result-action@v2
-            if: always()
+          - uses: actions/cache@v3
             with:
-              files: build/test-results/**/*.xml
+              path: build  # Note that this path is not influenced by working-directory set in defaults, for example
+              key: "build"
 
-          - name: Add coverage to PR
-            id: jacoco
-            uses: madrapps/jacoco-report@v1.3
-            with:
-              paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
-              token: ${{ secrets.GITHUB_TOKEN }}
-              min-coverage-overall: 40
-              min-coverage-changed-files: 60
+          - name: Build the code
+            run: ./gradlew --no-daemon build -x tests
+
+    test-2015:
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout Main AoC code
+          uses: actions/checkout@v3
+
+        - name: Checkout the AoC Input files
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.AOC_INPUT }}
+            repository: peckb1/advent-of-code-input
+            path: advent-of-code-input
+            ref: main
+
+        - name: Bring in the gradle wrapper running the build
+          uses: gradle/wrapper-validation-action@v1
+
+        - name: Set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+        - uses: actions/cache@v3
+          with:
+            path: build
+            key: "build"
+
+        - name: Test 2015
+          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2015**'
+
+    test-2016:
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout Main AoC code
+          uses: actions/checkout@v3
+
+        - name: Checkout the AoC Input files
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.AOC_INPUT }}
+            repository: peckb1/advent-of-code-input
+            path: advent-of-code-input
+            ref: main
+
+        - name: Bring in the gradle wrapper running the build
+          uses: gradle/wrapper-validation-action@v1
+
+        - name: Set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+        - uses: actions/cache@v3
+          with:
+            path: build
+            key: "build"
+
+        - name: Test 2016
+          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2016**'
+
+    test-2017:
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout Main AoC code
+          uses: actions/checkout@v3
+
+        - name: Checkout the AoC Input files
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.AOC_INPUT }}
+            repository: peckb1/advent-of-code-input
+            path: advent-of-code-input
+            ref: main
+
+        - name: Bring in the gradle wrapper running the build
+          uses: gradle/wrapper-validation-action@v1
+
+        - name: Set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+        - uses: actions/cache@v3
+          with:
+            path: build
+            key: "build"
+
+        - name: Test 2017
+          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2017**'
+
+    test-2018:
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout Main AoC code
+          uses: actions/checkout@v3
+
+        - name: Checkout the AoC Input files
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.AOC_INPUT }}
+            repository: peckb1/advent-of-code-input
+            path: advent-of-code-input
+            ref: main
+
+        - name: Bring in the gradle wrapper running the build
+          uses: gradle/wrapper-validation-action@v1
+
+        - name: Set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+        - uses: actions/cache@v3
+          with:
+            path: build
+            key: "build"
+
+        - name: Test 2018
+          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2018**'
+
+    test-2019:
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout Main AoC code
+          uses: actions/checkout@v3
+
+        - name: Checkout the AoC Input files
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.AOC_INPUT }}
+            repository: peckb1/advent-of-code-input
+            path: advent-of-code-input
+            ref: main
+
+        - name: Bring in the gradle wrapper running the build
+          uses: gradle/wrapper-validation-action@v1
+
+        - name: Set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+        - uses: actions/cache@v3
+          with:
+            path: build
+            key: "build"
+
+        - name: Test 2019
+          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2019**'
+
+    test-2021:
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout Main AoC code
+          uses: actions/checkout@v3
+
+        - name: Checkout the AoC Input files
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.AOC_INPUT }}
+            repository: peckb1/advent-of-code-input
+            path: advent-of-code-input
+            ref: main
+
+        - name: Bring in the gradle wrapper running the build
+          uses: gradle/wrapper-validation-action@v1
+
+        - name: Set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+        - uses: actions/cache@v3
+          with:
+            path: build
+            key: "build"
+
+        - name: Test 2021
+          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2021**'
+
+    test-2022:
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout Main AoC code
+          uses: actions/checkout@v3
+
+        - name: Checkout the AoC Input files
+          uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.AOC_INPUT }}
+            repository: peckb1/advent-of-code-input
+            path: advent-of-code-input
+            ref: main
+
+        - name: Bring in the gradle wrapper running the build
+          uses: gradle/wrapper-validation-action@v1
+
+        - name: Set up JDK 11
+          uses: actions/setup-java@v1
+          with:
+            java-version: 11
+
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+
+        - uses: actions/cache@v3
+          with:
+            path: build
+            key: "build"
+
+        - name: Test 2022
+          run: ./gradlew --no-daemon build -x tests --tests 'me.peckb.aoc._2022**'
+
+
+#          - name: Publish Unit Test Results
+#            uses: EnricoMi/publish-unit-test-result-action@v2
+#            if: always()
+#            with:
+#              files: build/test-results/**/*.xml
+#
+#          - name: Add coverage to PR
+#            id: jacoco
+#            uses: madrapps/jacoco-report@v1.3
+#            with:
+#              paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
+#              token: ${{ secrets.GITHUB_TOKEN }}
+#              min-coverage-overall: 40
+#              min-coverage-changed-files: 60
