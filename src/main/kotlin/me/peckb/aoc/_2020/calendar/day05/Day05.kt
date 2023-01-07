@@ -12,12 +12,19 @@ class Day05 @Inject constructor(
     input.maxOf { it.id }
   }
 
+  /**
+   * sort them by seat ID
+   * work in groups of two
+   * find the window that has a gap
+   * grab the start of that window
+   * add one to get our seat ID
+   */
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::seat) { input ->
-    val seatBeforeMine = input.sortedBy { it.id } // sort them by seat ID
-      .windowed(2)                                 // work in groups of two
-      .first { (a, b) -> b.id - a.id != 1 } // find the window that has a gap
-      .first()                                          // grab the start of that window
-    seatBeforeMine.id + 1                       // add one to get my seat ID
+    val seatBeforeMine = input.sortedBy { it.id }
+      .windowed(2)
+      .first { (a, b) -> b.id - a.id != 1 }
+      .first()
+    seatBeforeMine.id + 1
   }
 
   private fun seat(line: String) : Seat {
