@@ -109,6 +109,10 @@ as the value which passed the given day/phase combination
 * Day 14 Using a binary search on the fuel needed was a much needed speed up from a linear scan until we hit the fuel value.
 * Day 24 Recursion hurt my brain, so I just spelled out every neighbor when I setup connections.
 
+#### 2020
+
+* Day 10 Keeping track of how many possible paths for each adapter makes finding how many steps it takes to get to an adapter it can touch nice and trivial.
+
 #### 2021
 
 * The double window for Day01 part 02
