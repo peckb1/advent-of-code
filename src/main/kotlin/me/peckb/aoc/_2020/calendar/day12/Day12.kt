@@ -5,7 +5,6 @@ import me.peckb.aoc._2020.calendar.day12.Day12.Direction.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import java.lang.IllegalStateException
 import kotlin.math.abs
 
 class Day12 @Inject constructor(
@@ -37,70 +36,35 @@ class Day12 @Inject constructor(
     var eastWestPosition = 0
 
     input.forEach {
-      when (it.action) {
-        NORTH -> northSouthPosition -= it.value
-        EAST -> eastWestPosition += it.value
-        SOUTH -> northSouthPosition += it.value
-        WEST -> eastWestPosition -= it.value
-        LEFT -> {
-          when (it.value) {
-            90 -> facingDirection = when (facingDirection) {
-              N -> W
-              E -> N
-              S -> E
-              W -> S
-            }
-
-            180 -> facingDirection = when (facingDirection) {
-              N -> S
-              E -> W
-              S -> N
-              W -> E
-            }
-
-            270 -> facingDirection = when (facingDirection) {
-              N -> E
-              E -> S
-              S -> W
-              W -> N
-            }
-
-            else -> throw IllegalStateException("Cannot turn to face a non-cardinal direction")
-          }
-        }
-
-        RIGHT -> when (it.value) {
-          90 -> facingDirection = when (facingDirection) {
-            N -> E
-            E -> S
-            S -> W
-            W -> N
-          }
-
-          180 -> facingDirection = when (facingDirection) {
-            N -> S
-            E -> W
-            S -> N
-            W -> E
-          }
-
-          270 -> facingDirection = when (facingDirection) {
-            N -> W
-            E -> N
-            S -> E
-            W -> S
-          }
-
-          else -> throw IllegalStateException("Cannot turn to face a non-cardinal direction")
-        }
-
-        FORWARD -> when (facingDirection) {
-          N -> northSouthPosition -= it.value
-          E -> eastWestPosition += it.value
-          S -> northSouthPosition += it.value
-          W -> eastWestPosition -= it.value
-        }
+      if (it.action == NORTH) northSouthPosition -= it.value
+      else if (it.action == EAST) eastWestPosition += it.value
+      else if (it.action == SOUTH) northSouthPosition += it.value
+      else if (it.action == WEST) eastWestPosition -= it.value
+      else if (it.action == FORWARD) when (facingDirection) {
+        N -> northSouthPosition -= it.value
+        E -> eastWestPosition += it.value
+        S -> northSouthPosition += it.value
+        W -> eastWestPosition -= it.value
       }
+      else if (it.value == 180) facingDirection = when (facingDirection) {
+        N -> S
+        E -> W
+        S -> N
+        W -> E
+      }
+      else if ((it.action == LEFT && it.value == 90) || (it.action == RIGHT && it.value == 270)) facingDirection = when (facingDirection) {
+        N -> W
+        E -> N
+        S -> E
+        W -> S
+      }
+      else // (it.action == RIGHT && it.value == 90) || (it.action == LEFT && it.value == 270)
+        facingDirection = when (facingDirection) {
+          N -> E
+          E -> S
+          S -> W
+          W -> N
+        }
     }
 
     abs(northSouthPosition) + abs(eastWestPosition)
