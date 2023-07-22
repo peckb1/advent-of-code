@@ -113,55 +113,27 @@ class Day12 @Inject constructor(
     var relativeWaypointNorthSouth = -1L
 
     input.forEach {
-      when (it.action) {
-        NORTH -> relativeWaypointNorthSouth -= it.value
-        EAST -> relativeWaypointEastWest += it.value
-        SOUTH -> relativeWaypointNorthSouth += it.value
-        WEST -> relativeWaypointEastWest -= it.value
-        LEFT -> {
-          when (it.value) {
-            90 -> {
-              val tempNorthSouth = relativeWaypointNorthSouth
-              relativeWaypointNorthSouth = -relativeWaypointEastWest
-              relativeWaypointEastWest = tempNorthSouth
-            }
-
-            180 -> {
-              relativeWaypointNorthSouth = 0 - relativeWaypointNorthSouth
-              relativeWaypointEastWest = 0 - relativeWaypointEastWest
-            }
-
-            270 -> {
-              val tempNorthSouth = relativeWaypointNorthSouth
-              relativeWaypointNorthSouth = relativeWaypointEastWest
-              relativeWaypointEastWest = -tempNorthSouth
-            }
-          }
-        }
-
-        RIGHT -> when (it.value) {
-          90 -> {
-            val tempNorthSouth = relativeWaypointNorthSouth
-            relativeWaypointNorthSouth = relativeWaypointEastWest
-            relativeWaypointEastWest = -tempNorthSouth
-          }
-
-          180 -> {
-            relativeWaypointNorthSouth = 0 - relativeWaypointNorthSouth
-            relativeWaypointEastWest = 0 - relativeWaypointEastWest
-          }
-
-          270 -> {
-            val tempNorthSouth = relativeWaypointNorthSouth
-            relativeWaypointNorthSouth = -relativeWaypointEastWest
-            relativeWaypointEastWest = tempNorthSouth
-          }
-        }
-
-        FORWARD -> {
-          northSouthPosition += (it.value * relativeWaypointNorthSouth)
-          eastWestPosition += (it.value * relativeWaypointEastWest)
-        }
+      if (it.action == NORTH) relativeWaypointNorthSouth -= it.value
+      else if (it.action == EAST) relativeWaypointEastWest += it.value
+      else if (it.action == SOUTH) relativeWaypointNorthSouth += it.value
+      else if (it.action == WEST) relativeWaypointEastWest -= it.value
+      else if (it.action == FORWARD) {
+        northSouthPosition += (it.value * relativeWaypointNorthSouth)
+        eastWestPosition += (it.value * relativeWaypointEastWest)
+      }
+      else if (it.value == 180) {
+        relativeWaypointNorthSouth = 0 - relativeWaypointNorthSouth
+        relativeWaypointEastWest = 0 - relativeWaypointEastWest
+      }
+      else if ((it.action == LEFT && it.value == 90) || (it.action == RIGHT && it.value == 270)) {
+        val tempNorthSouth = relativeWaypointNorthSouth
+        relativeWaypointNorthSouth = -relativeWaypointEastWest
+        relativeWaypointEastWest = tempNorthSouth
+      }
+      else { // (it.action == RIGHT && it.value == 90) || (it.action == LEFT && it.value == 270)
+        val tempNorthSouth = relativeWaypointNorthSouth
+        relativeWaypointNorthSouth = relativeWaypointEastWest
+        relativeWaypointEastWest = -tempNorthSouth
       }
     }
 
