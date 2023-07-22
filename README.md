@@ -112,6 +112,7 @@ as the value which passed the given day/phase combination
 #### 2020
 
 * Day 10 Keeping track of how many possible paths for each adapter makes finding how many steps it takes to get to an adapter it can touch nice and trivial.
+* Day 13 Finally had to code up the chinese remainder theorem
 
 #### 2021
 
