@@ -4,21 +4,20 @@ import arrow.core.foldLeft
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import org.apache.commons.math3.util.ArithmeticUtils
 import org.apache.commons.math3.util.ArithmeticUtils.pow
 
 class Day14 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val registers = mutableMapOf<Int, List<Char>>()
+    val registers = mutableMapOf<String, List<Char>>()
 
     var currentMask = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     input.forEach { line ->
       if (line.startsWith("mask")) {
         currentMask = line.split(" ").last()
       } else { // line == "mem[n] = x"
-        val register = line.drop(4).takeWhile { it != ']' }.toInt()
+        val register = line.drop(4).takeWhile { it != ']' }
         val value = line.split(" ").last().toInt()
 
         val binaryValue = toBinary(value, currentMask.length)
