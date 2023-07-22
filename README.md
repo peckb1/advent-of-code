@@ -61,6 +61,11 @@ as the value which passed the given day/phase combination
 * Day 09
   * Although just another operation for the Intcode computer, the self checking baked into the input is super impressive
 
+#### 2020
+
+* Day 10 
+  * Keeping track of how many possible paths for each adapter makes finding how many steps it takes to get to an adapter it can touch nice and trivial.
+
 #### 2021
 
 * Day 07
@@ -111,7 +116,6 @@ as the value which passed the given day/phase combination
 
 #### 2020
 
-* Day 10 Keeping track of how many possible paths for each adapter makes finding how many steps it takes to get to an adapter it can touch nice and trivial.
 * Day 13 Finally had to code up the chinese remainder theorem
 
 #### 2021
