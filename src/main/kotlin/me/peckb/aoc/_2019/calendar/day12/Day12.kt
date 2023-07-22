@@ -3,6 +3,7 @@ package me.peckb.aoc._2019.calendar.day12
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import org.apache.commons.math3.util.ArithmeticUtils.gcd
 import kotlin.math.abs
 
 class Day12 @Inject constructor(
@@ -54,10 +55,6 @@ class Day12 @Inject constructor(
   private fun lcm(a: Long, b: Long, c: Long): Long {
     val x = (a * b) / gcd(a, b)
     return (x * c) / gcd(x, c)
-  }
-
-  private tailrec fun gcd(n1: Long, n2: Long): Long {
-    return if (n2 != 0L) gcd(n2, n1 % n2) else n1
   }
 
   private fun position(line: String) = line

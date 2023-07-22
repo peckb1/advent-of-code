@@ -5,6 +5,7 @@ import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D
+import org.apache.commons.math3.util.ArithmeticUtils.gcd
 import kotlin.math.abs
 
 class Day10 @Inject constructor(
@@ -81,10 +82,6 @@ class Day10 @Inject constructor(
       fun reduced(): Direction {
         val gcd = abs(gcd(deltaY, deltaX))
         return Direction(deltaY / gcd, deltaX / gcd)
-      }
-
-      private tailrec fun gcd(n1: Int, n2: Int): Int {
-        return if (n2 != 0) gcd(n2, n1 % n2) else n1
       }
     }
   }
