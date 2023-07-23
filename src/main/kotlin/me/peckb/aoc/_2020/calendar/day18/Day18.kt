@@ -53,6 +53,9 @@ class Day18 @Inject constructor(
         currentValue = number
       } else {
         // we have both a waitingValue and a currentValue
+        // DEV NOTE: even though  we have the `!!` below and would also get an exception
+        //           the compiler seems smart enough to optimize here since there are mutliple
+        //           `!!` for each of these operators
         if (waitingOperator == null || currentOperator == null) {
           throw IllegalStateException("We have a third value, but are missing operators")
         }
@@ -95,20 +98,12 @@ class Day18 @Inject constructor(
         }
 
         ')' -> {
-          if (currentValue != null && waitingOperator != null && waitingValue != null) {
-            return waitingOperator!!.apply(waitingValue!!, currentValue!!) to index
-          } else {
-            throw IllegalStateException("End of a group with no values found")
-          }
+          return waitingOperator!!.apply(waitingValue!!, currentValue!!) to index
         }
       }
       index++
     }
 
-    if (waitingValue != null && waitingOperator != null && currentValue != null) {
-      return waitingOperator!!.apply(waitingValue!!, currentValue!!) to index
-    }
-
-    throw IllegalStateException("End of a block but no operation was waiting")
+    return waitingOperator!!.apply(waitingValue!!, currentValue!!) to index
   }
 }
