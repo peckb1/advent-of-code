@@ -7,34 +7,14 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 class Day18 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-  interface PriorityOperator {
-    val code: Char
-    val priority: Int
-    val apply: (Long, Long) -> Long
-  }
-
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val operators = listOf(createMultiplication(0), createAddition(0))
+    val operators = listOf(Multiplication(0), Addition(0))
     input.sumOf { line -> performMaths(line, operators).first }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val operators = listOf(createMultiplication(0), createAddition(1))
+    val operators = listOf(Multiplication(0), Addition(1))
     input.sumOf { line -> performMaths(line, operators).first }
-  }
-
-  private fun createAddition(priority: Int): PriorityOperator = object : PriorityOperator {
-    override val code: Char = '+'
-    override val priority: Int = priority
-    override val apply: (Long, Long) -> Long = Long::plus
-    override fun toString(): String = code.toString()
-  }
-
-  private fun createMultiplication(priority: Int): PriorityOperator = object : PriorityOperator {
-    override val code: Char = '*'
-    override val priority: Int = priority
-    override val apply: (Long, Long) -> Long = Long::times
-    override fun toString(): String = code.toString()
   }
 
   private fun performMaths(line: String, operators: List<PriorityOperator>, startIndex: Int = 0): Pair<Long, Int> {
