@@ -119,6 +119,7 @@ as the value which passed the given day/phase combination
 #### 2020
 
 * Day 13 Finally had to code up the chinese remainder theorem
+* Day 18 Created a generic solver that can easily include new operators with any priority for those operators
 
 #### 2021
 
