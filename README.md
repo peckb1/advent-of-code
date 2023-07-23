@@ -65,6 +65,8 @@ as the value which passed the given day/phase combination
 
 * Day 10 
   * Keeping track of how many possible paths for each adapter makes finding how many steps it takes to get to an adapter it can touch nice and trivial.
+* Day 16
+  * Just a normal handle the data day. And the fact that each index had a unique number of possible fields (1-n) was a nice touch. 
 
 #### 2021
 
