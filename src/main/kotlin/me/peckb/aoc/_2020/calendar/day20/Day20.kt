@@ -279,13 +279,13 @@ class Day20 @Inject constructor(
       }
     }
 
-    val edges = edgeMatches.filter { (_, tiles) -> tiles.size == 1 }
+    val corners = edgeMatches
+      .filter  { it.value.size == 1 }
       .flatMap { it.value }
       .groupBy { it.id }
+      .filter  { it.value.size == 4 }
 
-    val corners = edges.filter { it.value.size == 4 }
-
-    return Puzzle(tiles, edgeMatches, edges, corners)
+    return Puzzle(tiles, edgeMatches, corners)
   }
 
   companion object {
