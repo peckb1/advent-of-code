@@ -120,6 +120,7 @@ as the value which passed the given day/phase combination
 
 * Day 13 Finally had to code up the chinese remainder theorem
 * Day 18 Created a generic solver that can easily include new operators with any priority for those operators
+* Day 20 I enjoyed building the puzzle and then finding the sea monsters! It was fairly straight forward, just a lot of code.
 
 #### 2021
 
