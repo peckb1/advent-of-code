@@ -1,6 +1,7 @@
 package me.peckb.aoc._2020.calendar.day20
 
 import me.peckb.aoc._2020.calendar.day20.Day20.Edge.*
+import me.peckb.aoc._2020.calendar.day20.Day20.Tile
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -50,14 +51,14 @@ class Day20 @Inject constructor(
       }
     }
     
-    fun rotate180() = reset { data.map { it.reversed() } }
+    fun rotate180() = reset { data.map { it.reversed() }.reversed() }
     
     fun flipHorizontal() = reset { data.map { it.reversed() } }
     
     fun flipVertical() = reset { data.reversed() }
 
     override fun toString(): String {
-      return data.joinToString("\n")
+      return "$id\n${data.joinToString("\n")}"
     }
 
     private fun reset(dataReset: () -> List<String>) = apply {
@@ -85,35 +86,40 @@ class Day20 @Inject constructor(
     // assemble the puzzle!
     val puzzleIdsAssembled = mutableSetOf<Int>()
     val assembledPuzzle = mutableListOf<MutableList<Tile>>()
+    val growthDirections = mutableListOf<Edge>()
 
     var firstPieceOfRow = puzzle.tiles[puzzle.corners.keys.first()]!!
     while(puzzleIdsAssembled.size != puzzle.tiles.size) {
       // pick a random corner which will become our "top left" corner
-      val currentRow = mutableListOf<Tile>()
+      val currentRow = mutableListOf<Tile>().apply {
+        assembledPuzzle.add(this)
+      }
       var currentTile = puzzle.tiles[firstPieceOfRow.id]!!.also {
         puzzleIdsAssembled.add(it.id)
         currentRow.add(it)
       }
-      do {
-        // we're going to the east as we build
-        val keys = currentTile.edgeValues[EAST]!!
-        // find the tile that touches that side
-        val nextTile = (puzzle.edgeMatches[keys.first()] ?: emptyList())
-          .first { t -> t.id != currentTile.id }
 
+      // we're going to the east as we build
+      // TODO: we may need to guarantee that the first corner has an east, and if not flip it around :D
+      var keys = currentTile.edgeValues[EAST]!!
+      // find the tile that touches that side
+      var nextTile = puzzle.edgeMatches[keys.first()]?.firstOrNull { t -> t.id != currentTile.id }
+
+      while(nextTile != null) {
         // find out how we need to orient it
         // `keys.first()` is the top to bottom orientation of the `EAST` edge from above
         val (nextTileTouchingSide, touchingKeys) = nextTile.edgeValues.entries.first { it.value.contains(keys.first()) }
         val whichDirection = touchingKeys.indexOf(keys.first())
+
         when (nextTileTouchingSide) {
           NORTH -> {
-            if (whichDirection == 1) nextTile.rotateCounterClockwise()
-            else nextTile.rotateCounterClockwise().flipVertical()
+            if (whichDirection == 0) nextTile.rotateCounterClockwise().flipVertical()
+            else nextTile.rotateCounterClockwise()
           }
 
           SOUTH -> {
             if (whichDirection == 0) nextTile.rotateClockwise()
-            else nextTile.rotateCounterClockwise().flipVertical()
+            else nextTile.rotateClockwise().flipVertical()
           }
 
           EAST -> {
@@ -130,9 +136,11 @@ class Day20 @Inject constructor(
         puzzleIdsAssembled.add(nextTile.id)
         currentRow.add(nextTile)
         currentTile = nextTile
-      } while (!puzzle.corners.contains(currentTile.id))
 
-      assembledPuzzle.add(currentRow)
+        keys = currentTile.edgeValues[EAST]!!
+        // find the tile that touches that side
+        nextTile = puzzle.edgeMatches[keys.first()]?.firstOrNull { t -> t.id != currentTile.id }
+      }
 
       // the next row is then going to have the piece that is to the south of the current firstPieceOfRow
       val edge = listOf(NORTH, SOUTH).first {
@@ -149,6 +157,8 @@ class Day20 @Inject constructor(
           otherKeys.contains(firstPieceOfRow.edgeValues[edge]!!.first())
         }
         val whichDirection = touchingKeys.indexOf(firstPieceOfRow.edgeValues[edge]!!.first())
+
+        growthDirections.add(edge)
 
         when (edge) {
           SOUTH -> {
@@ -182,7 +192,7 @@ class Day20 @Inject constructor(
                 else newTile.flipHorizontal()
               }
               EAST -> {
-                if (whichDirection == 0) newTile.rotateClockwise().flipHorizontal()
+                if (whichDirection == 0) newTile.rotateCounterClockwise().flipVertical()
                 else newTile.rotateClockwise()
               }
               WEST -> {
@@ -195,10 +205,38 @@ class Day20 @Inject constructor(
         }
         firstPieceOfRow = newTile
       }
-
-      -1
     }
-    -1
+
+    val southDirections = growthDirections.count { it == SOUTH }
+    val northDirections = growthDirections.count { it == NORTH }
+
+    val finalPuzzle= if (southDirections > northDirections) {
+      toPuzzleArray(assembledPuzzle)
+    } else if (northDirections > southDirections) {
+      toPuzzleArray(assembledPuzzle.reversed())
+    } else {
+      throw IllegalStateException("No Growth Direction had a majority")
+    }
+
+//    printPuzzle(finalPuzzle)
+  }
+
+  private fun printPuzzle(assembledPuzzle: List<List<Tile>>) {
+    println("Current Puzzle: ")
+    assembledPuzzle.forEach { tileRow ->
+      (0..9).forEach { rowIndexForTiles ->
+        tileRow.forEach { tile ->
+          print(tile.data[rowIndexForTiles])
+          print(" ")
+        }
+        println()
+      }
+      println()
+    }
+  }
+
+  private fun toPuzzleArray(tileData: List<MutableList<Tile>>): Array<Array<Char>> {
+    TODO("Not yet implemented")
   }
 
   private fun toTile(data: List<String>): Tile {
