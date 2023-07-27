@@ -1,6 +1,7 @@
 package me.peckb.aoc._2020.calendar.day20
 
-import me.peckb.aoc._2020.calendar.day20.Day20.Edge.*
+import dagger.Lazy
+import me.peckb.aoc._2020.calendar.day20.Edge.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -9,76 +10,6 @@ import kotlin.text.RegexOption.DOT_MATCHES_ALL
 class Day20 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-  enum class Edge {
-    NORTH, SOUTH, EAST, WEST
-  }
-
-  class Tile(val id: Int, var data: List<String>) {
-    var edgeValues: Map<Edge, List<String>> = createEdgeValues(data)
-
-    private fun createEdgeValues(data: List<String>): MutableMap<Edge, List<String>> {
-      val result = mutableMapOf<Edge, List<String>>()
-
-      result[NORTH] = listOf(data[0], data[0].reversed())
-      result[SOUTH] = listOf(data[9], data[9].reversed())
-
-      result[WEST] = data.map { it[0] }.let {
-        val key = it.joinToString("")
-        listOf(key, key.reversed())
-      }
-
-      result[EAST] = data.map { it[9] }.let {
-        val key = it.joinToString("")
-        listOf(key, key.reversed())
-      }
-
-      return result
-    }
-    
-    fun rotateClockwise() = reset {
-      data.indices.map { xIndex ->
-        ((data.size - 1) downTo 0).joinToString("") { yIndex ->
-          data[yIndex][xIndex].toString()
-        }
-      }
-    }
-    
-    fun rotateCounterClockwise() = reset {
-      ((data.size - 1) downTo 0).map { xIndex ->
-        data.indices.joinToString("") { yIndex ->
-          data[yIndex][xIndex].toString()
-        }
-      }
-    }
-    
-    fun rotate180() = reset { data.map { it.reversed() }.reversed() }
-    
-    fun flipHorizontal() = reset { data.map { it.reversed() } }
-    
-    fun flipVertical() = reset { data.reversed() }
-
-    override fun toString(): String {
-      return "$id\n${data.joinToString("\n")}"
-    }
-
-    private fun reset(dataReset: () -> List<String>) = apply {
-      data = dataReset()
-      edgeValues = createEdgeValues(data)
-    }
-
-    fun trim() {
-      data = data.drop(1).dropLast(1)
-        .map { it.drop(1).dropLast(1) }
-    }
-  }
-
-  data class Puzzle(
-    val tiles: Map<Int, Tile>,
-    val edgeMatches: MutableMap<String, MutableList<Tile>>,
-    val edges: Map<Int, List<Tile>>,
-    val corners: Map<Int, List<Tile>>,
-  )
-
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val puzzle = setup(input)
 
@@ -94,7 +25,7 @@ class Day20 @Inject constructor(
     val growthDirections = mutableListOf<Edge>()
 
     var firstPieceOfRow = puzzle.tiles[puzzle.corners.keys.first()]!!
-    while(puzzleIdsAssembled.size != puzzle.tiles.size) {
+    while (puzzleIdsAssembled.size != puzzle.tiles.size) {
       // pick a random corner which will become our "top left" corner
       val currentRow = mutableListOf<Tile>().apply {
         assembledPuzzle.add(this)
@@ -105,12 +36,13 @@ class Day20 @Inject constructor(
       }
 
       // we're going to the east as we build
-      // TODO: we may need to guarantee that the first corner has an east, and if not flip it around :D
+      // we may need to guarantee that the first corner has an east, and if not flip it around :D
+      // Though for our test data, and our real data it was ok ... I'm gonna leave it
       var keys = currentTile.edgeValues[EAST]!!
       // find the tile that touches that side
       var nextTile = puzzle.edgeMatches[keys.first()]?.firstOrNull { t -> t.id != currentTile.id }
 
-      while(nextTile != null) {
+      while (nextTile != null) {
         // find out how we need to orient it
         // `keys.first()` is the top to bottom orientation of the `EAST` edge from above
         val (nextTileTouchingSide, touchingKeys) = nextTile.edgeValues.entries.first { it.value.contains(keys.first()) }
@@ -133,8 +65,8 @@ class Day20 @Inject constructor(
           }
 
           WEST -> {
-            if (whichDirection == 0) { /* "do nothing" */ }
-            else nextTile.flipVertical()
+            if (whichDirection == 0) { /* "do nothing" */
+            } else nextTile.flipVertical()
           }
         }
 
@@ -169,43 +101,51 @@ class Day20 @Inject constructor(
           SOUTH -> {
             when (nextTileTouchingSide) {
               NORTH -> {
-                if (whichDirection == 0) { /* do nothing */ }
-                else newTile.flipHorizontal()
+                if (whichDirection == 0) { /* do nothing */
+                } else newTile.flipHorizontal()
               }
+
               SOUTH -> {
                 if (whichDirection == 0) newTile.flipVertical()
                 else newTile.rotate180()
               }
+
               EAST -> {
                 if (whichDirection == 0) newTile.rotateCounterClockwise()
                 else newTile.rotateCounterClockwise().flipHorizontal()
               }
+
               WEST -> {
                 if (whichDirection == 0) newTile.rotateClockwise().flipHorizontal()
                 newTile.rotateClockwise()
               }
             }
           }
+
           NORTH -> {
             when (nextTileTouchingSide) {
               NORTH -> {
                 if (whichDirection == 0) newTile.flipVertical()
                 else newTile.rotate180()
               }
+
               SOUTH -> {
-                if (whichDirection == 0) { /* do nothing */ }
-                else newTile.flipHorizontal()
+                if (whichDirection == 0) { /* do nothing */
+                } else newTile.flipHorizontal()
               }
+
               EAST -> {
                 if (whichDirection == 0) newTile.rotateCounterClockwise().flipVertical()
                 else newTile.rotateClockwise()
               }
+
               WEST -> {
                 if (whichDirection == 0) newTile.rotateCounterClockwise()
                 else newTile.rotateCounterClockwise().flipHorizontal()
               }
             }
           }
+
           else -> throw IllegalStateException("New rows must have a north south match if they were oriented correctly")
         }
         firstPieceOfRow = newTile
@@ -215,7 +155,7 @@ class Day20 @Inject constructor(
     val southDirections = growthDirections.count { it == SOUTH }
     val northDirections = growthDirections.count { it == NORTH }
 
-    val finalPuzzle= if (southDirections > northDirections) {
+    val finalPuzzle = if (southDirections > northDirections) {
       combineTiles(assembledPuzzle)
     } else if (northDirections > southDirections) {
       combineTiles(assembledPuzzle.reversed())
@@ -223,31 +163,31 @@ class Day20 @Inject constructor(
       throw IllegalStateException("No Growth Direction had a majority")
     }
 
-    val orientation1 = finalPuzzle//.also { it.forEach { println(it) }; println() }
-    val monsterCount1 = countMonsters(orientation1)
-    val orientation2 = rotate(orientation1).also { it.forEach { println(it) }; println() }
-    val monsterCount2 = countMonsters(orientation2)
-    val orientation3 = rotate(orientation2)//.also { it.forEach { println(it) }; println() }
-    val monsterCount3 = countMonsters(orientation3)
-    val orientation4 = rotate(orientation3)//.also { it.forEach { println(it) }; println() }
-    val monsterCount4 = countMonsters(orientation4)
-    val orientation5 = flip(finalPuzzle)//.also { it.forEach { println(it) }; println() }
-    val monsterCount5 = countMonsters(orientation5)
-    val orientation6 = rotate(orientation5)//.also { it.forEach { println(it) }; println() }
-    val monsterCount6 = countMonsters(orientation6)
-    val orientation7 = rotate(orientation6)//.also { it.forEach { println(it) }; println() }
-    val monsterCount7 = countMonsters(orientation7)
-    val orientation8 = rotate(orientation7)//.also { it.forEach { println(it) }; println() }
-    val monsterCount8 = countMonsters(orientation8)
+    val monsterCount1 = Lazy { countMonsters(finalPuzzle) }
+    val orientation2 = Lazy { rotate(finalPuzzle) }
+    val monsterCount2 = Lazy { countMonsters(orientation2.get()) }
+    val orientation3 = Lazy { rotate(orientation2.get()) }
+    val monsterCount3 = Lazy { countMonsters(orientation3.get()) }
+    val orientation4 = Lazy { rotate(orientation3.get()) }
+    val monsterCount4 = Lazy { countMonsters(orientation4.get()) }
+
+    val orientation5 = Lazy { flip(finalPuzzle) }
+    val monsterCount5 = Lazy { countMonsters(orientation5.get()) }
+    val orientation6 = Lazy { rotate(orientation5.get()) }
+    val monsterCount6 = Lazy { countMonsters(orientation6.get()) }
+    val orientation7 = Lazy { rotate(orientation6.get()) }
+    val monsterCount7 = Lazy { countMonsters(orientation7.get()) }
+    val orientation8 = Lazy { rotate(orientation7.get()) }
+    val monsterCount8 = Lazy { countMonsters(orientation8.get()) }
 
     val monsterCount = listOf(
       monsterCount1, monsterCount2, monsterCount3, monsterCount4,
       monsterCount5, monsterCount6, monsterCount7, monsterCount8
-    ).maxOf { it }
+    ).first { lazyCount -> lazyCount.get() > 0 }
 
     val totalOnPieces = countOn(finalPuzzle)
 
-    totalOnPieces - (monsterCount * 15)
+    totalOnPieces - (monsterCount.get() * 15)
   }
 
   private fun flip(data: List<String>): List<String> {
@@ -279,12 +219,7 @@ class Day20 @Inject constructor(
             val upperSection = previousRow[endIndex - 1]
             val lowerSection = nextRow.substring(startIndex + 1, endIndex - 2)
 
-            if (CENTER_SEA_MONSTER_LOWER.matchEntire(lowerSection) != null && upperSection == '#') {
-              println("$row ($index): $startIndex - $endIndex")
-              true
-            } else {
-              false
-            }
+            CENTER_SEA_MONSTER_LOWER.matchEntire(lowerSection) != null && upperSection == '#'
           } else {
             false
           }
@@ -299,23 +234,7 @@ class Day20 @Inject constructor(
     }
   }
 
-  private fun printPuzzle(assembledPuzzle: List<List<Tile>>) {
-    println("Current Puzzle: ")
-    assembledPuzzle.forEach { tileRow ->
-      (0..9).forEach { rowIndexForTiles ->
-        tileRow.forEach { tile ->
-          print(tile.data[rowIndexForTiles])
-          print(" ")
-        }
-        println()
-      }
-      println()
-    }
-  }
-
   private fun combineTiles(assembledPuzzle: List<MutableList<Tile>>): List<String> {
-    printPuzzle(assembledPuzzle)
-
     assembledPuzzle.forEach { tileRow ->
       tileRow.forEach { tile ->
         tile.trim()
