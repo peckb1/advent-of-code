@@ -1,10 +1,10 @@
 package me.peckb.aoc._2020.calendar.day20
 
 import me.peckb.aoc._2020.calendar.day20.Day20.Edge.*
-import me.peckb.aoc._2020.calendar.day20.Day20.Tile
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import kotlin.text.RegexOption.DOT_MATCHES_ALL
 
 class Day20 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -64,6 +64,11 @@ class Day20 @Inject constructor(
     private fun reset(dataReset: () -> List<String>) = apply {
       data = dataReset()
       edgeValues = createEdgeValues(data)
+    }
+
+    fun trim() {
+      data = data.drop(1).dropLast(1)
+        .map { it.drop(1).dropLast(1) }
     }
   }
 
@@ -211,14 +216,87 @@ class Day20 @Inject constructor(
     val northDirections = growthDirections.count { it == NORTH }
 
     val finalPuzzle= if (southDirections > northDirections) {
-      toPuzzleArray(assembledPuzzle)
+      combineTiles(assembledPuzzle)
     } else if (northDirections > southDirections) {
-      toPuzzleArray(assembledPuzzle.reversed())
+      combineTiles(assembledPuzzle.reversed())
     } else {
       throw IllegalStateException("No Growth Direction had a majority")
     }
 
-//    printPuzzle(finalPuzzle)
+    val orientation1 = finalPuzzle//.also { it.forEach { println(it) }; println() }
+    val monsterCount1 = countMonsters(orientation1)
+    val orientation2 = rotate(orientation1).also { it.forEach { println(it) }; println() }
+    val monsterCount2 = countMonsters(orientation2)
+    val orientation3 = rotate(orientation2)//.also { it.forEach { println(it) }; println() }
+    val monsterCount3 = countMonsters(orientation3)
+    val orientation4 = rotate(orientation3)//.also { it.forEach { println(it) }; println() }
+    val monsterCount4 = countMonsters(orientation4)
+    val orientation5 = flip(finalPuzzle)//.also { it.forEach { println(it) }; println() }
+    val monsterCount5 = countMonsters(orientation5)
+    val orientation6 = rotate(orientation5)//.also { it.forEach { println(it) }; println() }
+    val monsterCount6 = countMonsters(orientation6)
+    val orientation7 = rotate(orientation6)//.also { it.forEach { println(it) }; println() }
+    val monsterCount7 = countMonsters(orientation7)
+    val orientation8 = rotate(orientation7)//.also { it.forEach { println(it) }; println() }
+    val monsterCount8 = countMonsters(orientation8)
+
+    val monsterCount = listOf(
+      monsterCount1, monsterCount2, monsterCount3, monsterCount4,
+      monsterCount5, monsterCount6, monsterCount7, monsterCount8
+    ).maxOf { it }
+
+    val totalOnPieces = countOn(finalPuzzle)
+
+    totalOnPieces - (monsterCount * 15)
+  }
+
+  private fun flip(data: List<String>): List<String> {
+    return data.reversed()
+  }
+
+  private fun rotate(data: List<String>): List<String> {
+    return data.indices.map { xIndex ->
+      ((data.size - 1) downTo 0).joinToString("") { yIndex ->
+        data[yIndex][xIndex].toString()
+      }
+    }
+  }
+
+  private fun countMonsters(data: List<String>): Int {
+    return (1 until data.lastIndex).sumOf { index ->
+      val row = data[index]
+
+      val matchResults = CENTER_SEA_MONSTER_CENTER.findAll(row).toList()
+      matchResults.sumOf { matchResult ->
+        matchResult.groups.count { matchGroup ->
+          if (matchGroup != null) {
+            val previousRow = data[index - 1]
+            val nextRow = data[index + 1]
+
+            val startIndex = matchGroup.range.first
+            val endIndex = matchGroup.range.last
+
+            val upperSection = previousRow[endIndex - 1]
+            val lowerSection = nextRow.substring(startIndex + 1, endIndex - 2)
+
+            if (CENTER_SEA_MONSTER_LOWER.matchEntire(lowerSection) != null && upperSection == '#') {
+              println("$row ($index): $startIndex - $endIndex")
+              true
+            } else {
+              false
+            }
+          } else {
+            false
+          }
+        }
+      }
+    }
+  }
+
+  private fun countOn(data: List<String>): Int {
+    return data.sumOf { row ->
+      row.count { it == '#' }
+    }
   }
 
   private fun printPuzzle(assembledPuzzle: List<List<Tile>>) {
@@ -235,8 +313,28 @@ class Day20 @Inject constructor(
     }
   }
 
-  private fun toPuzzleArray(tileData: List<MutableList<Tile>>): Array<Array<Char>> {
-    TODO("Not yet implemented")
+  private fun combineTiles(assembledPuzzle: List<MutableList<Tile>>): List<String> {
+    printPuzzle(assembledPuzzle)
+
+    assembledPuzzle.forEach { tileRow ->
+      tileRow.forEach { tile ->
+        tile.trim()
+      }
+    }
+
+    val combinedTiles = mutableListOf<String>()
+
+    assembledPuzzle.forEach { tileRow ->
+      (0..7).forEach { rowIndexForTiles ->
+        val sb = StringBuilder()
+        tileRow.forEach { tile ->
+          sb.append(tile.data[rowIndexForTiles])
+        }
+        combinedTiles.add(sb.toString())
+      }
+    }
+
+    return combinedTiles
   }
 
   private fun toTile(data: List<String>): Tile {
@@ -269,5 +367,10 @@ class Day20 @Inject constructor(
     val corners = edges.filter { it.value.size == 4 }
 
     return Puzzle(tiles, edgeMatches, edges, corners)
+  }
+
+  companion object {
+    val CENTER_SEA_MONSTER_CENTER = "#.{4}##.{4}##.{4}###".toRegex(DOT_MATCHES_ALL)
+    val CENTER_SEA_MONSTER_LOWER = "#.{2}#.{2}#.{2}#.{2}#.{2}#".toRegex(DOT_MATCHES_ALL)
   }
 }
