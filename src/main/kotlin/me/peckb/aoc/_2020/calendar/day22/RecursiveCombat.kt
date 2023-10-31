@@ -62,7 +62,6 @@ class RecursiveCombat(
   }
 }
 
-
 enum class RecursiveCombatWinner {
   PLAYER_ONE, PLAYER_TWO, NO_WINNER
 }

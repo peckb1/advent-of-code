@@ -1,6 +1,7 @@
 package me.peckb.aoc._2020.calendar.day22
 
-import java.util.*
+import java.util.LinkedList
+import java.util.Queue
 
 data class CombatPlayer(
   val id: Int,
