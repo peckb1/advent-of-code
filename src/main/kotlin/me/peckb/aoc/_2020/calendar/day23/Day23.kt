@@ -19,17 +19,13 @@ class Day23 @Inject constructor(
         cups[id] = newCup
         if (currentCup == null) { currentCup = newCup }
         lastCup?.also {
-          newCup.counterClockwiseCup = it
           it.clockwiseCup = newCup
         }
         lastCup = newCup
       }
     }
 
-    lastCup?.also {
-      currentCup?.counterClockwiseCup = it
-      it.clockwiseCup = currentCup
-    }
+    lastCup?.also { it.clockwiseCup = currentCup!! }
 
     cups.runGame(100, currentCup!!)
 
@@ -46,31 +42,19 @@ class Day23 @Inject constructor(
         cups[id] = newCup
         if (currentCup == null) { currentCup = newCup }
         lastCup?.also {
-          newCup.counterClockwiseCup = it
           it.clockwiseCup = newCup
         }
         lastCup = newCup
       }
     }
 
-    cupLabeling.forEach { cupCodeChar ->
-      setupNewCup(Character.getNumericValue(cupCodeChar))
-    }
-
-    lastCup?.also {
-      currentCup?.counterClockwiseCup = it
-      it.clockwiseCup = currentCup
-    }
+    cupLabeling.forEach { cupCodeChar -> setupNewCup(Character.getNumericValue(cupCodeChar)) }
+    lastCup?.also { it.clockwiseCup = currentCup!! }
 
     val previousMaxCup = cups.keys.maxOrNull()!!
-    repeat(1_000_000 - previousMaxCup) { iteration ->
-      setupNewCup(previousMaxCup + iteration + 1)
-    }
 
-    lastCup?.also {
-      currentCup?.counterClockwiseCup = it
-      it.clockwiseCup = currentCup
-    }
+    repeat(1_000_000 - previousMaxCup) { setupNewCup(previousMaxCup + it + 1) }
+    lastCup?.also { it.clockwiseCup = currentCup!! }
 
     cups.runGame(10_000_000, currentCup!!)
 
@@ -87,9 +71,9 @@ class Day23 @Inject constructor(
 
     repeat(rounds) { round ->
       // pick up the next three cups
-      val firstCupToPickup = currentCup.clockwiseCup!!
-      val secondCupToPickup = firstCupToPickup.clockwiseCup!!
-      val thirdCupToPickup   = secondCupToPickup.clockwiseCup!!
+      val firstCupToPickup = currentCup.clockwiseCup
+      val secondCupToPickup = firstCupToPickup.clockwiseCup
+      val thirdCupToPickup   = secondCupToPickup.clockwiseCup
 
       val cupsInHand = setOfNotNull(firstCupToPickup.id, secondCupToPickup.id, thirdCupToPickup.id)
       var destinationCupId = currentCup.id
@@ -103,21 +87,16 @@ class Day23 @Inject constructor(
       // from:
       //   q -> C -> [a, b, c] -> r
       //   x -> D -> y
-      val C = currentCup
-      val a = firstCupToPickup
-      val c = thirdCupToPickup
-      val r = thirdCupToPickup.clockwiseCup!!
-
-      val D = destinationCup
-      val y = destinationCup.clockwiseCup!!
+      val r = thirdCupToPickup.clockwiseCup
+      val y = destinationCup.clockwiseCup
       // to:
       //   q -> C -> r
       //   x -> D -> [a, b, c] -> y
-      C.clockwiseCup = r; r.counterClockwiseCup = C
-      D.clockwiseCup = a; a.counterClockwiseCup = D
-      c.clockwiseCup = y; y.counterClockwiseCup = c
+      currentCup.clockwiseCup = r
+      destinationCup.clockwiseCup = firstCupToPickup
+      thirdCupToPickup.clockwiseCup = y
 
-      currentCup = currentCup.clockwiseCup!!
+      currentCup = currentCup.clockwiseCup
     }
   }
 
@@ -127,15 +106,14 @@ class Day23 @Inject constructor(
       append(cup.id)
     }
     repeat(cups.size) {
-      sb.append("${cup.clockwiseCup?.id}")
-      cup = cup.clockwiseCup!!
+      sb.append("${cup.clockwiseCup.id}")
+      cup = cup.clockwiseCup
     }
     return sb.toString()
   }
 
   data class Cup(val id: Int) {
-    var clockwiseCup: Cup? = null
-    var counterClockwiseCup: Cup? = null
+    lateinit var clockwiseCup: Cup
 
     override fun toString(): String {
       return id.toString()
