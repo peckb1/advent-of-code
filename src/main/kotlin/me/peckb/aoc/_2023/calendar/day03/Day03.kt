@@ -8,145 +8,97 @@ class Day03 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val engineSchematic = mutableListOf<String>()
-    val parts: MutableMap<Location, Int> = mutableMapOf()
+    val (engine, parts) = createData(input)
 
-    input.forEachIndexed { rowIndex, line ->
-      engineSchematic.add(line)
+    val validParts = mutableSetOf<Part>()
 
-      var currentDigit = ""
-      line.forEachIndexed { colIndex, c ->
-        if (c.isDigit()) {
-          currentDigit += c
-        } else {
-          currentDigit.toIntOrNull()?.let { number ->
-            val l = Location(rowIndex, colIndex - currentDigit.length, colIndex - 1)
-            parts[l] = number
+    engine.forEachIndexed { rowIndex, row ->
+      val rowRange = (rowIndex - 1)..(rowIndex + 1)
+      row.forEachIndexed { colIndex, c ->
+        if (c.isSymbol) {
+          parts.forEach { part ->
+            val partIsNearRow = rowRange.contains(part.location.row)
+            val partIsNearCol by lazy { part.location.extendedRange.contains(colIndex) }
+
+            if (partIsNearRow && partIsNearCol) validParts.add(part)
           }
-          currentDigit = ""
         }
       }
-      currentDigit.toIntOrNull()?.let { number ->
-        val l = Location(rowIndex, line.length - currentDigit.length, line.length - 1)
-        parts[l] = number
-      }
     }
 
-    parts.entries.sumOf { (location, value) ->
-      if (location.isNearSymbol(engineSchematic)) {
-        value
-      } else {
-        0
-      }
-    }
+    validParts.sumOf { it.value }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val (engine, parts) = createData(input)
+
+    val gearRatios = mutableListOf<Int>()
+
+    engine.forEachIndexed { rowIndex, row ->
+      val rowRange = (rowIndex - 1)..(rowIndex + 1)
+      row.forEachIndexed { colIndex, c ->
+        if (c.isGear) {
+          val nearbyParts = parts.filter { part ->
+            val partIsNearRow = rowRange.contains(part.location.row)
+            val partIsNearCol by lazy { part.location.extendedRange.contains(colIndex) }
+
+            partIsNearRow && partIsNearCol
+          }
+
+          if (nearbyParts.size == 2) {
+            gearRatios.add(nearbyParts.first().value * nearbyParts.last().value)
+          }
+        }
+      }
+    }
+
+    gearRatios.sum()
+  }
+
+  private fun createData(input: Sequence<String>): Pair<MutableList<String>, MutableList<Part>> {
     val engineSchematic = mutableListOf<String>()
-    val parts: MutableMap<Location, Int> = mutableMapOf()
+    val parts: MutableList<Part> = mutableListOf()
 
-    input.forEachIndexed { rowIndex, line ->
-      engineSchematic.add(line)
-
-      var currentDigit = ""
-      line.forEachIndexed { colIndex, c ->
-        if (c.isDigit()) {
-          currentDigit += c
-        } else {
-          currentDigit.toIntOrNull()?.let { number ->
-            val l = Location(rowIndex, colIndex - currentDigit.length, colIndex - 1)
-            parts[l] = number
-          }
-          currentDigit = ""
-        }
-      }
-      currentDigit.toIntOrNull()?.let { number ->
-        val l = Location(rowIndex, line.length - currentDigit.length, line.length - 1)
-        parts[l] = number
+    input.forEachIndexed { rowIndex, row ->
+      engineSchematic.add(row)
+      findPartData(row).forEach { (intRange, value) ->
+        val location = Location(rowIndex, intRange)
+        val part = Part(value, location)
+        parts.add(part)
       }
     }
 
-    engineSchematic.mapIndexed { rowIndex, row ->
-
-      row.mapIndexed { colIndex, c ->
-        if (c == '*') {
-          val nearbyNumbers = parts.filter { (loc, ) ->
-            ((rowIndex-1)..(rowIndex+1)).contains(loc.row) &&
-              (loc.startIndex-1..loc.endIndex+1).contains(colIndex)
-          }
-
-          if (nearbyNumbers.entries.size == 2) {
-            nearbyNumbers.entries.fold(1) { acc, entry ->
-              acc * entry.value
-            }
-          } else {
-            0
-          }
-        } else {
-          0
-        }
-      }.sum()
-    }.sum()
-
+    return (engineSchematic to parts)
   }
 
-  data class Location(val row: Int, val startIndex: Int, val endIndex: Int) {
-    fun isNearSymbol(engineSchematic: MutableList<String>): Boolean {
-      return (startIndex..endIndex).any { colIndex ->
-        if (row > 0) {
-          if (colIndex > 0) {
-            val ul = engineSchematic[row-1][colIndex-1]
-            if (ul != '.' && !ul.isDigit()) {
-              return true
-            }
-          }
-          val u = engineSchematic[row-1][colIndex]
-          if (u != '.' && !u.isDigit()) {
-            return true
-          }
+  private fun findPartData(row: String): List<Pair<IntRange, Int>> {
+    val parts = mutableListOf<Pair<IntRange, Int>>()
+    var currentDigit = ""
 
-          if (colIndex < engineSchematic[row-1].length - 1) {
-            val ur = engineSchematic[row - 1][colIndex + 1]
-            if (ur != '.' && !ur.isDigit()) {
-              return true
-            }
-          }
+    row.forEachIndexed { colIndex, c ->
+      if (c.isDigit()) {
+        currentDigit += c
+      } else {
+        currentDigit.toIntOrNull()?.let { number ->
+          val range = (colIndex - currentDigit.length - 1)..colIndex
+          parts.add(range to number)
         }
-
-        if (startIndex > 0) {
-          if (engineSchematic[row][startIndex - 1] != '.') {
-            return true
-          }
-        }
-
-        if (endIndex < engineSchematic[row].length - 1) {
-          if (engineSchematic[row][endIndex + 1] != '.') {
-            return true
-          }
-        }
-
-        if (row < engineSchematic.size - 1) {
-          if (colIndex > 0) {
-            val dl = engineSchematic[row+1][colIndex-1]
-            if (dl != '.' && !dl.isDigit()) {
-              return true
-            }
-          }
-          val d = engineSchematic[row+1][colIndex]
-          if (d != '.' && !d.isDigit()) {
-            return true
-          }
-          if (colIndex < engineSchematic[row+1].length - 1) {
-            val dr = engineSchematic[row + 1][colIndex + 1]
-            if (dr != '.' && !dr.isDigit()) {
-              return true
-            }
-          }
-        }
-
-        false
+        currentDigit = ""
       }
     }
+    currentDigit.toIntOrNull()?.let { number ->
+      val range = (row.length - currentDigit.length - 1)..row.length
+      parts.add(range to number)
+    }
+
+    return parts
   }
 
+  data class Part(val value: Int, val location: Location)
+
+  data class Location(val row: Int, val extendedRange: IntRange)
+
+  private val Char.isSymbol get() = !this.isDigit() && this != '.'
+
+  private val Char.isGear get() = this == '*'
 }
