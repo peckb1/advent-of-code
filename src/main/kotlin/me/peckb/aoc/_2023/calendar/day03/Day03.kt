@@ -13,14 +13,12 @@ class Day03 @Inject constructor(
     val validParts = mutableSetOf<Part>()
 
     engine.forEachIndexed { rowIndex, row ->
-      val rowRange = (rowIndex - 1)..(rowIndex + 1)
       row.forEachIndexed { colIndex, c ->
         if (c.isSymbol) {
-          parts.forEach { part ->
-            val partIsNearRow = rowRange.contains(part.location.row)
-            val partIsNearCol by lazy { part.location.extendedRange.contains(colIndex) }
-
-            if (partIsNearRow && partIsNearCol) validParts.add(part)
+          listOfNotNull(
+            parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
+          ).flatten().forEach { part ->
+            if (part.location.extendedRange.contains(colIndex)) validParts.add(part)
           }
         }
       }
@@ -32,39 +30,36 @@ class Day03 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     val (engine, parts) = createData(input)
 
-    val gearRatios = mutableListOf<Int>()
+    var gearRatioSum = 0
 
     engine.forEachIndexed { rowIndex, row ->
-      val rowRange = (rowIndex - 1)..(rowIndex + 1)
       row.forEachIndexed { colIndex, c ->
         if (c.isGear) {
-          val nearbyParts = parts.filter { part ->
-            val partIsNearRow = rowRange.contains(part.location.row)
-            val partIsNearCol by lazy { part.location.extendedRange.contains(colIndex) }
-
-            partIsNearRow && partIsNearCol
-          }
+          val nearbyParts = listOfNotNull(
+            parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
+          ).flatten().filter { part -> part.location.extendedRange.contains(colIndex) }
 
           if (nearbyParts.size == 2) {
-            gearRatios.add(nearbyParts.first().value * nearbyParts.last().value)
+            gearRatioSum += (nearbyParts.first().value * nearbyParts.last().value)
           }
         }
       }
     }
 
-    gearRatios.sum()
+    gearRatioSum
   }
 
-  private fun createData(input: Sequence<String>): Pair<MutableList<String>, MutableList<Part>> {
+  private fun createData(input: Sequence<String>): Pair<List<String>, Map<Int, List<Part>>> {
     val engineSchematic = mutableListOf<String>()
-    val parts: MutableList<Part> = mutableListOf()
+    val parts: MutableMap<Int, MutableList<Part>> = mutableMapOf()
 
     input.forEachIndexed { rowIndex, row ->
       engineSchematic.add(row)
       findPartData(row).forEach { (intRange, value) ->
         val location = Location(rowIndex, intRange)
         val part = Part(value, location)
-        parts.add(part)
+
+        parts[rowIndex] = parts.getOrDefault(rowIndex, mutableListOf()).also { it.add(part) }
       }
     }
 
