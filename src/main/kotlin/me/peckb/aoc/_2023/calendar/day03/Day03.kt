@@ -8,19 +8,15 @@ class Day03 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val (engine, parts) = createData(input)
+    val (symbolLocations, parts) = createData(input) { !it.isDigit() && it != '.' }
 
     val validParts = mutableSetOf<Part>()
 
-    engine.forEachIndexed { rowIndex, row ->
-      row.forEachIndexed { colIndex, c ->
-        if (c.isSymbol) {
-          listOfNotNull(
-            parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
-          ).flatten().forEach { part ->
-            if (part.location.extendedRange.contains(colIndex)) validParts.add(part)
-          }
-        }
+    symbolLocations.forEach { (rowIndex, colIndex) ->
+      listOfNotNull(
+        parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
+      ).flatten().forEach { part ->
+        if (part.location.extendedRange.contains(colIndex)) validParts.add(part)
       }
     }
 
@@ -28,33 +24,33 @@ class Day03 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val (engine, parts) = createData(input)
+    val (symbolLocations, parts) = createData(input) { it == '*' }
 
     var gearRatioSum = 0
 
-    engine.forEachIndexed { rowIndex, row ->
-      row.forEachIndexed { colIndex, c ->
-        if (c.isGear) {
-          val nearbyParts = listOfNotNull(
-            parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
-          ).flatten().filter { part -> part.location.extendedRange.contains(colIndex) }
+    symbolLocations.forEach { (rowIndex, colIndex) ->
+      val nearbyParts = listOfNotNull(
+        parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
+      ).flatten().filter { part -> part.location.extendedRange.contains(colIndex) }
 
-          if (nearbyParts.size == 2) {
-            gearRatioSum += (nearbyParts.first().value * nearbyParts.last().value)
-          }
-        }
+      if (nearbyParts.size == 2) {
+        gearRatioSum += (nearbyParts.first().value * nearbyParts.last().value)
       }
     }
 
     gearRatioSum
   }
 
-  private fun createData(input: Sequence<String>): Pair<List<String>, Map<Int, List<Part>>> {
-    val engineSchematic = mutableListOf<String>()
+  private fun createData(input: Sequence<String>, check: (Char) -> Boolean): Pair<List<SymbolLocation>, Map<Int, List<Part>>> {
+    val validSymbols = mutableListOf<SymbolLocation>()
     val parts: MutableMap<Int, MutableList<Part>> = mutableMapOf()
 
     input.forEachIndexed { rowIndex, row ->
-      engineSchematic.add(row)
+      row.forEachIndexed { colIndex, c ->
+        if (check(c)) {
+          validSymbols.add(SymbolLocation(rowIndex, colIndex))
+        }
+      }
       findPartData(row).forEach { (intRange, value) ->
         val location = Location(rowIndex, intRange)
         val part = Part(value, location)
@@ -63,7 +59,7 @@ class Day03 @Inject constructor(
       }
     }
 
-    return (engineSchematic to parts)
+    return (validSymbols to parts)
   }
 
   private fun findPartData(row: String): List<Pair<IntRange, Int>> {
@@ -89,11 +85,9 @@ class Day03 @Inject constructor(
     return parts
   }
 
+  data class SymbolLocation(val rowIndex: Int, val colIndex: Int)
+
   data class Part(val value: Int, val location: Location)
 
   data class Location(val row: Int, val extendedRange: IntRange)
-
-  private val Char.isSymbol get() = !this.isDigit() && this != '.'
-
-  private val Char.isGear get() = this == '*'
 }
