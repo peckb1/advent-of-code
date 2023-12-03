@@ -13,11 +13,10 @@ class Day03 @Inject constructor(
     val validParts = mutableSetOf<Part>()
 
     symbolLocations.forEach { (rowIndex, colIndex) ->
-      listOfNotNull(
-        parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
-      ).flatten().forEach { part ->
-        if (part.location.extendedRange.contains(colIndex)) validParts.add(part)
-      }
+      listOfNotNull(parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1])
+        .flatten()
+        .filter { it.location.extendedRange.contains(colIndex) }
+        .forEach { validParts.add(it) }
     }
 
     validParts.sumOf { it.value }
@@ -29,9 +28,9 @@ class Day03 @Inject constructor(
     var gearRatioSum = 0
 
     symbolLocations.forEach { (rowIndex, colIndex) ->
-      val nearbyParts = listOfNotNull(
-        parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1]
-      ).flatten().filter { part -> part.location.extendedRange.contains(colIndex) }
+      val nearbyParts = listOfNotNull(parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1])
+        .flatten()
+        .filter { part -> part.location.extendedRange.contains(colIndex) }
 
       if (nearbyParts.size == 2) {
         gearRatioSum += (nearbyParts.first().value * nearbyParts.last().value)
@@ -41,7 +40,10 @@ class Day03 @Inject constructor(
     gearRatioSum
   }
 
-  private fun createData(input: Sequence<String>, check: (Char) -> Boolean): Pair<List<SymbolLocation>, Map<Int, List<Part>>> {
+  private fun createData(
+    input: Sequence<String>,
+    check: (Char) -> Boolean
+  ): Pair<List<SymbolLocation>, Map<Int, List<Part>>> {
     val validSymbols = mutableListOf<SymbolLocation>()
     val parts: MutableMap<Int, MutableList<Part>> = mutableMapOf()
 
