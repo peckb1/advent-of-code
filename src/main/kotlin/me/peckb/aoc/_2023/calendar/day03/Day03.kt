@@ -10,16 +10,16 @@ class Day03 @Inject constructor(
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     val (symbolLocations, parts) = createData(input) { !it.isDigit() && it != '.' }
 
-    val validParts = mutableSetOf<Part>()
+    var partSum = 0
 
     symbolLocations.forEach { (rowIndex, colIndex) ->
       listOfNotNull(parts[rowIndex - 1], parts[rowIndex], parts[rowIndex + 1])
         .flatten()
         .filter { it.location.extendedRange.contains(colIndex) }
-        .forEach { validParts.add(it) }
+        .forEach { partSum += it.value }
     }
 
-    validParts.sumOf { it.value }
+    partSum
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
