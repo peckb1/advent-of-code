@@ -90,6 +90,10 @@ as the value which passed the given day/phase combination
 * Day 18
   * My first flood fill algorithm
 
+#### 2023
+* Day 01
+  * Way to hard for a "normal" Day 01. Gave the year an "uh oh" vibe from the start! 
+
 ### Interesting approaches:
 
 #### 2015
@@ -135,6 +139,9 @@ as the value which passed the given day/phase combination
 * Day 09 The [-1, 0, 1] returned by `compareTo( ~ )` helped simplify the movement of a tail.
 * Day 12 Reversing the Dijkstra to go from `E` to all `a` to save an order of magnitude of searching was a nice optimization.
 * Day 15 Precomputing the shortest paths for every valve combination seemed key to being able to quickly go from node to node in a brute force solution.   
+
+#### 2023
+* Day 05 The fact that the numbers are "small" meant just starting at 0 and iterating over every location until we found one that matches a seed helps avoid the "forever" brute force solutions 
 
 ## Takeaways
 
