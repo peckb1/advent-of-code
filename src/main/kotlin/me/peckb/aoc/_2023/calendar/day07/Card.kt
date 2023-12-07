@@ -13,15 +13,20 @@ enum class Card(val rank: Int) {
   FIVE(5),
   FOUR(4),
   THREE(3),
-  TWO(2);
+  TWO(2),
+  JOKER(1);
 
   companion object {
-    fun fromSymbol(symbol: Char): Card {
+    fun fromSymbol(symbol: Char) = fromSymbol(symbol, JACK)
+
+    fun fromSymbolWithJokers(symbol: Char) = fromSymbol(symbol, JOKER)
+
+    private fun fromSymbol(symbol: Char, j: Card): Card {
       return when (symbol) {
         'A' -> ACE
         'K' -> KING
         'Q' -> QUEEN
-        'J' -> JACK
+        'J' -> j
         'T' -> TEN
         '9' -> NINE
         '8' -> EIGHT
