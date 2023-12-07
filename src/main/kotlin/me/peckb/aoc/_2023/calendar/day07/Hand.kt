@@ -1,6 +1,7 @@
 package me.peckb.aoc._2023.calendar.day07
 
 import me.peckb.aoc._2023.calendar.day07.Card.JOKER
+import me.peckb.aoc._2023.calendar.day07.HandStrength.*
 
 data class Hand(val cards: List<Card>, val bid: Int) {
   private val jokers = cards.count { it == JOKER }
@@ -23,37 +24,37 @@ data class Hand(val cards: List<Card>, val bid: Int) {
       (ones == 1 && jokers == 4) ||
       jokers == 5
     ) {
-      HandStrength.FIVE_OF_A_KIND
+      FIVE_OF_A_KIND
     } else if (
       fours == 1 ||
       (threes == 1 && jokers == 1) ||
       (twos == 1 && jokers == 2) ||
       (ones >= 1 && jokers == 3)
     ) {
-      HandStrength.FOUR_OF_A_KIND
+      FOUR_OF_A_KIND
     } else if (
       (threes == 1 && twos == 1) ||
       (twos == 2 && jokers == 1)
     ) {
-      HandStrength.FULL_HOUSE
+      FULL_HOUSE
     } else if (
       threes == 1 ||
       (twos >= 1 && jokers == 1) ||
       (ones >= 1 && jokers == 2)
     ) {
-      HandStrength.THREE_OF_A_KIND
+      THREE_OF_A_KIND
     } else if (
       twos == 2 ||
       (ones > 1 && jokers >= 2)
     ) {
-      HandStrength.TWO_PAIR
+      TWO_PAIR
     } else if (
       twos == 1 ||
       ones > 1 && jokers >= 1
     ) {
-      HandStrength.ONE_PAIR
+      ONE_PAIR
     } else {
-      HandStrength.HIGH_CARD
+      HIGH_CARD
     }
   }
 
