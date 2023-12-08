@@ -92,7 +92,9 @@ as the value which passed the given day/phase combination
 
 #### 2023
 * Day 01
-  * Way to hard for a "normal" Day 01. Gave the year an "uh oh" vibe from the start! 
+  * Way to hard for a "normal" Day 01. Gave the year an "uh oh" vibe from the start!
+* Day 08
+  * This was my first "the AoC way to solve this is ..." where seeing that we had cycles and a forever brute force meant to try Least Common Multiple, which succeeded 
 
 ### Interesting approaches:
 
