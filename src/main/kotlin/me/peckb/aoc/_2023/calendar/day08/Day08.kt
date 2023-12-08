@@ -3,7 +3,7 @@ package me.peckb.aoc._2023.calendar.day08
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import org.apache.commons.math3.util.ArithmeticUtils.gcd
+import org.apache.commons.math3.util.ArithmeticUtils.lcm
 
 class Day08 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -44,8 +44,6 @@ class Day08 @Inject constructor(
 
     stepsForEachStart.fold(1L) { acc, next -> lcm(acc, next) }
   }
-
-  private fun lcm(a: Long, b: Long): Long = (a * b) / gcd(a, b)
 
   data class Node(val id: String, val leftId: String, val rightID: String)
 
