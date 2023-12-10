@@ -27,12 +27,8 @@ class Day10 @Inject constructor(
     markInsideAreas(area, outsideCorner.row, outsideCorner.col)
     floodFillInsideItems(area)
 
-    area.sumOf { row ->
-      row.count { it == INSIDE }
-    }
+    area.sumOf { row -> row.count { it == INSIDE } }
   }
-
-
 
   private fun generateArea(input: Sequence<String>): Triple<MutableList<MutableList<LandType>>, Int, Int> {
     val area = mutableListOf<MutableList<LandType>>()
@@ -288,12 +284,11 @@ class Day10 @Inject constructor(
               emptyList()
             }
             when (directionCameFrom) {
-              N -> stepsToTake.add(StepData(N, Location(location.row + 1, location.col), insideDirections = myInsides))
-              S -> stepsToTake.add(StepData(S, Location(location.row - 1, location.col), insideDirections = myInsides))
+              N -> stepsToTake.add(StepData(N, location.goSouth(), insideDirections = myInsides))
+              S -> stepsToTake.add(StepData(S, location.goNorth(), insideDirections = myInsides))
               else -> throw IllegalStateException("Where did I come from")
             }
           }
-
           EW_PIPE -> {
             myInsides = if (northSide) {
               listOf(FloodFill.N)
@@ -303,12 +298,11 @@ class Day10 @Inject constructor(
               emptyList()
             }
             when (directionCameFrom) {
-              W -> stepsToTake.add(StepData(W, Location(location.row, location.col + 1), insideDirections = myInsides))
-              E -> stepsToTake.add(StepData(E, Location(location.row, location.col - 1), insideDirections = myInsides))
+              W -> stepsToTake.add(StepData(W, location.goEast(), insideDirections = myInsides))
+              E -> stepsToTake.add(StepData(E, location.goWest(), insideDirections = myInsides))
               else -> throw IllegalStateException("Where did I come from")
             }
           }
-
           NE_PIPE -> {
             when (directionCameFrom) {
               E -> {
@@ -319,7 +313,7 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(S, Location(location.row - 1, location.col), insideDirections = myInsides))
+                stepsToTake.add(StepData(S, location.goNorth(), insideDirections = myInsides))
               }
               N -> {
                 myInsides = if(westSide) {
@@ -329,12 +323,11 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(W, Location(location.row, location.col + 1), insideDirections = myInsides))
+                stepsToTake.add(StepData(W, location.goEast(), insideDirections = myInsides))
               }
               else -> throw IllegalStateException("Where did I come from")
             }
           }
-
           NW_PIPE -> {
             when (directionCameFrom) {
               W -> {
@@ -345,7 +338,7 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(S, Location(location.row - 1, location.col), insideDirections = myInsides))
+                stepsToTake.add(StepData(S, location.goNorth(), insideDirections = myInsides))
               }
               N -> {
                 myInsides = if(westSide) {
@@ -355,12 +348,11 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(E, Location(location.row, location.col - 1), insideDirections = myInsides))
+                stepsToTake.add(StepData(E, location.goWest(), insideDirections = myInsides))
               }
               else -> throw IllegalStateException("Where did I come from")
             }
           }
-
           SW_PIPE -> {
             when (directionCameFrom) {
               S -> {
@@ -371,7 +363,7 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(E, Location(location.row, location.col - 1), insideDirections = myInsides))
+                stepsToTake.add(StepData(E, location.goWest(), insideDirections = myInsides))
               }
               W -> {
                 myInsides = if(northSide) {
@@ -381,12 +373,11 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(N, Location(location.row + 1, location.col), insideDirections = myInsides))
+                stepsToTake.add(StepData(N, location.goSouth(), insideDirections = myInsides))
               }
               else -> throw IllegalStateException("Where did I come from")
             }
           }
-
           SE_PIPE -> {
             when (directionCameFrom) {
               E -> {
@@ -397,7 +388,7 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(N, Location(location.row + 1, location.col), insideDirections = myInsides))
+                stepsToTake.add(StepData(N, location.goSouth(), insideDirections = myInsides))
               }
               S -> {
                 myInsides = if(westSide) {
@@ -407,99 +398,52 @@ class Day10 @Inject constructor(
                 } else {
                   emptyList()
                 }
-                stepsToTake.add(StepData(W, Location(location.row, location.col + 1), insideDirections = myInsides))
+                stepsToTake.add(StepData(W, location.goEast(), insideDirections = myInsides))
               }
               else -> throw IllegalStateException("Where did I come from")
             }
           }
-
           else -> throw IllegalStateException("Unknown Start Pipe")
         }
 
         myInsides.forEach { myInside ->
+          val canFillNorth by lazy { location.row > 0 }
+          val canFillSouth by lazy { location.row < area.size - 1 }
+          val canFillEast by lazy { location.col < area[location.row].size - 1 }
+          val canFillWest by lazy { location.col > 0 }
+
           when (myInside) {
-            FloodFill.NE -> {
-              if (
-                location.row > 0 &&
-                location.col < area[location.row].size - 1 &&
-                area[location.row - 1][location.col + 1] == GROUND
-              ) {
-                area[location.row - 1][location.col + 1] = INSIDE
-              }
+            FloodFill.NE -> if (canFillNorth && canFillEast && area.isGround(location.row - 1, location.col + 1)) {
+              area[location.row - 1][location.col + 1] = INSIDE
             }
-
-            FloodFill.NW -> {
-              if (
-                location.row > 0 &&
-                location.col > 0 &&
-                area[location.row - 1][location.col - 1] == GROUND
-              ) {
-                area[location.row - 1][location.col - 1] = INSIDE
-              }
+            FloodFill.NW -> if (canFillNorth && canFillWest && area.isGround(location.row - 1, location.col - 1)) {
+              area[location.row - 1][location.col - 1] = INSIDE
             }
-
-            FloodFill.SE -> {
-              if (
-                location.row < area.size - 1 &&
-                location.col < area[location.row].size - 1 &&
-                area[location.row + 1][location.col + 1] == GROUND
-              ) {
-                area[location.row + 1][location.col + 1] = INSIDE
-              }
+            FloodFill.SE -> if (canFillSouth && canFillEast && area.isGround(location.row + 1, location.col + 1)) {
+              area[location.row + 1][location.col + 1] = INSIDE
             }
-
-            FloodFill.SW -> {
-              if (
-                location.row < area.size - 1 &&
-                location.col > 0 &&
-                area[location.row + 1][location.col - 1] == GROUND
-              ) {
-                area[location.row + 1][location.col - 1] = INSIDE
-              }
+            FloodFill.SW -> if (canFillSouth && canFillWest && area.isGround(location.row + 1, location.col - 1)) {
+              area[location.row + 1][location.col - 1] = INSIDE
             }
-
-            FloodFill.N -> {
-              if (
-                location.row > 0 &&
-                area[location.row - 1][location.col] == GROUND
-              ) {
-                area[location.row - 1][location.col] = INSIDE
-              }
+            FloodFill.N -> if (canFillNorth && area.isGround(location.row - 1, location.col)) {
+              area[location.row - 1][location.col] = INSIDE
             }
-
-            FloodFill.S -> {
-              if (
-                location.row < area.size - 1 &&
-                area[location.row + 1][location.col] == GROUND
-              ) {
-                area[location.row + 1][location.col] = INSIDE
-              }
+            FloodFill.S -> if (canFillSouth && area.isGround(location.row + 1, location.col)) {
+              area[location.row + 1][location.col] = INSIDE
             }
-
-            FloodFill.E -> {
-              if (
-                location.col < area[location.row].size - 1 &&
-                area[location.row][location.col + 1] == GROUND
-              ) {
-                area[location.row][location.col + 1] = INSIDE
-              }
+            FloodFill.E -> if (canFillEast && area.isGround(location.row, location.col + 1)) {
+              area[location.row][location.col + 1] = INSIDE
             }
-
-            FloodFill.W -> {
-              if (
-                location.col > 0 &&
-                area[location.row][location.col - 1] == GROUND
-              ) {
-                area[location.row][location.col - 1] = INSIDE
-              }
+            FloodFill.W -> if (canFillWest && area.isGround(location.row, location.col - 1)) {
+              area[location.row][location.col - 1] = INSIDE
             }
-
-            FloodFill.UNKNOWN -> { /* ignore! */ }
           }
         }
       }
     }
   }
+
+  private fun List<List<LandType>>.isGround(row: Int, col: Int) = this[row][col] == GROUND
 
   data class StepData(
     val directionCameFrom: DirectionCameFrom,
@@ -517,7 +461,7 @@ class Day10 @Inject constructor(
 
   enum class DirectionCameFrom { N, S, E, W }
 
-  enum class FloodFill { NE, NW, SE, SW, N, S, E, W, UNKNOWN }
+  enum class FloodFill { NE, NW, SE, SW, N, S, E, W }
 
   enum class LandType(private val symbol: Char) {
     NS_PIPE('|'),
