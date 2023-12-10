@@ -20,17 +20,19 @@ class Day10 @Inject constructor(
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     val (area, startLocationRow, startLocationCol) = generateArea(input)
-    val locationDistances: Map<Location, Int> = findOurPipes(area, startLocationRow, startLocationCol).also {
-      clearExtraneousPipe(area, it)
-    }
+    val locationDistances: Map<Location, Int> = findOurPipes(area, startLocationRow, startLocationCol)
+    clearExtraneousPipe(area, locationDistances)
 
-    things(area, startLocationCol, startLocationRow)
-    things2(area)
+    val outsideCorner: Location = findOutsideCorner(area)
+    markInsideAreas(area, outsideCorner.row, outsideCorner.col)
+    floodFillInsideItems(area)
 
     area.sumOf { row ->
       row.count { it == INSIDE }
     }
   }
+
+
 
   private fun generateArea(input: Sequence<String>): Triple<MutableList<MutableList<LandType>>, Int, Int> {
     val area = mutableListOf<MutableList<LandType>>()
@@ -38,17 +40,17 @@ class Day10 @Inject constructor(
     var startLocationRow = -1
     var startLocationCol = -1
     input.forEachIndexed { rowIndex, row ->
-      val pipeRow = mutableListOf<LandType>()
+      val landTypeRow = mutableListOf<LandType>()
       row.forEachIndexed { colIndex, c ->
-        LandType.fromSymbol(c).also { pipe ->
-          pipeRow.add(pipe)
-          if (pipe == LandType.START) {
+        LandType.fromSymbol(c).also { landType ->
+          landTypeRow.add(landType)
+          if (landType == START) {
             startLocationRow = rowIndex
             startLocationCol = colIndex
           }
         }
       }
-      area.add(pipeRow)
+      area.add(landTypeRow)
     }
 
     mutateStartPipeLocation(area, startLocationRow, startLocationCol)
@@ -194,27 +196,6 @@ class Day10 @Inject constructor(
     return locationDistances
   }
 
-  private fun things2(area: MutableList<MutableList<LandType>>) {
-    area.forEachIndexed { r, row ->
-      row.forEachIndexed { c, pipe ->
-        if (pipe == GROUND) {
-          if (r > 0 && area[r-1][c] == INSIDE) {
-            area[r][c] = INSIDE
-          }
-          if (r < area.size - 1 && area[r+1][c] == INSIDE) {
-            area[r][c] = INSIDE
-          }
-          if (c > 0 && area[r][c-1] == INSIDE) {
-            area[r][c] = INSIDE
-          }
-          if (c < area[r].size - 1 && area[r][c+1] == INSIDE) {
-            area[r][c] = INSIDE
-          }
-        }
-      }
-    }
-  }
-
   private fun clearExtraneousPipe(area: MutableList<MutableList<LandType>>, locationMap: Map<Location, Int>) {
     area.forEachIndexed { rowIndex , row ->
       row.indices.forEach { colIndex ->
@@ -225,184 +206,219 @@ class Day10 @Inject constructor(
     }
   }
 
-  fun things(area: MutableList<MutableList<LandType>>, startLocationCol: Int, startLocationRow: Int) {
+  private fun findOutsideCorner(area: MutableList<MutableList<LandType>>): Location {
+    area.forEachIndexed { rowIndex, row ->
+      row.forEachIndexed { colIndex, landType ->
+        if (landType != GROUND) {
+          return Location(rowIndex, colIndex)
+        }
+      }
+    }
+    throw IllegalStateException("No pipe found")
+  }
+
+  private fun floodFillInsideItems(area: MutableList<MutableList<LandType>>) {
+    area.forEachIndexed { r, row ->
+      row.forEachIndexed { c, landType ->
+        if (landType == GROUND) {
+          if (r > 0 && area[r-1][c] == INSIDE) {
+            area[r][c] = INSIDE
+          } else if (r < area.size - 1 && area[r+1][c] == INSIDE) {
+            area[r][c] = INSIDE
+          } else if (c > 0 && area[r][c-1] == INSIDE) {
+            area[r][c] = INSIDE
+          } else if (c < area[r].size - 1 && area[r][c+1] == INSIDE) {
+            area[r][c] = INSIDE
+          }
+        }
+      }
+    }
+  }
+
+  private fun markInsideAreas(area: MutableList<MutableList<LandType>>, startLocationRow: Int, startLocationCol: Int) {
     val stepsToTake: Queue<StepData> = LinkedList()
-    val locationDistances = mutableMapOf<Location, Int>()
+    val locations = mutableSetOf<Location>()
+
+    val startLocation = Location(startLocationRow, startLocationCol)
 
     when (area[startLocationRow][startLocationCol]) {
-      NS_PIPE -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
-      }
-      EW_PIPE -> {
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.N)))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.N)))
-      }
       NE_PIPE -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.NE)))
+        stepsToTake.add(StepData(S, startLocation.goNorth(), insideDirections = listOf(FloodFill.NE)))
+        stepsToTake.add(StepData(W, startLocation.goEast(), insideDirections = listOf(FloodFill.NE)))
       }
       NW_PIPE -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NW)))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.NW)))
+        stepsToTake.add(StepData(S, startLocation.goNorth(), insideDirections = listOf(FloodFill.NW)))
+        stepsToTake.add(StepData(E, startLocation.goWest(), insideDirections = listOf(FloodFill.NW)))
       }
       SW_PIPE -> {
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.SW)))
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SW)))
+        stepsToTake.add(StepData(E, startLocation.goWest(), insideDirections = listOf(FloodFill.SW)))
+        stepsToTake.add(StepData(N, startLocation.goSouth(), insideDirections = listOf(FloodFill.SW)))
       }
       SE_PIPE -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.SE)))
+        stepsToTake.add(StepData(N, startLocation.goSouth(), insideDirections = listOf(FloodFill.SE)))
+        stepsToTake.add(StepData(W, startLocation.goEast(), insideDirections = listOf(FloodFill.SE)))
       }
-      else -> throw IllegalStateException("Unknown Start Pipe")
+      else -> throw IllegalStateException("Unknown Corner Pipe")
     }
 
-    locationDistances[Location(startLocationRow, startLocationCol)] = 0
+    locations.add(Location(startLocationRow, startLocationCol))
+
+    val floodDirectionsWithNorth = setOf(FloodFill.N, FloodFill.NW, FloodFill.NE)
+    val floodDirectionsWithSouth = setOf(FloodFill.S, FloodFill.SW, FloodFill.SE)
+    val floodDirectionsWithEast = setOf(FloodFill.E, FloodFill.NE, FloodFill.SE)
+    val floodDirectionsWithWest = setOf(FloodFill.W, FloodFill.NW, FloodFill.SW)
 
     while (stepsToTake.isNotEmpty()) {
-      val (directionCameFrom, location, stepCount, insideDirections) = stepsToTake.remove()
+      val (directionCameFrom, location, _, insideDirections) = stepsToTake.remove()
 
-      if (!locationDistances.containsKey(location)) {
+      val eastSide by lazy { insideDirections.any { floodDirectionsWithEast.contains(it) } }
+      val westSide by lazy { insideDirections.any { floodDirectionsWithWest.contains(it) } }
+      val northSide by lazy { insideDirections.any { floodDirectionsWithNorth.contains(it) } }
+      val southSide by lazy { insideDirections.any { floodDirectionsWithSouth.contains(it) } }
 
-        locationDistances[location] = stepCount
-
-        val myInsides: List<FloodFillDirection>
+      if (!locations.contains(location)) {
+        val myInsides: List<FloodFill>
         when (area[location.row][location.col]) {
           NS_PIPE -> {
-            myInsides = if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
-              listOf(FloodFillDirection.E)
-            } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
-              listOf(FloodFillDirection.W)
+            myInsides = if (eastSide) {
+              listOf(FloodFill.E)
+            } else if (westSide) {
+              listOf(FloodFill.W)
             } else {
               emptyList()
             }
-            if (directionCameFrom == N) {
-              stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, myInsides))
-            } else if (directionCameFrom == S) {
-              stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, myInsides))
-            } else {
-              throw IllegalStateException("Where did I come from")
+            when (directionCameFrom) {
+              N -> stepsToTake.add(StepData(N, Location(location.row + 1, location.col), insideDirections = myInsides))
+              S -> stepsToTake.add(StepData(S, Location(location.row - 1, location.col), insideDirections = myInsides))
+              else -> throw IllegalStateException("Where did I come from")
             }
           }
 
           EW_PIPE -> {
-            myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
-              listOf(FloodFillDirection.N)
-            } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
-              listOf(FloodFillDirection.S)
+            myInsides = if (northSide) {
+              listOf(FloodFill.N)
+            } else if (southSide) {
+              listOf(FloodFill.S)
             } else {
               emptyList()
             }
-            if (directionCameFrom == W) {
-              stepsToTake.add(StepData(W, Location(location.row, location.col + 1), stepCount + 1, myInsides))
-            } else if (directionCameFrom == E) {
-              stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, myInsides))
-            } else {
-              throw IllegalStateException("Where did I come from")
+            when (directionCameFrom) {
+              W -> stepsToTake.add(StepData(W, Location(location.row, location.col + 1), insideDirections = myInsides))
+              E -> stepsToTake.add(StepData(E, Location(location.row, location.col - 1), insideDirections = myInsides))
+              else -> throw IllegalStateException("Where did I come from")
             }
           }
 
           NE_PIPE -> {
-            if (directionCameFrom == E) {
-              myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
-                listOf(FloodFillDirection.NE)
-              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.SW).contains(it) }) {
-                listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.W)
-              } else {
-                emptyList()
+            when (directionCameFrom) {
+              E -> {
+                myInsides = if (northSide) {
+                  listOf(FloodFill.NE)
+                } else if (southSide) {
+                  listOf(FloodFill.S, FloodFill.SW, FloodFill.W)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(S, Location(location.row - 1, location.col), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, myInsides))
-            } else if (directionCameFrom == N) {
-              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.SW, FloodFillDirection.NW).contains(it) }) {
-                listOf(FloodFillDirection.W, FloodFillDirection.SW, FloodFillDirection.S)
-              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
-                listOf(FloodFillDirection.NE)
-              } else {
-                emptyList()
+              N -> {
+                myInsides = if(westSide) {
+                  listOf(FloodFill.W, FloodFill.SW, FloodFill.S)
+                } else if (eastSide) {
+                  listOf(FloodFill.NE)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(W, Location(location.row, location.col + 1), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(W, Location(location.row, location.col + 1), stepCount + 1, myInsides))
-            } else {
-              throw IllegalStateException("Where did I come from")
+              else -> throw IllegalStateException("Where did I come from")
             }
           }
 
           NW_PIPE -> {
-            if (directionCameFrom == W) {
-              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
-                listOf(FloodFillDirection.NW)
-              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
-                listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.E)
-              } else {
-                emptyList()
+            when (directionCameFrom) {
+              W -> {
+                myInsides = if(northSide) {
+                  listOf(FloodFill.NW)
+                } else if (southSide) {
+                  listOf(FloodFill.S, FloodFill.SE, FloodFill.E)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(S, Location(location.row - 1, location.col), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, myInsides))
-            } else if (directionCameFrom == N) {
-              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
-                listOf(FloodFillDirection.NW)
-              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
-                listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.E)
-              } else {
-                emptyList()
+              N -> {
+                myInsides = if(westSide) {
+                  listOf(FloodFill.NW)
+                } else if (eastSide) {
+                  listOf(FloodFill.S, FloodFill.SE, FloodFill.E)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(E, Location(location.row, location.col - 1), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, myInsides))
-            } else {
-              throw IllegalStateException("Where did I come from")
+              else -> throw IllegalStateException("Where did I come from")
             }
           }
 
           SW_PIPE -> {
-            if (directionCameFrom == S) {
-              myInsides = if(insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
-                listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.N)
-              } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
-                listOf(FloodFillDirection.SW)
-              } else {
-                emptyList()
+            when (directionCameFrom) {
+              S -> {
+                myInsides = if(eastSide) {
+                  listOf(FloodFill.E, FloodFill.NE, FloodFill.N)
+                } else if (westSide) {
+                  listOf(FloodFill.SW)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(E, Location(location.row, location.col - 1), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, myInsides))
-            } else if (directionCameFrom == W) {
-              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
-                listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.E)
-              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
-                listOf(FloodFillDirection.SW)
-              } else {
-                emptyList()
+              W -> {
+                myInsides = if(northSide) {
+                  listOf(FloodFill.N, FloodFill.NE, FloodFill.E)
+                } else if (southSide) {
+                  listOf(FloodFill.SW)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(N, Location(location.row + 1, location.col), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, myInsides))
-            } else {
-              throw IllegalStateException("Where did I come from")
+              else -> throw IllegalStateException("Where did I come from")
             }
           }
 
           SE_PIPE -> {
-            if (directionCameFrom == E) {
-              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
-                listOf(FloodFillDirection.N, FloodFillDirection.NW, FloodFillDirection.W)
-              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.SW).contains(it) }) {
-                listOf(FloodFillDirection.SE)
-              } else {
-                emptyList()
+            when (directionCameFrom) {
+              E -> {
+                myInsides = if(northSide) {
+                  listOf(FloodFill.N, FloodFill.NW, FloodFill.W)
+                } else if (southSide) {
+                  listOf(FloodFill.SE)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(N, Location(location.row + 1, location.col), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, myInsides))
-            } else if (directionCameFrom == S) {
-              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
-                listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.N)
-              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.SE, FloodFillDirection.NE).contains(it) }) {
-                listOf(FloodFillDirection.SE)
-              } else {
-                emptyList()
+              S -> {
+                myInsides = if(westSide) {
+                  listOf(FloodFill.W, FloodFill.NW, FloodFill.N)
+                } else if (eastSide) {
+                  listOf(FloodFill.SE)
+                } else {
+                  emptyList()
+                }
+                stepsToTake.add(StepData(W, Location(location.row, location.col + 1), insideDirections = myInsides))
               }
-              stepsToTake.add(StepData(W, Location(location.row, location.col + 1), stepCount + 1, myInsides))
-            } else {
-              throw IllegalStateException("Where did I come from")
+              else -> throw IllegalStateException("Where did I come from")
             }
           }
 
           else -> throw IllegalStateException("Unknown Start Pipe")
         }
+
         myInsides.forEach { myInside ->
           when (myInside) {
-            FloodFillDirection.NE -> {
+            FloodFill.NE -> {
               if (
                 location.row > 0 &&
                 location.col < area[location.row].size - 1 &&
@@ -412,7 +428,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.NW -> {
+            FloodFill.NW -> {
               if (
                 location.row > 0 &&
                 location.col > 0 &&
@@ -422,7 +438,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.SE -> {
+            FloodFill.SE -> {
               if (
                 location.row < area.size - 1 &&
                 location.col < area[location.row].size - 1 &&
@@ -432,7 +448,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.SW -> {
+            FloodFill.SW -> {
               if (
                 location.row < area.size - 1 &&
                 location.col > 0 &&
@@ -442,7 +458,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.N -> {
+            FloodFill.N -> {
               if (
                 location.row > 0 &&
                 area[location.row - 1][location.col] == GROUND
@@ -451,7 +467,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.S -> {
+            FloodFill.S -> {
               if (
                 location.row < area.size - 1 &&
                 area[location.row + 1][location.col] == GROUND
@@ -460,7 +476,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.E -> {
+            FloodFill.E -> {
               if (
                 location.col < area[location.row].size - 1 &&
                 area[location.row][location.col + 1] == GROUND
@@ -469,7 +485,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.W -> {
+            FloodFill.W -> {
               if (
                 location.col > 0 &&
                 area[location.row][location.col - 1] == GROUND
@@ -478,7 +494,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            FloodFillDirection.UNKNOWN -> { /* save for later */ }
+            FloodFill.UNKNOWN -> { /* ignore! */ }
           }
         }
       }
@@ -489,7 +505,7 @@ class Day10 @Inject constructor(
     val directionCameFrom: DirectionCameFrom,
     val location: Location,
     val stepCount: Int = 1,
-    val insideDirections: List<FloodFillDirection> = emptyList()
+    val insideDirections: List<FloodFill> = emptyList()
   )
 
   data class Location(val row: Int, val col: Int) {
@@ -499,10 +515,9 @@ class Day10 @Inject constructor(
     fun goWest() = Location(row, col - 1)
   }
 
-
   enum class DirectionCameFrom { N, S, E, W }
 
-  enum class FloodFillDirection { NE, NW, SE, SW, N, S, E, W, UNKNOWN }
+  enum class FloodFill { NE, NW, SE, SW, N, S, E, W, UNKNOWN }
 
   enum class LandType(private val symbol: Char) {
     NS_PIPE('|'),
