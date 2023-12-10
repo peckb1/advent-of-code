@@ -11,16 +11,16 @@ class Day10 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val area = mutableListOf<MutableList<Pipe>>()
+    val area = mutableListOf<MutableList<LAND_TYPE>>()
 
     var startLocationRow = -1
     var startLocationCol = -1
     input.forEachIndexed { rowIndex, row ->
-      val pipeRow = mutableListOf<Pipe>()
+      val pipeRow = mutableListOf<LAND_TYPE>()
       row.forEachIndexed { colIndex, c ->
-        Pipe.fromSymbol(c).also { pipe ->
+        LAND_TYPE.fromSymbol(c).also { pipe ->
           pipeRow.add(pipe)
-          if (pipe == Pipe.UNKNOWN) {
+          if (pipe == LAND_TYPE.START) {
             startLocationRow = rowIndex
             startLocationCol = colIndex
           }
@@ -30,30 +30,30 @@ class Day10 @Inject constructor(
     }
 
     val south = startLocationRow < area.size - 1 && listOf(
-      Pipe.NS, Pipe.NW, Pipe.NE
+      LAND_TYPE.NS_PIPE, LAND_TYPE.NW_PIPE, LAND_TYPE.NE_PIPE
     ).contains(area[startLocationRow + 1][startLocationCol])
     val north = startLocationRow > 0 && listOf(
-      Pipe.NS, Pipe.SW, Pipe.SE
+      LAND_TYPE.NS_PIPE, LAND_TYPE.SW_PIPE, LAND_TYPE.SE_PIPE
     ).contains(area[startLocationRow - 1][startLocationCol])
     val west = startLocationCol > 0 && listOf(
-      Pipe.EW, Pipe.SE, Pipe.NE
+      LAND_TYPE.EW_PIPE, LAND_TYPE.SE_PIPE, LAND_TYPE.NE_PIPE
     ).contains(area[startLocationRow][startLocationCol - 1])
     val east = startLocationCol < area[startLocationRow].size - 1 && listOf(
-      Pipe.EW, Pipe.SW, Pipe.NW
+      LAND_TYPE.EW_PIPE, LAND_TYPE.SW_PIPE, LAND_TYPE.NW_PIPE
     ).contains(area[startLocationRow][startLocationCol + 1])
 
     if (south && north) {
-      area[startLocationRow][startLocationCol] = Pipe.NS
+      area[startLocationRow][startLocationCol] = LAND_TYPE.NS_PIPE
     } else if (south && east) {
-      area[startLocationRow][startLocationCol] = Pipe.SE
+      area[startLocationRow][startLocationCol] = LAND_TYPE.SE_PIPE
     } else if (south && west) {
-      area[startLocationRow][startLocationCol] = Pipe.SW
+      area[startLocationRow][startLocationCol] = LAND_TYPE.SW_PIPE
     } else if (north && east) {
-      area[startLocationRow][startLocationCol] = Pipe.NE
+      area[startLocationRow][startLocationCol] = LAND_TYPE.NE_PIPE
     } else if (north && west) {
-      area[startLocationRow][startLocationCol] = Pipe.NW
+      area[startLocationRow][startLocationCol] = LAND_TYPE.NW_PIPE
     } else if (east && west) {
-      area[startLocationRow][startLocationCol] = Pipe.EW
+      area[startLocationRow][startLocationCol] = LAND_TYPE.EW_PIPE
     } else {
       throw IllegalStateException("Unknown Starting Pipe Type")
     }
@@ -64,27 +64,27 @@ class Day10 @Inject constructor(
     when (area[startLocationRow][startLocationCol]) {
       // These directions are NOT generic, and specific to my solution - but I can likely find a proper direction after splitting
       // clear and flood fill algorithms
-      Pipe.NS -> {
+      LAND_TYPE.NS_PIPE -> {
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
       }
-      Pipe.EW -> {
+      LAND_TYPE.EW_PIPE -> {
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.N)))
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.N)))
       }
-      Pipe.NE -> {
+      LAND_TYPE.NE_PIPE -> {
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NE)))
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.NE)))
       }
-      Pipe.NW -> {
+      LAND_TYPE.NW_PIPE -> {
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NW)))
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.NW)))
       }
-      Pipe.SW -> {
+      LAND_TYPE.SW_PIPE -> {
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.SW)))
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SW)))
       }
-      Pipe.SE -> {
+      LAND_TYPE.SE_PIPE -> {
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SE)))
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.SE)))
       }
@@ -99,7 +99,7 @@ class Day10 @Inject constructor(
         locationDistances[location] = stepCount
 
         when (area[location.row][location.col]) {
-          Pipe.NS -> {
+          LAND_TYPE.NS_PIPE -> {
             if (directionCameFrom == N) {
               stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == S) {
@@ -107,7 +107,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.EW -> {
+          LAND_TYPE.EW_PIPE -> {
             if (directionCameFrom == W) {
               stepsToTake.add(StepData(W, Location(location.row, location.col + 1), stepCount + 1, emptyList()))
             } else if (directionCameFrom == E) {
@@ -115,7 +115,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.NE -> {
+          LAND_TYPE.NE_PIPE -> {
             if (directionCameFrom == E) {
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == N) {
@@ -123,7 +123,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.NW -> {
+          LAND_TYPE.NW_PIPE -> {
             if (directionCameFrom == W) {
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == N) {
@@ -131,7 +131,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.SW -> {
+          LAND_TYPE.SW_PIPE -> {
             if (directionCameFrom == S) {
               stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, emptyList()))
             } else if (directionCameFrom == W) {
@@ -139,7 +139,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.SE -> {
+          LAND_TYPE.SE_PIPE -> {
             if (directionCameFrom == E) {
               stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == S) {
@@ -156,16 +156,16 @@ class Day10 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val area = mutableListOf<MutableList<Pipe>>()
+    val area = mutableListOf<MutableList<LAND_TYPE>>()
 
     var startLocationRow = -1
     var startLocationCol = -1
     input.forEachIndexed { rowIndex, row ->
-      val pipeRow = mutableListOf<Pipe>()
+      val pipeRow = mutableListOf<LAND_TYPE>()
       row.forEachIndexed { colIndex, c ->
-        Pipe.fromSymbol(c).also { pipe ->
+        LAND_TYPE.fromSymbol(c).also { pipe ->
           pipeRow.add(pipe)
-          if (pipe == Pipe.UNKNOWN) {
+          if (pipe == LAND_TYPE.START) {
             startLocationRow = rowIndex
             startLocationCol = colIndex
           }
@@ -175,30 +175,30 @@ class Day10 @Inject constructor(
     }
 
     val south = startLocationRow < area.size - 1 && listOf(
-      Pipe.NS, Pipe.NW, Pipe.NE
+      LAND_TYPE.NS_PIPE, LAND_TYPE.NW_PIPE, LAND_TYPE.NE_PIPE
     ).contains(area[startLocationRow + 1][startLocationCol])
     val north = startLocationRow > 0 && listOf(
-      Pipe.NS, Pipe.SW, Pipe.SE
+      LAND_TYPE.NS_PIPE, LAND_TYPE.SW_PIPE, LAND_TYPE.SE_PIPE
     ).contains(area[startLocationRow - 1][startLocationCol])
     val west = startLocationCol > 0 && listOf(
-      Pipe.EW, Pipe.SE, Pipe.NE
+      LAND_TYPE.EW_PIPE, LAND_TYPE.SE_PIPE, LAND_TYPE.NE_PIPE
     ).contains(area[startLocationRow][startLocationCol - 1])
     val east = startLocationCol < area[startLocationRow].size - 1 && listOf(
-      Pipe.EW, Pipe.SW, Pipe.NW
+      LAND_TYPE.EW_PIPE, LAND_TYPE.SW_PIPE, LAND_TYPE.NW_PIPE
     ).contains(area[startLocationRow][startLocationCol + 1])
 
     if (south && north) {
-      area[startLocationRow][startLocationCol] = Pipe.NS
+      area[startLocationRow][startLocationCol] = LAND_TYPE.NS_PIPE
     } else if (south && east) {
-      area[startLocationRow][startLocationCol] = Pipe.SE
+      area[startLocationRow][startLocationCol] = LAND_TYPE.SE_PIPE
     } else if (south && west) {
-      area[startLocationRow][startLocationCol] = Pipe.SW
+      area[startLocationRow][startLocationCol] = LAND_TYPE.SW_PIPE
     } else if (north && east) {
-      area[startLocationRow][startLocationCol] = Pipe.NE
+      area[startLocationRow][startLocationCol] = LAND_TYPE.NE_PIPE
     } else if (north && west) {
-      area[startLocationRow][startLocationCol] = Pipe.NW
+      area[startLocationRow][startLocationCol] = LAND_TYPE.NW_PIPE
     } else if (east && west) {
-      area[startLocationRow][startLocationCol] = Pipe.EW
+      area[startLocationRow][startLocationCol] = LAND_TYPE.EW_PIPE
     } else {
       throw IllegalStateException("Unknown Starting Pipe Type")
     }
@@ -207,27 +207,27 @@ class Day10 @Inject constructor(
     val locationDistances = mutableMapOf<Location, Int>()
 
     when (area[startLocationRow][startLocationCol]) {
-      Pipe.NS -> {
+      LAND_TYPE.NS_PIPE -> {
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
       }
-      Pipe.EW -> {
+      LAND_TYPE.EW_PIPE -> {
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.N)))
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.N)))
       }
-      Pipe.NE -> {
+      LAND_TYPE.NE_PIPE -> {
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NE)))
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.NE)))
       }
-      Pipe.NW -> {
+      LAND_TYPE.NW_PIPE -> {
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NW)))
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.NW)))
       }
-      Pipe.SW -> {
+      LAND_TYPE.SW_PIPE -> {
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.SW)))
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SW)))
       }
-      Pipe.SE -> {
+      LAND_TYPE.SE_PIPE -> {
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SE)))
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.SE)))
       }
@@ -244,7 +244,7 @@ class Day10 @Inject constructor(
 
         val myInsides: List<FloodFillDirection>
         when (area[location.row][location.col]) {
-          Pipe.NS -> {
+          LAND_TYPE.NS_PIPE -> {
             myInsides = if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
               listOf(FloodFillDirection.E)
             } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
@@ -261,7 +261,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.EW -> {
+          LAND_TYPE.EW_PIPE -> {
             myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
               listOf(FloodFillDirection.N)
             } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
@@ -278,7 +278,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.NE -> {
+          LAND_TYPE.NE_PIPE -> {
             if (directionCameFrom == E) {
               myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
                 listOf(FloodFillDirection.NE)
@@ -302,7 +302,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.NW -> {
+          LAND_TYPE.NW_PIPE -> {
             if (directionCameFrom == W) {
               myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
                 listOf(FloodFillDirection.NW)
@@ -326,7 +326,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.SW -> {
+          LAND_TYPE.SW_PIPE -> {
             if (directionCameFrom == S) {
               myInsides = if(insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
                 listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.N)
@@ -350,7 +350,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.SE -> {
+          LAND_TYPE.SE_PIPE -> {
             if (directionCameFrom == E) {
               myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
                 listOf(FloodFillDirection.N, FloodFillDirection.NW, FloodFillDirection.W)
@@ -382,9 +382,9 @@ class Day10 @Inject constructor(
               if (
                 location.row > 0 &&
                 location.col < area[location.row].size - 1 &&
-                area[location.row - 1][location.col + 1] == Pipe.NONE
+                area[location.row - 1][location.col + 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row - 1][location.col + 1] = Pipe.INSIDE
+                area[location.row - 1][location.col + 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -392,9 +392,9 @@ class Day10 @Inject constructor(
               if (
                 location.row > 0 &&
                 location.col > 0 &&
-                area[location.row - 1][location.col - 1] == Pipe.NONE
+                area[location.row - 1][location.col - 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row - 1][location.col - 1] = Pipe.INSIDE
+                area[location.row - 1][location.col - 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -402,9 +402,9 @@ class Day10 @Inject constructor(
               if (
                 location.row < area.size - 1 &&
                 location.col < area[location.row].size - 1 &&
-                area[location.row + 1][location.col + 1] == Pipe.NONE
+                area[location.row + 1][location.col + 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row + 1][location.col + 1] = Pipe.INSIDE
+                area[location.row + 1][location.col + 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -412,45 +412,45 @@ class Day10 @Inject constructor(
               if (
                 location.row < area.size - 1 &&
                 location.col > 0 &&
-                area[location.row + 1][location.col - 1] == Pipe.NONE
+                area[location.row + 1][location.col - 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row + 1][location.col - 1] = Pipe.INSIDE
+                area[location.row + 1][location.col - 1] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.N -> {
               if (
                 location.row > 0 &&
-                area[location.row - 1][location.col] == Pipe.NONE
+                area[location.row - 1][location.col] == LAND_TYPE.GROUND
               ) {
-                area[location.row - 1][location.col] = Pipe.INSIDE
+                area[location.row - 1][location.col] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.S -> {
               if (
                 location.row < area.size - 1 &&
-                area[location.row + 1][location.col] == Pipe.NONE
+                area[location.row + 1][location.col] == LAND_TYPE.GROUND
               ) {
-                area[location.row + 1][location.col] = Pipe.INSIDE
+                area[location.row + 1][location.col] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.E -> {
               if (
                 location.col < area[location.row].size - 1 &&
-                area[location.row][location.col + 1] == Pipe.NONE
+                area[location.row][location.col + 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row][location.col + 1] = Pipe.INSIDE
+                area[location.row][location.col + 1] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.W -> {
               if (
                 location.col > 0 &&
-                area[location.row][location.col - 1] == Pipe.NONE
+                area[location.row][location.col - 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row][location.col - 1] = Pipe.INSIDE
+                area[location.row][location.col - 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -462,8 +462,8 @@ class Day10 @Inject constructor(
 
     area.forEachIndexed { rowIndex , row ->
       row.forEachIndexed { colIndex, col ->
-        if (!locationDistances.containsKey(Location(rowIndex, colIndex)) && area[rowIndex][colIndex] != Pipe.INSIDE) {
-          area[rowIndex][colIndex] = Pipe.NONE
+        if (!locationDistances.containsKey(Location(rowIndex, colIndex)) && area[rowIndex][colIndex] != LAND_TYPE.INSIDE) {
+          area[rowIndex][colIndex] = LAND_TYPE.GROUND
         }
       }
     }
@@ -472,57 +472,57 @@ class Day10 @Inject constructor(
     things2(area)
 
     area.sumOf { row ->
-      row.count { it == Pipe.INSIDE }
+      row.count { it == LAND_TYPE.INSIDE }
     }
   }
 
-  private fun things2(area: MutableList<MutableList<Pipe>>) {
+  private fun things2(area: MutableList<MutableList<LAND_TYPE>>) {
     area.forEachIndexed { r, row ->
       row.forEachIndexed { c, pipe ->
-        if (pipe == Pipe.NONE) {
-          if (r > 0 && area[r-1][c] == Pipe.INSIDE) {
-            area[r][c] = Pipe.INSIDE
+        if (pipe == LAND_TYPE.GROUND) {
+          if (r > 0 && area[r-1][c] == LAND_TYPE.INSIDE) {
+            area[r][c] = LAND_TYPE.INSIDE
           }
-          if (r < area.size - 1 && area[r+1][c] == Pipe.INSIDE) {
-            area[r][c] = Pipe.INSIDE
+          if (r < area.size - 1 && area[r+1][c] == LAND_TYPE.INSIDE) {
+            area[r][c] = LAND_TYPE.INSIDE
           }
-          if (c > 0 && area[r][c-1] == Pipe.INSIDE) {
-            area[r][c] = Pipe.INSIDE
+          if (c > 0 && area[r][c-1] == LAND_TYPE.INSIDE) {
+            area[r][c] = LAND_TYPE.INSIDE
           }
-          if (c < area[r].size - 1 && area[r][c+1] == Pipe.INSIDE) {
-            area[r][c] = Pipe.INSIDE
+          if (c < area[r].size - 1 && area[r][c+1] == LAND_TYPE.INSIDE) {
+            area[r][c] = LAND_TYPE.INSIDE
           }
         }
       }
     }
   }
 
-  fun things(area: MutableList<MutableList<Pipe>>, startLocationCol: Int, startLocationRow: Int) {
+  fun things(area: MutableList<MutableList<LAND_TYPE>>, startLocationCol: Int, startLocationRow: Int) {
     val stepsToTake: Queue<StepData> = LinkedList()
     val locationDistances = mutableMapOf<Location, Int>()
 
     when (area[startLocationRow][startLocationCol]) {
-      Pipe.NS -> {
+      LAND_TYPE.NS_PIPE -> {
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
       }
-      Pipe.EW -> {
+      LAND_TYPE.EW_PIPE -> {
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.N)))
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.N)))
       }
-      Pipe.NE -> {
+      LAND_TYPE.NE_PIPE -> {
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NE)))
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.NE)))
       }
-      Pipe.NW -> {
+      LAND_TYPE.NW_PIPE -> {
         stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NW)))
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.NW)))
       }
-      Pipe.SW -> {
+      LAND_TYPE.SW_PIPE -> {
         stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.SW)))
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SW)))
       }
-      Pipe.SE -> {
+      LAND_TYPE.SE_PIPE -> {
         stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SE)))
         stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.SE)))
       }
@@ -540,7 +540,7 @@ class Day10 @Inject constructor(
 
         val myInsides: List<FloodFillDirection>
         when (area[location.row][location.col]) {
-          Pipe.NS -> {
+          LAND_TYPE.NS_PIPE -> {
             myInsides = if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
               listOf(FloodFillDirection.E)
             } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
@@ -557,7 +557,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.EW -> {
+          LAND_TYPE.EW_PIPE -> {
             myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
               listOf(FloodFillDirection.N)
             } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
@@ -574,7 +574,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.NE -> {
+          LAND_TYPE.NE_PIPE -> {
             if (directionCameFrom == E) {
               myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
                 listOf(FloodFillDirection.NE)
@@ -598,7 +598,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.NW -> {
+          LAND_TYPE.NW_PIPE -> {
             if (directionCameFrom == W) {
               myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
                 listOf(FloodFillDirection.NW)
@@ -622,7 +622,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.SW -> {
+          LAND_TYPE.SW_PIPE -> {
             if (directionCameFrom == S) {
               myInsides = if(insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
                 listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.N)
@@ -646,7 +646,7 @@ class Day10 @Inject constructor(
             }
           }
 
-          Pipe.SE -> {
+          LAND_TYPE.SE_PIPE -> {
             if (directionCameFrom == E) {
               myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
                 listOf(FloodFillDirection.N, FloodFillDirection.NW, FloodFillDirection.W)
@@ -678,9 +678,9 @@ class Day10 @Inject constructor(
               if (
                 location.row > 0 &&
                 location.col < area[location.row].size - 1 &&
-                area[location.row - 1][location.col + 1] == Pipe.NONE
+                area[location.row - 1][location.col + 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row - 1][location.col + 1] = Pipe.INSIDE
+                area[location.row - 1][location.col + 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -688,9 +688,9 @@ class Day10 @Inject constructor(
               if (
                 location.row > 0 &&
                 location.col > 0 &&
-                area[location.row - 1][location.col - 1] == Pipe.NONE
+                area[location.row - 1][location.col - 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row - 1][location.col - 1] = Pipe.INSIDE
+                area[location.row - 1][location.col - 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -698,9 +698,9 @@ class Day10 @Inject constructor(
               if (
                 location.row < area.size - 1 &&
                 location.col < area[location.row].size - 1 &&
-                area[location.row + 1][location.col + 1] == Pipe.NONE
+                area[location.row + 1][location.col + 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row + 1][location.col + 1] = Pipe.INSIDE
+                area[location.row + 1][location.col + 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -708,45 +708,45 @@ class Day10 @Inject constructor(
               if (
                 location.row < area.size - 1 &&
                 location.col > 0 &&
-                area[location.row + 1][location.col - 1] == Pipe.NONE
+                area[location.row + 1][location.col - 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row + 1][location.col - 1] = Pipe.INSIDE
+                area[location.row + 1][location.col - 1] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.N -> {
               if (
                 location.row > 0 &&
-                area[location.row - 1][location.col] == Pipe.NONE
+                area[location.row - 1][location.col] == LAND_TYPE.GROUND
               ) {
-                area[location.row - 1][location.col] = Pipe.INSIDE
+                area[location.row - 1][location.col] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.S -> {
               if (
                 location.row < area.size - 1 &&
-                area[location.row + 1][location.col] == Pipe.NONE
+                area[location.row + 1][location.col] == LAND_TYPE.GROUND
               ) {
-                area[location.row + 1][location.col] = Pipe.INSIDE
+                area[location.row + 1][location.col] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.E -> {
               if (
                 location.col < area[location.row].size - 1 &&
-                area[location.row][location.col + 1] == Pipe.NONE
+                area[location.row][location.col + 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row][location.col + 1] = Pipe.INSIDE
+                area[location.row][location.col + 1] = LAND_TYPE.INSIDE
               }
             }
 
             FloodFillDirection.W -> {
               if (
                 location.col > 0 &&
-                area[location.row][location.col - 1] == Pipe.NONE
+                area[location.row][location.col - 1] == LAND_TYPE.GROUND
               ) {
-                area[location.row][location.col - 1] = Pipe.INSIDE
+                area[location.row][location.col - 1] = LAND_TYPE.INSIDE
               }
             }
 
@@ -770,22 +770,21 @@ class Day10 @Inject constructor(
 
   enum class FloodFillDirection { NE, NW, SE, SW, N, S, E, W, UNKNOWN }
 
-  enum class Pipe(private val symbol: Char) {
-    NS('|'),
-    EW('-'),
-    NE('L'),
-    NW('J'),
-    SW('7'),
-    SE('F'),
-    NONE('.'),
-    UNKNOWN('S'),
-    INSIDE('*'),
-    OUTSIDE('#');
+  enum class LAND_TYPE(private val symbol: Char) {
+    NS_PIPE('|'),
+    EW_PIPE('-'),
+    NE_PIPE('L'),
+    NW_PIPE('J'),
+    SW_PIPE('7'),
+    SE_PIPE('F'),
+    GROUND('.'),
+    START('S'),
+    INSIDE('I');
 
     override fun toString(): String = symbol.toString()
 
     companion object {
-      fun fromSymbol(symbol: Char): Pipe = values().first { it.symbol == symbol }
+      fun fromSymbol(symbol: Char): LAND_TYPE = values().first { it.symbol == symbol }
     }
   }
 }
