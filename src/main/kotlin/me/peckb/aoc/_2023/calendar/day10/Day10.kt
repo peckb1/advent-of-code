@@ -62,29 +62,31 @@ class Day10 @Inject constructor(
     val locationDistances = mutableMapOf<Location, Int>()
 
     when (area[startLocationRow][startLocationCol]) {
+      // These directions are NOT generic, and specific to my solution - but I can likely find a proper direction after splitting
+      // clear and flood fill algorithms
       Pipe.NS -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, emptyList()))
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, emptyList()))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
       }
       Pipe.EW -> {
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, emptyList()))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, emptyList()))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.N)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.N)))
       }
       Pipe.NE -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.NE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.NE)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NE)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.NE)))
       }
       Pipe.NW -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.NW)))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.NW)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NW)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.NW)))
       }
       Pipe.SW -> {
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.SW)))
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.SW)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.SW)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SW)))
       }
       Pipe.SE -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.SE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.SE)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SE)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.SE)))
       }
       else -> throw IllegalStateException("Unknown Start Pipe")
     }
@@ -102,8 +104,6 @@ class Day10 @Inject constructor(
               stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == S) {
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, emptyList()))
-            } else {
-              throw IllegalStateException("Where did I come from")
             }
           }
 
@@ -112,8 +112,6 @@ class Day10 @Inject constructor(
               stepsToTake.add(StepData(W, Location(location.row, location.col + 1), stepCount + 1, emptyList()))
             } else if (directionCameFrom == E) {
               stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, emptyList()))
-            } else {
-              throw IllegalStateException("Where did I come from")
             }
           }
 
@@ -122,8 +120,6 @@ class Day10 @Inject constructor(
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == N) {
               stepsToTake.add(StepData(W, Location(location.row, location.col + 1), stepCount + 1, emptyList()))
-            } else {
-              throw IllegalStateException("Where did I come from")
             }
           }
 
@@ -132,8 +128,6 @@ class Day10 @Inject constructor(
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == N) {
               stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, emptyList()))
-            } else {
-              throw IllegalStateException("Where did I come from")
             }
           }
 
@@ -142,8 +136,6 @@ class Day10 @Inject constructor(
               stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, emptyList()))
             } else if (directionCameFrom == W) {
               stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, emptyList()))
-            } else {
-              throw IllegalStateException("Where did I come from")
             }
           }
 
@@ -152,8 +144,6 @@ class Day10 @Inject constructor(
               stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, emptyList()))
             } else if (directionCameFrom == S) {
               stepsToTake.add(StepData(W, Location(location.row, location.col + 1), stepCount + 1, emptyList()))
-            } else {
-              throw IllegalStateException("Where did I come from")
             }
           }
 
@@ -218,33 +208,31 @@ class Day10 @Inject constructor(
 
     when (area[startLocationRow][startLocationCol]) {
       Pipe.NS -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.W)))
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.W)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
       }
       Pipe.EW -> {
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.N)))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.N)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.N)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.N)))
       }
       Pipe.NE -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.NE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.NE)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NE)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.NE)))
       }
       Pipe.NW -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.NW)))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.NW)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NW)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.NW)))
       }
       Pipe.SW -> {
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.SW)))
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.SW)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.SW)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SW)))
       }
       Pipe.SE -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.SE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.SE)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SE)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.SE)))
       }
       else -> throw IllegalStateException("Unknown Start Pipe")
     }
-
-//    area[startLocationRow][startLocationCol] = Pipe.UNKNOWN
 
     locationDistances[Location(startLocationRow, startLocationCol)] = 0
 
@@ -252,28 +240,15 @@ class Day10 @Inject constructor(
       val (directionCameFrom, location, stepCount, insideDirections) = stepsToTake.remove()
 
       if (!locationDistances.containsKey(location)) {
-
-//        area.forEachIndexed { r, row ->
-//          row.forEachIndexed { c, pipe ->
-//            if (r == location.row && c == location.col) {
-//              print("@")
-//            } else {
-//              print(pipe)
-//            }
-//          }
-//          println()
-//        }
-//        println()
-
         locationDistances[location] = stepCount
 
-        val myInsides: List<Direction>
+        val myInsides: List<FloodFillDirection>
         when (area[location.row][location.col]) {
           Pipe.NS -> {
-            myInsides = if (insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-              listOf(Direction.E)
-            } else if (insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-              listOf(Direction.W)
+            myInsides = if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+              listOf(FloodFillDirection.E)
+            } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+              listOf(FloodFillDirection.W)
             } else {
               emptyList()
             }
@@ -287,10 +262,10 @@ class Day10 @Inject constructor(
           }
 
           Pipe.EW -> {
-            myInsides = if (insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-              listOf(Direction.N)
-            } else if (insideDirections.any { listOf(Direction.S, Direction.SW, Direction.SE).contains(it) }) {
-              listOf(Direction.S)
+            myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+              listOf(FloodFillDirection.N)
+            } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
+              listOf(FloodFillDirection.S)
             } else {
               emptyList()
             }
@@ -305,19 +280,19 @@ class Day10 @Inject constructor(
 
           Pipe.NE -> {
             if (directionCameFrom == E) {
-              myInsides = if (insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.NE)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SE, Direction.SW).contains(it) }) {
-                listOf(Direction.S, Direction.SW, Direction.W)
+              myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.NE)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.W)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, myInsides))
             } else if (directionCameFrom == N) {
-              myInsides = if(insideDirections.any { listOf(Direction.W, Direction.SW, Direction.NW).contains(it) }) {
-                listOf(Direction.W, Direction.SW, Direction.S)
-              } else if (insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-                listOf(Direction.NE)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.SW, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.W, FloodFillDirection.SW, FloodFillDirection.S)
+              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.NE)
               } else {
                 emptyList()
               }
@@ -329,19 +304,19 @@ class Day10 @Inject constructor(
 
           Pipe.NW -> {
             if (directionCameFrom == W) {
-              myInsides = if(insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.NW)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SW, Direction.SE).contains(it) }) {
-                listOf(Direction.S, Direction.SE, Direction.E)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.NW)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.E)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, myInsides))
             } else if (directionCameFrom == N) {
-              myInsides = if(insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-                listOf(Direction.NW)
-              } else if (insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-                listOf(Direction.S, Direction.SE, Direction.E)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.NW)
+              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.E)
               } else {
                 emptyList()
               }
@@ -353,19 +328,19 @@ class Day10 @Inject constructor(
 
           Pipe.SW -> {
             if (directionCameFrom == S) {
-              myInsides = if(insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-                listOf(Direction.E, Direction.NE, Direction.N)
-              } else if (insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-                listOf(Direction.SW)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.N)
+              } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.SW)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, myInsides))
             } else if (directionCameFrom == W) {
-              myInsides = if(insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.N, Direction.NE, Direction.E)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SW, Direction.SE).contains(it) }) {
-                listOf(Direction.SW)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.E)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.SW)
               } else {
                 emptyList()
               }
@@ -377,19 +352,19 @@ class Day10 @Inject constructor(
 
           Pipe.SE -> {
             if (directionCameFrom == E) {
-              myInsides = if(insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.N, Direction.NW, Direction.W)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SE, Direction.SW).contains(it) }) {
-                listOf(Direction.SE)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.N, FloodFillDirection.NW, FloodFillDirection.W)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.SE)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, myInsides))
             } else if (directionCameFrom == S) {
-              myInsides = if(insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-                listOf(Direction.W, Direction.NW, Direction.N)
-              } else if (insideDirections.any { listOf(Direction.E, Direction.SE, Direction.NE).contains(it) }) {
-                listOf(Direction.SE)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.N)
+              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.SE, FloodFillDirection.NE).contains(it) }) {
+                listOf(FloodFillDirection.SE)
               } else {
                 emptyList()
               }
@@ -403,7 +378,7 @@ class Day10 @Inject constructor(
         }
         myInsides.forEach { myInside ->
           when (myInside) {
-            Direction.NE -> {
+            FloodFillDirection.NE -> {
               if (
                 location.row > 0 &&
                 location.col < area[location.row].size - 1 &&
@@ -413,7 +388,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.NW -> {
+            FloodFillDirection.NW -> {
               if (
                 location.row > 0 &&
                 location.col > 0 &&
@@ -423,7 +398,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.SE -> {
+            FloodFillDirection.SE -> {
               if (
                 location.row < area.size - 1 &&
                 location.col < area[location.row].size - 1 &&
@@ -433,7 +408,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.SW -> {
+            FloodFillDirection.SW -> {
               if (
                 location.row < area.size - 1 &&
                 location.col > 0 &&
@@ -443,7 +418,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.N -> {
+            FloodFillDirection.N -> {
               if (
                 location.row > 0 &&
                 area[location.row - 1][location.col] == Pipe.NONE
@@ -452,7 +427,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.S -> {
+            FloodFillDirection.S -> {
               if (
                 location.row < area.size - 1 &&
                 area[location.row + 1][location.col] == Pipe.NONE
@@ -461,7 +436,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.E -> {
+            FloodFillDirection.E -> {
               if (
                 location.col < area[location.row].size - 1 &&
                 area[location.row][location.col + 1] == Pipe.NONE
@@ -470,7 +445,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.W -> {
+            FloodFillDirection.W -> {
               if (
                 location.col > 0 &&
                 area[location.row][location.col - 1] == Pipe.NONE
@@ -479,7 +454,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.UNKNOWN -> { /* save for later */ }
+            FloodFillDirection.UNKNOWN -> { /* save for later */ }
           }
         }
       }
@@ -493,18 +468,8 @@ class Day10 @Inject constructor(
       }
     }
 
-//    area.forEach {
-//      println(it.joinToString(""))
-//    }
-
-    println()
     things(area, startLocationCol, startLocationRow)
-    println()
     things2(area)
-
-    area.forEach {
-      println(it.joinToString(""))
-    }
 
     area.sumOf { row ->
       row.count { it == Pipe.INSIDE }
@@ -538,33 +503,31 @@ class Day10 @Inject constructor(
 
     when (area[startLocationRow][startLocationCol]) {
       Pipe.NS -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.W)))
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.W)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.W)))
       }
       Pipe.EW -> {
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.N)))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.N)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.N)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.N)))
       }
       Pipe.NE -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.NE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.NE)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NE)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.NE)))
       }
       Pipe.NW -> {
-        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(Direction.NW)))
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.NW)))
+        stepsToTake.add(StepData(S, Location(startLocationRow - 1, startLocationCol), 1, listOf(FloodFillDirection.NW)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.NW)))
       }
       Pipe.SW -> {
-        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(Direction.SW)))
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.SW)))
+        stepsToTake.add(StepData(E, Location(startLocationRow, startLocationCol - 1), 1, listOf(FloodFillDirection.SW)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SW)))
       }
       Pipe.SE -> {
-        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(Direction.SE)))
-        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(Direction.SE)))
+        stepsToTake.add(StepData(N, Location(startLocationRow + 1, startLocationCol), 1, listOf(FloodFillDirection.SE)))
+        stepsToTake.add(StepData(W, Location(startLocationRow, startLocationCol + 1), 1, listOf(FloodFillDirection.SE)))
       }
       else -> throw IllegalStateException("Unknown Start Pipe")
     }
-
-//    area[startLocationRow][startLocationCol] = Pipe.UNKNOWN
 
     locationDistances[Location(startLocationRow, startLocationCol)] = 0
 
@@ -573,27 +536,15 @@ class Day10 @Inject constructor(
 
       if (!locationDistances.containsKey(location)) {
 
-//        area.forEachIndexed { r, row ->
-//          row.forEachIndexed { c, pipe ->
-//            if (r == location.row && c == location.col) {
-//              print("@")
-//            } else {
-//              print(pipe)
-//            }
-//          }
-//          println()
-//        }
-//        println()
-
         locationDistances[location] = stepCount
 
-        val myInsides: List<Direction>
+        val myInsides: List<FloodFillDirection>
         when (area[location.row][location.col]) {
           Pipe.NS -> {
-            myInsides = if (insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-              listOf(Direction.E)
-            } else if (insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-              listOf(Direction.W)
+            myInsides = if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+              listOf(FloodFillDirection.E)
+            } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+              listOf(FloodFillDirection.W)
             } else {
               emptyList()
             }
@@ -607,10 +558,10 @@ class Day10 @Inject constructor(
           }
 
           Pipe.EW -> {
-            myInsides = if (insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-              listOf(Direction.N)
-            } else if (insideDirections.any { listOf(Direction.S, Direction.SW, Direction.SE).contains(it) }) {
-              listOf(Direction.S)
+            myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+              listOf(FloodFillDirection.N)
+            } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
+              listOf(FloodFillDirection.S)
             } else {
               emptyList()
             }
@@ -625,19 +576,19 @@ class Day10 @Inject constructor(
 
           Pipe.NE -> {
             if (directionCameFrom == E) {
-              myInsides = if (insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.NE)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SE, Direction.SW).contains(it) }) {
-                listOf(Direction.S, Direction.SW, Direction.W)
+              myInsides = if (insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.NE)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.W)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, myInsides))
             } else if (directionCameFrom == N) {
-              myInsides = if(insideDirections.any { listOf(Direction.W, Direction.SW, Direction.NW).contains(it) }) {
-                listOf(Direction.W, Direction.SW, Direction.S)
-              } else if (insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-                listOf(Direction.NE)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.SW, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.W, FloodFillDirection.SW, FloodFillDirection.S)
+              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.NE)
               } else {
                 emptyList()
               }
@@ -649,19 +600,19 @@ class Day10 @Inject constructor(
 
           Pipe.NW -> {
             if (directionCameFrom == W) {
-              myInsides = if(insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.NW)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SW, Direction.SE).contains(it) }) {
-                listOf(Direction.S, Direction.SE, Direction.E)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.NW)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.E)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(S, Location(location.row - 1, location.col), stepCount + 1, myInsides))
             } else if (directionCameFrom == N) {
-              myInsides = if(insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-                listOf(Direction.NW)
-              } else if (insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-                listOf(Direction.S, Direction.SE, Direction.E)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.NW)
+              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.E)
               } else {
                 emptyList()
               }
@@ -673,19 +624,19 @@ class Day10 @Inject constructor(
 
           Pipe.SW -> {
             if (directionCameFrom == S) {
-              myInsides = if(insideDirections.any { listOf(Direction.E, Direction.NE, Direction.SE).contains(it) }) {
-                listOf(Direction.E, Direction.NE, Direction.N)
-              } else if (insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-                listOf(Direction.SW)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.E, FloodFillDirection.NE, FloodFillDirection.N)
+              } else if (insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.SW)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(E, Location(location.row, location.col - 1), stepCount + 1, myInsides))
             } else if (directionCameFrom == W) {
-              myInsides = if(insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.N, Direction.NE, Direction.E)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SW, Direction.SE).contains(it) }) {
-                listOf(Direction.SW)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.E)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SW, FloodFillDirection.SE).contains(it) }) {
+                listOf(FloodFillDirection.SW)
               } else {
                 emptyList()
               }
@@ -697,19 +648,19 @@ class Day10 @Inject constructor(
 
           Pipe.SE -> {
             if (directionCameFrom == E) {
-              myInsides = if(insideDirections.any { listOf(Direction.N, Direction.NE, Direction.NW).contains(it) }) {
-                listOf(Direction.N, Direction.NW, Direction.W)
-              } else if (insideDirections.any { listOf(Direction.S, Direction.SE, Direction.SW).contains(it) }) {
-                listOf(Direction.SE)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.N, FloodFillDirection.NE, FloodFillDirection.NW).contains(it) }) {
+                listOf(FloodFillDirection.N, FloodFillDirection.NW, FloodFillDirection.W)
+              } else if (insideDirections.any { listOf(FloodFillDirection.S, FloodFillDirection.SE, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.SE)
               } else {
                 emptyList()
               }
               stepsToTake.add(StepData(N, Location(location.row + 1, location.col), stepCount + 1, myInsides))
             } else if (directionCameFrom == S) {
-              myInsides = if(insideDirections.any { listOf(Direction.W, Direction.NW, Direction.SW).contains(it) }) {
-                listOf(Direction.W, Direction.NW, Direction.N)
-              } else if (insideDirections.any { listOf(Direction.E, Direction.SE, Direction.NE).contains(it) }) {
-                listOf(Direction.SE)
+              myInsides = if(insideDirections.any { listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.SW).contains(it) }) {
+                listOf(FloodFillDirection.W, FloodFillDirection.NW, FloodFillDirection.N)
+              } else if (insideDirections.any { listOf(FloodFillDirection.E, FloodFillDirection.SE, FloodFillDirection.NE).contains(it) }) {
+                listOf(FloodFillDirection.SE)
               } else {
                 emptyList()
               }
@@ -723,7 +674,7 @@ class Day10 @Inject constructor(
         }
         myInsides.forEach { myInside ->
           when (myInside) {
-            Direction.NE -> {
+            FloodFillDirection.NE -> {
               if (
                 location.row > 0 &&
                 location.col < area[location.row].size - 1 &&
@@ -733,7 +684,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.NW -> {
+            FloodFillDirection.NW -> {
               if (
                 location.row > 0 &&
                 location.col > 0 &&
@@ -743,7 +694,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.SE -> {
+            FloodFillDirection.SE -> {
               if (
                 location.row < area.size - 1 &&
                 location.col < area[location.row].size - 1 &&
@@ -753,7 +704,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.SW -> {
+            FloodFillDirection.SW -> {
               if (
                 location.row < area.size - 1 &&
                 location.col > 0 &&
@@ -763,7 +714,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.N -> {
+            FloodFillDirection.N -> {
               if (
                 location.row > 0 &&
                 area[location.row - 1][location.col] == Pipe.NONE
@@ -772,7 +723,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.S -> {
+            FloodFillDirection.S -> {
               if (
                 location.row < area.size - 1 &&
                 area[location.row + 1][location.col] == Pipe.NONE
@@ -781,7 +732,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.E -> {
+            FloodFillDirection.E -> {
               if (
                 location.col < area[location.row].size - 1 &&
                 area[location.row][location.col + 1] == Pipe.NONE
@@ -790,7 +741,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.W -> {
+            FloodFillDirection.W -> {
               if (
                 location.col > 0 &&
                 area[location.row][location.col - 1] == Pipe.NONE
@@ -799,7 +750,7 @@ class Day10 @Inject constructor(
               }
             }
 
-            Direction.UNKNOWN -> { /* save for later */ }
+            FloodFillDirection.UNKNOWN -> { /* save for later */ }
           }
         }
       }
@@ -810,14 +761,14 @@ class Day10 @Inject constructor(
     val directionCameFrom: DirectionCameFrom,
     val location: Location,
     val stepCount: Int,
-    val insideDirections: List<Direction>
+    val insideDirections: List<FloodFillDirection>
   )
 
   data class Location(val row: Int, val col: Int)
 
   enum class DirectionCameFrom { N, S, E, W }
 
-  enum class Direction { NE, NW, SE, SW, N, S, E, W, UNKNOWN }
+  enum class FloodFillDirection { NE, NW, SE, SW, N, S, E, W, UNKNOWN }
 
   enum class Pipe(private val symbol: Char) {
     NS('|'),
