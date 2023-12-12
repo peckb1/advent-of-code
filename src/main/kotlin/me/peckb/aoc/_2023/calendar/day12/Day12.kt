@@ -49,6 +49,7 @@ class Day12 @Inject constructor(
 
     // first check to see if we have an empty, or something that could be used an empty
     // to complete a block we're in the process of building
+    // technically we can do either the `.` or `#` sections in any order; as long as we do both
     if ((c == '.' || c == '?')) {
       val noBlockBeingBuiltYet = currentBlockSize == 0
       val haveNotFoundAllBlocksYet = blocksFound < groupings.size
@@ -68,6 +69,7 @@ class Day12 @Inject constructor(
 
     // Once we are done finishing recursing from blank spaces, or completed blocks we can actually build up the blocks!
     // So if we find a damage section, or a wildcard we can add to our damaged section
+    // technically we can do either the `.` or `#` sections in any order; as long as we do both
     if (c == '#' || c == '?') {
       total += count(conditions, groupings, cache, index + 1, blocksFound, currentBlockSize + 1)
     }
