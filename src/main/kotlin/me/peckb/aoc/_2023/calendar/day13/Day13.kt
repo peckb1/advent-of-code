@@ -107,8 +107,8 @@ class Day13 @Inject constructor(
     highIndex: Int,
     lowIndex: Int = 0
   ): Set<Mirror> {
-    return (0..highIndex).flatMap { horizontalIndex ->
-      val matches = dataToIndices[indexToData[horizontalIndex]]!!
+    return (0..highIndex).flatMap { lineIndex ->
+      val matches: List<Int> = dataToIndices[indexToData[lineIndex]]!!
       val foundPossibleMirror = matches.size >= 2
 
       val zeroIndexMatch = if (foundPossibleMirror && matches.contains(lowIndex)) {
