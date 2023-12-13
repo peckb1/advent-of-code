@@ -19,7 +19,7 @@ internal class Day13Test {
 
   @Test
   fun testDay13PartOne() {
-    assertEquals(-1, day13.partOne(DAY_13))
+    assertEquals(26957, day13.partOne(DAY_13))
   }
 
   @Test

@@ -42,53 +42,96 @@ class Day13 @Inject constructor(
         verticalItems2[index] = s
       }
 
-      val verticalEdgeMatch = (0 until pattern[0].length).firstOrNull { verticalIndex ->
-        val mirrorDataOfIndex = verticalItems1[verticalItems2[verticalIndex]] ?: emptyList()
-        (
-          mirrorDataOfIndex.size >= 2 &&
-          (mirrorDataOfIndex.contains(0) || mirrorDataOfIndex.contains(pattern[0].length - 1))
-        )
-      }
+      val horizontalMirror = (0 until pattern.size).firstNotNullOfOrNull { horizontalIndex ->
+        val matches = horizontalItems1[horizontalItems2[horizontalIndex]]!!
+        val lowIndex = 0
+        val highIndex = pattern.size - 1
 
-      val verticalMirror = verticalEdgeMatch?.let { edgeIndex ->
-        val pair = verticalItems1[verticalItems2[edgeIndex]]!!
-        val minEdge = max(0, pair.minOf { it })
-        val maxEdge = min(pattern[0].length - 1, pair.maxOf { it })
-        (minEdge .. maxEdge).withIndex().all { (i, index) ->
-          val expectedPair = listOf(minEdge + i, maxEdge - i)
-          verticalItems1[verticalItems2[index]]!!.containsAll(expectedPair)
+        if (matches.size >= 2 && (matches.contains(lowIndex) || matches.contains(highIndex))) {
+          val zeroIndexMatch = if (matches.contains(lowIndex)) {
+            matches.minus(lowIndex).firstOrNull { upperEdge ->
+              (lowIndex .. upperEdge).withIndex().all { (i, index) ->
+                val expectedPair = listOf(lowIndex + i, upperEdge - i)
+                horizontalItems1[horizontalItems2[index]]!!.containsAll(expectedPair)
+              }
+            }
+          } else {
+            null
+          }?.takeIf {
+            (highIndex - it) %2 == 1
+          }
+
+          val highIndexMatch = if (matches.contains(highIndex)) {
+            matches.minus(highIndex).firstOrNull { lowerEdge ->
+              (lowerEdge .. highIndex).withIndex().all { (i, index) ->
+                val expectedPair = listOf(lowerEdge + i, highIndex - i)
+                horizontalItems1[horizontalItems2[index]]!!.containsAll(expectedPair)
+              }
+            }
+          } else {
+            null
+          }?.takeIf {
+            (highIndex - it) %2 == 1
+          }
+
+          zeroIndexMatch?.let { 0 to it } ?: highIndexMatch?.let { it to highIndex}
+        } else {
+          null
         }
       }
 
-      val horizontalEdgeMatch = (0 until pattern.size).firstOrNull { horizontalIndex ->
-        val mirrorDataOfIndex = horizontalItems1[horizontalItems2[horizontalIndex]] ?: emptyList()
+      val verticalMirror = (0 until pattern[0].length).firstNotNullOfOrNull { verticalIndex ->
+        val lowIndex = 0
+        val highIndex = pattern[0].length - 1
 
-        (
-          mirrorDataOfIndex.size >= 2 &&
-          (mirrorDataOfIndex.contains(0) || mirrorDataOfIndex.contains(pattern.size - 1))
-        )
-      }
+        val matches = verticalItems1[verticalItems2[verticalIndex]]!!
+        if (matches.size >= 2 && (matches.contains(lowIndex) || matches.contains(highIndex))) {
+          val zeroIndexMatch = if (matches.contains(lowIndex)) {
+            matches.minus(lowIndex).firstOrNull { upperEdge ->
+              (lowIndex .. upperEdge).withIndex().all { (i, index) ->
+                val expectedPair = listOf(0 + i, upperEdge - i)
+                verticalItems1[verticalItems2[index]]!!.containsAll(expectedPair)
+              }
+            }
+          } else {
+            null
+          }?.takeIf {
+            (highIndex - it) %2 == 1
+          }
 
-      val horizontalMirror = horizontalEdgeMatch?.let { edgeIndex ->
-        val pair = horizontalItems1[horizontalItems2[edgeIndex]]!!
-        val minEdge = max(0, pair.minOf { it })
-        val maxEdge = min(pattern.size - 1, pair.maxOf { it })
-        (minEdge .. maxEdge).withIndex().all { (i, index) ->
-          val expectedPair = listOf(minEdge + i, maxEdge - i)
-          horizontalItems1[horizontalItems2[index]]!!.containsAll(expectedPair)
+          val highIndexMatch = if (matches.contains(highIndex)) {
+            matches.minus(highIndex).firstOrNull { lowerEdge ->
+              (lowerEdge..highIndex).withIndex().all { (i, index) ->
+                val expectedPair = listOf(lowerEdge + i, highIndex - i)
+                verticalItems1[verticalItems2[index]]!!.containsAll(expectedPair)
+              }
+            }?.takeIf {
+              (highIndex - it) %2 == 1
+            }
+          } else {
+            null
+          }?.takeIf {
+            (highIndex - it) %2 == 1
+          }
+
+          zeroIndexMatch?.let { 0 to it } ?: highIndexMatch?.let { it to highIndex}
+        } else {
+          null
         }
       }
 
-      if (horizontalMirror == true) {
-        100 * ((pattern.size - horizontalEdgeMatch) / 2 + horizontalEdgeMatch)
-      } else if (verticalMirror == true) {
-        ((pattern[0].length - verticalEdgeMatch) / 2 + verticalEdgeMatch)
+      if (horizontalMirror != null) {
+        val (lowEnd, highEnd) = horizontalMirror
+        val mid = (highEnd - lowEnd + 1)
+        100 * ((mid / 2) + lowEnd)
+      } else if (verticalMirror != null) {
+        val (lowEnd, highEnd) = verticalMirror
+        val mid = (highEnd - lowEnd + 1)
+        (mid / 2) + lowEnd
       } else {
-        throw IllegalArgumentException("No Mirror Found")
+        throw IllegalArgumentException("No Mirror Found for index $patternIndex + $pattern")
       }
     }
-
-    -1
 
     summaries.sum()
   }
