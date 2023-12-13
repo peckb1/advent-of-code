@@ -1,7 +1,5 @@
 package me.peckb.aoc._2023.calendar.day13
 
-import arrow.core.Tuple4
-import arrow.core.firstOrNone
 import arrow.core.flatten
 import javax.inject.Inject
 
@@ -13,93 +11,40 @@ class Day13 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val patterns = findPatterns(input)
-
-    val summaries = patterns.mapIndexed { patternIndex, pattern ->
-      val (h1, h2, v1, v2) = createMaps(pattern)
-
-      val horizontalMirror = findMirror(h1, h2, pattern.size - 1).firstOrNull()
-      val verticalMirror = findMirror(v1, v2, pattern[0].size - 1).firstOrNull()
-
-      findSummary(horizontalMirror, verticalMirror)
-    }
-
-    summaries.sum()
+    findPatterns(input)
+      .map { findMirrors(it) }
+      .sumOf { findSummary(it.horizontalMirrors.firstOrNull(), it.verticalMirrors.firstOrNull()) }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     val patterns = findPatterns(input)
 
-    val summaries = patterns.mapIndexed thing@ { patternIndex, pattern ->
-      val (h1, h2, v1, v2) = createMaps(pattern)
-      val horizontalMirror = findMirror(h1, h2, pattern.size - 1).firstOrNull()
-      val verticalMirror = findMirror(v1, v2, pattern[0].size - 1).firstOrNull()
-      val originalMirrorInformation = (horizontalMirror to verticalMirror)
+    val summaries = patterns.mapIndexed summaryLoop@ { patternIndex, pattern ->
+      val originalMirrorData = findMirrors(pattern)
+      val originalHorizontal = originalMirrorData.horizontalMirrors.firstOrNull()
+      val originalVertical = originalMirrorData.verticalMirrors.firstOrNull()
 
       (0 until pattern.size).forEach { row ->
         (0 until pattern[row].size).forEach { col ->
-          pattern[row][col] = switch(pattern[row][col])
-          val (h3, h4, v3, v4) = createMaps(pattern)
-
-//          println("${v3.map { it.value.size }} $row $col ")
-
-          /*
-[0, 1, 12]
-[0, 1, 12]
-[2, 11]
-[3, 10]
-[4, 9]
-[5, 8]
-[6, 7]
-[6, 7]
-[5, 8]
-[4, 9]
-[3, 10]
-[2, 11]
-[0, 1, 12]
-
-           */
-
-//          println()
-//            (0 until pattern[0].size).map { i ->
-//              v3[v4[i]]
-//            }.forEach {
-//              println(it)
-//            }
-//          println()
-
-          if (v3[v4[2]] == listOf(2, 11)) {
-            // row = 4
-            // col = 2
-            -1
-          }
-
-          val horizontalMirror2 = findMirror(h3, h4, pattern.size - 1).minus(horizontalMirror)
-          val verticalMirror2 = findMirror(v3, v4, pattern[0].size - 1).minus(verticalMirror)
-
+          // swap
           pattern[row][col] = switch(pattern[row][col])
 
-          if (horizontalMirror2.size >= 2 || verticalMirror2.size >= 2) {
-            throw IllegalStateException("We should not have more than one match found (that isn't the original")
-          }
+          val newMirrorData = findMirrors(pattern)
+          val newHorizontal = newMirrorData.horizontalMirrors.minus(originalHorizontal).firstOrNull()
+          val newVertical = newMirrorData.verticalMirrors.minus(originalVertical).firstOrNull()
 
-          if (horizontalMirror2.isNotEmpty() && verticalMirror2.isNotEmpty()) {
-            throw IllegalStateException("We should not find both matches")
-          }
+          // swap back
+          pattern[row][col] = switch(pattern[row][col])
 
-          val newMirrorInformation = horizontalMirror2.firstOrNull() to verticalMirror2.firstOrNull()
-
-          if (newMirrorInformation != null to null) {
-            -1
-          }
-
-          if (originalMirrorInformation != newMirrorInformation && (newMirrorInformation != null to null)) {
-            return@thing findSummary(newMirrorInformation.first, newMirrorInformation.second)
+          val originalPair = originalHorizontal to originalVertical
+          val newPair = newHorizontal to newVertical
+          if ((newPair != null to null) && originalPair != newPair) {
+            return@summaryLoop findSummary(newPair.first, newPair.second)
           }
         }
       }
 
-      throw IllegalStateException("We should have found something for $patternIndex")
+      throw IllegalStateException("We should have found a mirror for $patternIndex")
     }
 
     summaries.sum()
@@ -111,31 +56,6 @@ class Day13 @Inject constructor(
       '#' -> '.'
       else -> throw IllegalArgumentException("Invalid mirror mark $c")
     }
-  }
-
-  private fun createMaps(pattern: List<List<Char>>): Tuple4<
-    MutableMap<List<Char>, List<Int>>,
-    MutableMap<Int, List<Char>>,
-    MutableMap<List<Char>, List<Int>>,
-    MutableMap<Int, List<Char>>
-    > {
-    val h1 = mutableMapOf<List<Char>, List<Int>>()
-    val h2 = mutableMapOf<Int, List<Char>>()
-
-    val v1 = mutableMapOf<List<Char>, List<Int>>()
-    val v2 = mutableMapOf<Int, List<Char>>()
-
-    pattern.forEachIndexed { index, s ->
-      h1.merge(s, listOf(index)) { a, b -> a + b }
-      h2[index] = s
-    }
-    (0 until pattern[0].size).forEach { index ->
-      val s = pattern.map { it[index] }//.joinToString("")
-      v1.merge(s, listOf(index)) { a, b -> a + b }
-      v2[index] = s
-    }
-
-    return Tuple4(h1, h2, v1, v2)
   }
 
   private fun findPatterns(input: Sequence<String>): List<Pattern> {
@@ -155,11 +75,38 @@ class Day13 @Inject constructor(
     return patterns
   }
 
+  private fun findMirrors(pattern: Pattern): MirrorData {
+    val mapData = createMaps(pattern)
+    val horizontalMirror = findMirror(mapData.rowToIndices, mapData.indexToRow, pattern.size - 1)
+    val verticalMirror   = findMirror(mapData.colToIndices, mapData.indexToCol, pattern[0].size - 1)
+
+    return MirrorData(horizontalMirror, verticalMirror)
+  }
+
+  private fun createMaps(pattern: List<List<Char>>): MirrorMaps {
+    val rowToIndices = mutableMapOf<List<Char>, List<Int>>()
+    val indexToRow = mutableMapOf<Int, List<Char>>()
+    pattern.forEachIndexed { index, s ->
+      rowToIndices.merge(s, listOf(index)) { a, b -> a + b }
+      indexToRow[index] = s
+    }
+
+    val colToIndices = mutableMapOf<List<Char>, List<Int>>()
+    val indexToCol = mutableMapOf<Int, List<Char>>()
+    (0 until pattern[0].size).forEach { index ->
+      val s = pattern.map { it[index] }
+      colToIndices.merge(s, listOf(index)) { a, b -> a + b }
+      indexToCol[index] = s
+    }
+
+    return MirrorMaps(rowToIndices, indexToRow, colToIndices, indexToCol)
+  }
+
   private fun findMirror(
     outerMap: MutableMap<List<Char>, List<Int>>,
     innerMap: MutableMap<Int, List<Char>>,
     highIndex: Int
-  ): Set<Pair<Int, Int>> {
+  ): Set<Mirror> {
     return (0..highIndex).mapNotNull { horizontalIndex ->
       val matches = outerMap[innerMap[horizontalIndex]]!!
       val lowIndex = 0
@@ -192,28 +139,37 @@ class Day13 @Inject constructor(
         }
 
         listOfNotNull(
-          zeroIndexMatch?.let { 0 to it },
-          highIndexMatch?.let { it to highIndex }
+          zeroIndexMatch?.let { Mirror(0, it) },
+          highIndexMatch?.let { Mirror(it, highIndex) }
         )
-
-//        zeroIndexMatch?.let { 0 to it } ?: highIndexMatch?.let { it to highIndex }
       } else {
         null
       }
     }.flatten().toSet()
   }
 
-  private fun findSummary(horizontalMirror: Pair<Int, Int>?, verticalMirror: Pair<Int, Int>?): Int {
-    return if (horizontalMirror != null) {
-      val (lowEnd, highEnd) = horizontalMirror
-      val mid = (highEnd - lowEnd + 1)
-      100 * ((mid / 2) + lowEnd)
-    } else if (verticalMirror != null) {
-      val (lowEnd, highEnd) = verticalMirror
-      val mid = (highEnd - lowEnd + 1)
-      (mid / 2) + lowEnd
-    } else {
-      throw IllegalArgumentException("One mirror must be non-null")
+  private fun findSummary(horizontalMirror: Mirror?, verticalMirror: Mirror?): Int {
+    return when {
+      horizontalMirror != null -> 100 * generalSummary(horizontalMirror)
+      verticalMirror   != null ->       generalSummary(verticalMirror)
+      else -> throw IllegalArgumentException("One mirror must be non-null")
     }
   }
+
+  private fun generalSummary(mirror: Mirror): Int {
+    val (lowEnd, highEnd) = mirror
+    val mid = (highEnd - lowEnd + 1)
+    return (mid / 2) + lowEnd
+  }
+
+  data class MirrorMaps(
+    val rowToIndices: MutableMap<List<Char>, List<Int>>,
+    val indexToRow: MutableMap<Int, List<Char>>,
+    val colToIndices: MutableMap<List<Char>, List<Int>>,
+    val indexToCol: MutableMap<Int, List<Char>>,
+  )
+
+  data class MirrorData(val horizontalMirrors: Set<Mirror>, val verticalMirrors: Set<Mirror>,)
+
+  data class Mirror(val low: Int, val high: Int)
 }
