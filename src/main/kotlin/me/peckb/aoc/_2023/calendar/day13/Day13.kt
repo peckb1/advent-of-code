@@ -1,6 +1,5 @@
 package me.peckb.aoc._2023.calendar.day13
 
-import arrow.core.flatten
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -103,49 +102,39 @@ class Day13 @Inject constructor(
   }
 
   private fun findMirror(
-    outerMap: MutableMap<List<Char>, List<Int>>,
-    innerMap: MutableMap<Int, List<Char>>,
-    highIndex: Int
+    dataToIndices: MutableMap<List<Char>, List<Int>>,
+    indexToData: MutableMap<Int, List<Char>>,
+    highIndex: Int,
+    lowIndex: Int = 0
   ): Set<Mirror> {
-    return (0..highIndex).mapNotNull { horizontalIndex ->
-      val matches = outerMap[innerMap[horizontalIndex]]!!
-      val lowIndex = 0
+    return (0..highIndex).flatMap { horizontalIndex ->
+      val matches = dataToIndices[indexToData[horizontalIndex]]!!
+      val foundPossibleMirror = matches.size >= 2
 
-      if (matches.size >= 2 && (matches.contains(lowIndex) || matches.contains(highIndex))) {
-        val zeroIndexMatch = if (matches.contains(lowIndex)) {
-          matches.minus(lowIndex).firstOrNull { upperEdge ->
-            (lowIndex..upperEdge).withIndex().all { (i, index) ->
-              val expectedPair = listOf(lowIndex + i, upperEdge - i)
-              outerMap[innerMap[index]]!!.containsAll(expectedPair)
-            }
+      val zeroIndexMatch = if (foundPossibleMirror && matches.contains(lowIndex)) {
+        matches.minus(lowIndex).firstOrNull { upperEdge ->
+          (lowIndex..upperEdge).withIndex().all { (i, index) ->
+            val expectedPair = listOf(lowIndex + i, upperEdge - i)
+            dataToIndices[indexToData[index]]!!.containsAll(expectedPair)
           }
-        } else {
-          null
-        }?.takeIf {
-          (highIndex - it) % 2 == 1
         }
+      } else null
 
-        val highIndexMatch = if (matches.contains(highIndex)) {
-          matches.minus(highIndex).firstOrNull { lowerEdge ->
-            (lowerEdge..highIndex).withIndex().all { (i, index) ->
-              val expectedPair = listOf(lowerEdge + i, highIndex - i)
-              outerMap[innerMap[index]]!!.containsAll(expectedPair)
-            }
+      val highIndexMatch = if (foundPossibleMirror && matches.contains(highIndex)) {
+        matches.minus(highIndex).firstOrNull { lowerEdge ->
+          (lowerEdge..highIndex).withIndex().all { (i, index) ->
+            val expectedPair = listOf(lowerEdge + i, highIndex - i)
+            dataToIndices[indexToData[index]]!!.containsAll(expectedPair)
           }
-        } else {
-          null
-        }?.takeIf {
-          (highIndex - it) % 2 == 1
         }
+      } else null
 
-        listOfNotNull(
-          zeroIndexMatch?.let { Mirror(0, it) },
-          highIndexMatch?.let { Mirror(it, highIndex) }
-        )
-      } else {
-        null
-      }
-    }.flatten().toSet()
+      // we also only care about perfect mirrors, so clear those out
+      listOfNotNull(
+        zeroIndexMatch?.takeIf { (highIndex - it) % 2 == 1 }?.let { Mirror(lowIndex, it) },
+        highIndexMatch?.takeIf { (highIndex - it) % 2 == 1 }?.let { Mirror(it, highIndex) }
+      )
+    }.toSet()
   }
 
   private fun findSummary(horizontalMirror: Mirror?, verticalMirror: Mirror?): Int {
@@ -169,7 +158,7 @@ class Day13 @Inject constructor(
     val indexToCol: MutableMap<Int, List<Char>>,
   )
 
-  data class MirrorData(val horizontalMirrors: Set<Mirror>, val verticalMirrors: Set<Mirror>,)
+  data class MirrorData(val horizontalMirrors: Set<Mirror>, val verticalMirrors: Set<Mirror>)
 
   data class Mirror(val low: Int, val high: Int)
 }
