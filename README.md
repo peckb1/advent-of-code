@@ -94,7 +94,9 @@ as the value which passed the given day/phase combination
 * Day 01
   * Way to hard for a "normal" Day 01. Gave the year an "uh oh" vibe from the start!
 * Day 08
-  * This was my first "the AoC way to solve this is ..." where seeing that we had cycles and a forever brute force meant to try Least Common Multiple, which succeeded 
+  * This was my first "the AoC way to solve this is ..." where seeing that we had cycles and a forever brute force meant to try Least Common Multiple, which succeeded
+* Day 13
+  * A good difficulty problem, with a fun programming challenge, but no tricks.
 
 ### Interesting approaches:
 
@@ -143,7 +145,8 @@ as the value which passed the given day/phase combination
 * Day 15 Precomputing the shortest paths for every valve combination seemed key to being able to quickly go from node to node in a brute force solution.   
 
 #### 2023
-* Day 05 The fact that the numbers are "small" meant just starting at 0 and iterating over every location until we found one that matches a seed helps avoid the "forever" brute force solutions 
+* Day 05 The fact that the numbers are "small" meant just starting at 0 and iterating over every location until we found one that matches a seed helps avoid the "forever" brute force solutions
+* Day 14 Rather than trying to make sure you found the right indices for tilting rocks east, west, or south just rotate the mirror and keep tilting north
 
 ## Takeaways
 
