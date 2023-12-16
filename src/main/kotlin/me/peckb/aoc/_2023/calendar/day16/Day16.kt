@@ -23,26 +23,12 @@ class Day16 @Inject constructor(
     val caveSystem = mutableListOf<MutableList<CaveArea>>()
     input.forEach { caveSystem.add(it.map(::CaveArea).toMutableList()) }
 
-    val topRow     = (1 until caveSystem.size - 1).map { Location(-1, it) to SOUTH }
-    val bottomRow  = (1 until caveSystem.size - 1).map { Location(caveSystem[it].size, it) to NORTH }
-    val leftColumn = (1 until caveSystem[0].size - 1).map { Location(it, -1) to EAST }
-    val rightColumn = (1 until caveSystem[0].size - 1).map { Location(caveSystem.size, it) to WEST }
-    val corners = listOf(
-      // upper left
-      Location(0, -1) to EAST,
-      Location(-1, 0) to SOUTH,
-      // upper right
-      Location(-1, caveSystem[0].size -1) to SOUTH,
-      Location(0, caveSystem[0].size) to WEST,
-      // lower left
-      Location(caveSystem.size - 1, -1) to EAST,
-      Location(caveSystem.size, 0) to NORTH,
-      // lower right
-      Location(caveSystem.size - 1, caveSystem[caveSystem.size - 1].size - 1) to WEST,
-      Location(caveSystem.size, caveSystem[caveSystem.size - 1].size) to NORTH,
-    )
+    val topRow     = (0 until caveSystem.size - 1).map { Location(-1, it) to SOUTH }
+    val bottomRow  = (0 until caveSystem.size - 1).map { Location(caveSystem[it].size, it) to NORTH }
+    val leftColumn = (0 until caveSystem[0].size - 1).map { Location(it, -1) to EAST }
+    val rightColumn= (0 until caveSystem[0].size - 1).map { Location(caveSystem.size, it) to WEST }
 
-    listOf(topRow, bottomRow, leftColumn, rightColumn, corners).flatten().map {
+    listOf(topRow, bottomRow, leftColumn, rightColumn).flatten().map {
       fireLaser(caveSystem, it)
       countEnergizedNodes(caveSystem).also { reset(caveSystem) }
     }.maxByOrNull { it }
