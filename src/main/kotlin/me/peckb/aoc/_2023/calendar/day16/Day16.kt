@@ -26,7 +26,7 @@ class Day16 @Inject constructor(
     val topRow     = (1 until caveSystem.size - 1).map { Location(-1, it) to SOUTH }
     val bottomRow  = (1 until caveSystem.size - 1).map { Location(caveSystem[it].size, it) to NORTH }
     val leftColumn = (1 until caveSystem[0].size - 1).map { Location(it, -1) to EAST }
-    val westColumn = (1 until caveSystem[0].size - 1).map { Location(caveSystem.size, it) to WEST }
+    val rightColumn = (1 until caveSystem[0].size - 1).map { Location(caveSystem.size, it) to WEST }
     val corners = listOf(
       // upper left
       Location(0, -1) to EAST,
@@ -42,7 +42,7 @@ class Day16 @Inject constructor(
       Location(caveSystem.size, caveSystem[caveSystem.size - 1].size) to NORTH,
     )
 
-    listOf(topRow, bottomRow, leftColumn, westColumn, corners).flatten().map {
+    listOf(topRow, bottomRow, leftColumn, rightColumn, corners).flatten().map {
       fireLaser(caveSystem, it)
       countEnergizedNodes(caveSystem).also { reset(caveSystem) }
     }.maxByOrNull { it }
