@@ -28,10 +28,12 @@ class Day16 @Inject constructor(
     val leftColumn = (0 until caveSystem[0].size - 1).map { Location(it, -1) to EAST }
     val rightColumn= (0 until caveSystem[0].size - 1).map { Location(caveSystem.size, it) to WEST }
 
-    listOf(topRow, bottomRow, leftColumn, rightColumn).flatten().map {
-      fireLaser(caveSystem, it)
-      countEnergizedNodes(caveSystem).also { reset(caveSystem) }
-    }.maxByOrNull { it }
+    listOf(topRow, bottomRow, leftColumn, rightColumn).maxOf { starts ->
+      starts.maxOf {
+        fireLaser(caveSystem, it)
+        countEnergizedNodes(caveSystem).also { reset(caveSystem) }
+      }
+    }
   }
 
   private fun fireLaser(caveSystem: List<List<CaveArea>>, laserStart : Pair<Location, Direction>) {
