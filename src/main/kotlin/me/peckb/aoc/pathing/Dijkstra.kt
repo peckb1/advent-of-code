@@ -6,13 +6,9 @@ import java.util.PriorityQueue
  * NOTE: whatever class you use for `Node` should be a `data class`
  */
 interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWithCost<Node, Cost>> {
-  fun solve(
-    start: Node,
-    end: Node? = null,
-    comparator: Comparator<Node>? = null,
-  ): MutableMap<Node, Cost> {
+  fun solve(start: Node, end: Node? = null, comparator: Comparator<Node>? = null): MutableMap<Node, Cost> {
     val toVisit = PriorityQueue<NodeWithCost>().apply { add(start.withCost(minCost())) }
-    val visited = linkedSetOf<Node>()
+    val visited = mutableSetOf<Node>()
     val currentCosts = mutableMapOf<Node, Cost>()
       .withDefault { maxCost() }
       .apply { this[start] = minCost() }
