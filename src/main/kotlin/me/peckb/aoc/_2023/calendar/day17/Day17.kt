@@ -1,6 +1,5 @@
 package me.peckb.aoc._2023.calendar.day17
 
-import me.peckb.aoc._2023.calendar.day17.Direction.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
