@@ -1,5 +1,6 @@
 package me.peckb.aoc._2023.calendar.day17
 
+import arrow.core.compareTo
 import me.peckb.aoc._2023.calendar.day17.Day17.Direction.*
 import me.peckb.aoc._2023.calendar.day17.Day17.LavaPoolDijkstra.*
 import javax.inject.Inject
@@ -12,57 +13,23 @@ import kotlin.math.abs
 class Day17 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-  fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val lavaPool = arrayListOf<ArrayList<Int>>()
-    input.forEach { row ->
-      lavaPool.add(row.map { it.digitToInt() }.toCollection(ArrayList()))
-    }
+  class LavaPoolDijkstra(val map: List<List<Int>>) : Dijkstra<Block, Path, LavaPoolDijkstra.BlockWithPath> {
+    val rowBounds = map.indices
+    val colBounds = 0 until map[0].size
 
-    var allowedEndNodes = 150
+    override fun Path.plus(cost: Path): Path = cost
 
-    val start = Block(0, 0, emptyList())
-    val paths = LavaPoolDijkstra(lavaPool)
-      .solve(
-        start = start,
-        end = Block(lavaPool.size - 1, lavaPool[0].size - 1, emptyList()),
-        comparator = object : Comparator<Block> {
-          override fun compare(o1: Block, o2: Block): Int {
-            val actualComparison = when (o1.row.compareTo(o2.row)) {
-              0  -> o1.col.compareTo(o2.col)
-              1  -> 1
-              -1 -> -1
-              else -> throw IllegalStateException()
-            }
+    override fun Block.withCost(cost: Path): BlockWithPath = BlockWithPath(this, cost)
+    override fun minCost(): Path = Path(map, emptyList())
+    override fun maxCost(): Path = Path(map, emptyList(), Int.MAX_VALUE)
 
-            return if (actualComparison == 0 && allowedEndNodes-- < 0) {
-              0
-            } else {
-              -1
-            }
-          }
-        }
-      )
-
-    val endNodes = paths.filter {
-      it.key.row == lavaPool.size - 1 && it.key.col == lavaPool[it.key.row].size - 1
-    }.entries.sortedBy { it.value.heatCosts.sum() }
-
-    endNodes.minOf { it.value.cost }
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read {
-    -1
-  }
-
-  class LavaPoolDijkstra(val map: List<List<Int>>) : Dijkstra<Block, Path, BlockWithPath> {
-
-    inner class BlockWithPath(private val block: Block, private val path: Path) : DijkstraNodeWithCost<Block, Path> {
+    inner class BlockWithPath(val block: Block, val path: Path) : DijkstraNodeWithCost<Block, Path> {
       override fun compareTo(other: DijkstraNodeWithCost<Block, Path>): Int {
         return cost().cost.compareTo(other.cost().cost)
       }
 
       override fun neighbors(): List<DijkstraNodeWithCost<Block, Path>> {
-        val lastThree = path.steps.takeLast(3)
+        val lastThree = block.lastDirections.takeLast(3)
         val lastStep = lastThree.lastOrNull()
 
         val threeInARow = (lastThree.size == 3 && lastThree.toSet().size == 1)
@@ -73,91 +40,94 @@ class Day17 @Inject constructor(
           null         -> mutableListOf(NORTH, SOUTH, EAST, WEST)
         }
 
-        return options.mapNotNull { directionToTravel ->
-          val (row, col) = block
+        val directionToTravel = options.mapNotNull { directionToTravel ->
           when (directionToTravel) {
-            NORTH -> {
-              if (row > 0) {
-                val newPath = Path(
-                  lastBlock = Block(row - 1, col, lastThree),
-                  heatCosts = path.heatCosts.plus(map[row - 1][col]),
-                  steps = path.steps.plus(directionToTravel),
-                  cost = path.cost + map[row - 1][col]
-                )
-                BlockWithPath(Block(row - 1, col, lastThree), newPath)
-              } else {
-                null
-              }
-            }
-            SOUTH -> {
-              if (row < map.size - 1) {
-                val newPath = Path(
-                  lastBlock = Block(row + 1, col, lastThree),
-                  heatCosts = path.heatCosts.plus(map[row + 1][col]),
-                  steps = path.steps.plus(directionToTravel),
-                  cost = path.cost + map[row + 1][col]
-                )
-                BlockWithPath(Block(row + 1, col, lastThree), newPath)
-              } else {
-                null
-              }
-            }
-            EAST -> {
-              if (col < map[row].size - 1) {
-                val newPath = Path(
-                  lastBlock = Block(row, col + 1, lastThree),
-                  heatCosts = path.heatCosts.plus(map[row][col + 1]),
-                  steps = path.steps.plus(directionToTravel),
-                  cost = path.cost + map[row][col + 1]
-                )
-                BlockWithPath(Block(row, col + 1, lastThree), newPath)
-              } else {
-                null
-              }
-            }
-            WEST -> {
-              if (col > 0) {
-                val newPath = Path(
-                  lastBlock = Block(row, col - 1, lastThree),
-                  heatCosts = path.heatCosts.plus(map[row][col - 1]),
-                  steps = path.steps.plus(directionToTravel),
-                  cost = path.cost + map[row][col - 1]
-                )
-                BlockWithPath(Block(row, col - 1, lastThree), newPath)
-              } else {
-                null
-              }
-            }
+            NORTH -> Triple(-1, 0, directionToTravel)
+            SOUTH -> Triple(1,0, directionToTravel)
+            EAST  -> Triple(0,1, directionToTravel)
+            WEST  -> Triple(0,-1, directionToTravel)
+          }
+        }
+
+        return directionToTravel.mapNotNull { (dr, dc, d) ->
+          val r = block.row + dr
+          val c = block.col + dc
+          if (rowBounds.contains(r) && colBounds.contains(c)) {
+            val newBlock = Block(r, c, block.lastDirections.takeLast(2).plus(d), map[r][c])
+            val newPath = Path(map, path.steps.plus(newBlock))
+            BlockWithPath(newBlock, newPath)
+          } else {
+            null
           }
         }
       }
 
       override fun node(): Block = block
-
       override fun cost(): Path = path
     }
+  }
 
-    override fun Block.withCost(cost: Path) = BlockWithPath(this, cost)
-    override fun Path.plus(cost: Path): Path {
-      return cost.copy(cost = cost.cost + (abs(cost.lastBlock.row - map.size) + abs(cost.lastBlock.col - map[0].size)))
+  data class Block(val row: Int, val col: Int, val lastDirections: List<Direction>, val cost: Int) : Comparable<Block> {
+    override fun compareTo(other: Block): Int {
+      return when (val rowCompare = row.compareTo(other.row)) {
+        0 -> when (val colCompare = col.compareTo(other.col)) {
+          0 -> {
+            val myLast = lastDirections.lastOrNull()
+            val theirLast = other.lastDirections.lastOrNull()
+            lastDirections.filter { it == myLast }.compareTo(other.lastDirections.filter { it == theirLast })
+          }
+          else -> colCompare
+        }
+        else -> rowCompare
+      }
     }
-
-    override fun minCost() = Path(Block(0, 0, emptyList()), emptyList(), emptyList(), 0)
-    override fun maxCost() = Path(Block(0, 0, emptyList()), emptyList(), emptyList(), Int.MAX_VALUE)
   }
 
-  data class Block(val row: Int, val col: Int, val lastThree: List<Direction>)
+  enum class Direction { NORTH, SOUTH, EAST, WEST }
 
-  data class Path(
-    val lastBlock: Block,
-    val heatCosts: List<Int>,
-    val steps: List<Direction>,
-    val cost: Int = steps.size
-  ) : Comparable<Path> {
-    override fun compareTo(other: Path) = (cost + heatCosts.sum()).compareTo(other.cost + other.heatCosts.sum())
+  data class Path(val map: List<List<Int>>, val steps: List<Block>, val cost: Int = steps.sumOf { it.cost }) : Comparable<Path> {
+    override fun compareTo(other: Path): Int {
+      return when(val costCompare =  cost.compareTo(other.cost)) {
+        0 -> {
+          val myDistance = steps.lastOrNull()?.let { (row, col, _, _) ->
+            abs((map.size - 1) - row) + abs((map[0].size - 1) - col)
+          }
+          val theirDistance = other.steps.lastOrNull()?.let { (row, col, _, _) ->
+            abs((map.size - 1) - row) + abs((map[0].size - 1) - col)
+          }
+
+          return when {
+            myDistance == null -> 1
+            theirDistance == null -> -1
+            else -> myDistance.compareTo(theirDistance)
+          }
+        }
+        else -> costCompare
+      }
+    }
   }
 
-  enum class Direction {
-    NORTH, SOUTH, EAST, WEST
+  fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val lavaPool = arrayListOf<ArrayList<Int>>()
+    input.forEach { row -> lavaPool.add(row.map { it.digitToInt() }.toCollection(ArrayList())) }
+
+    val start = Block(0, 0, emptyList(), 0)
+
+    val paths = LavaPoolDijkstra(lavaPool)
+      .solve(
+        start = start,
+        end = Block(lavaPool.size - 1, lavaPool[0].size - 1, emptyList(), 0)
+      ) { b1, b2 ->
+        when (val rowCompare = b1.row.compareTo(b2.row)) {
+          0 -> b1.col.compareTo(b2.col)
+          else -> rowCompare
+        }
+      }
+
+    paths.filter { it.key.row == lavaPool.size - 1 && it.key.col == lavaPool[0].size - 1 }.map { it.value.cost }
+  }
+
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read {
+    -1
   }
 }

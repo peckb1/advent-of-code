@@ -18,10 +18,6 @@ interface Dijkstra<Node, Cost : Comparable<Cost>, NodeWithCost: DijkstraNodeWith
       .apply { this[start] = minCost() }
 
     while (toVisit.isNotEmpty()) {
-//      if (visited.size > 250_000) {
-//        visited.remove(visited.elementAt(0))
-//      }
-//      println("${toVisit.size} ${visited.size}")
       val current: NodeWithCost = toVisit.poll().also { visited.add(it.node()) }
 
       val foundEnd: Boolean? = end?.let { node: Node ->
