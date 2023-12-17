@@ -66,10 +66,8 @@ class Day17 @Inject constructor(
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     runDijkstra(input) { map, node ->
       val directionsToTravel = when (node.directionTraveling) {
-        NORTH -> mutableListOf(EAST, WEST).also { if (node.stepsInDirection < 3) it.add(node.directionTraveling) }
-        SOUTH -> mutableListOf(EAST, WEST).also { if (node.stepsInDirection < 3) it.add(node.directionTraveling) }
-        EAST -> mutableListOf(NORTH, SOUTH).also { if (node.stepsInDirection < 3) it.add(node.directionTraveling) }
-        WEST -> mutableListOf(NORTH, SOUTH).also { if (node.stepsInDirection < 3) it.add(node.directionTraveling) }
+        NORTH, SOUTH -> mutableListOf(EAST, WEST).also   { if (node.stepsInDirection < 3) it.add(node.directionTraveling) }
+        EAST, WEST   -> mutableListOf(NORTH, SOUTH).also { if (node.stepsInDirection < 3) it.add(node.directionTraveling) }
       }
 
       directionsToTravel.mapNotNull { directionToMove ->
@@ -80,8 +78,25 @@ class Day17 @Inject constructor(
     }
   }
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read {
-    -1
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    runDijkstra(input) { map, node ->
+      val directionsToTravel = when (node.directionTraveling) {
+        NORTH, SOUTH -> mutableListOf<Direction>().apply {
+            if (node.stepsInDirection >= 4) { add(EAST); add(WEST) }
+            if (node.stepsInDirection < 10) { add(node.directionTraveling) }
+        }
+        EAST, WEST   -> mutableListOf<Direction>().apply {
+          if (node.stepsInDirection >= 4) { add(NORTH); add(SOUTH) }
+          if (node.stepsInDirection < 10) { add(node.directionTraveling) }
+        }
+      }
+
+      directionsToTravel.mapNotNull { directionToMove ->
+        node.move(directionToMove, map)?.let {
+          it to map[it.row][it.col]
+        }
+      }
+    }
   }
 
   private fun runDijkstra(
