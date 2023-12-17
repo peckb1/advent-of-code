@@ -31,8 +31,8 @@ class Day17 @Inject constructor(
       input.forEach { row -> add(row.map { it.digitToInt() }.toMutableList()) }
     }
 
-    val start = Node(0, 0, EAST, 0)
-    val end = Node(lavaPool.lastIndex, lavaPool[0].lastIndex, EAST, 0)
+    val start = Node(0, 0)
+    val end = Node(lavaPool.lastIndex, lavaPool[0].lastIndex)
 
     val dijkstra = LavaPoolDijkstra(lavaPool) { map, node ->
       val directionsToTravel = neighbors(node)

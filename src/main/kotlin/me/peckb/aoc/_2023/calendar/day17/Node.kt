@@ -2,7 +2,12 @@ package me.peckb.aoc._2023.calendar.day17
 
 import me.peckb.aoc._2023.calendar.day17.Direction.*
 
-data class Node(val row: Int, val col: Int, val directionTraveling: Direction, val stepsInDirection: Int) {
+data class Node(
+  val row: Int,
+  val col: Int,
+  val directionTraveling: Direction = EAST,
+  val stepsInDirection: Int = 0
+) {
   fun move(directionToMove: Direction, map: List<List<Int>>): Node? {
     val (rowDelta, columnDelta) = when (directionToMove) {
       NORTH -> -1 to  0
