@@ -147,6 +147,7 @@ as the value which passed the given day/phase combination
 #### 2023
 * Day 05 The fact that the numbers are "small" meant just starting at 0 and iterating over every location until we found one that matches a seed helps avoid the "forever" brute force solutions
 * Day 14 Rather than trying to make sure you found the right indices for tilting rocks east, west, or south just rotate the mirror and keep tilting north
+* Day 18 Learning about the Minkowski Sum for thick edge convex hull areas 
 
 ## Takeaways
 
