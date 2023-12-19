@@ -46,18 +46,111 @@ class Day19 @Inject constructor(
   }
 
   private fun countData(nodes: MutableMap<String, WorkflowNode>): Long {
-    val acceptedNode = nodes["A"]!!
+    val childNode = nodes["A"]!!
+    val entryNode = nodes["in"]!!
 
-    val parents = acceptedNode.getParents()
+    val parents = childNode.getParents()
 
     val validXmas = ValidXmas()
 
-    // 169536000000000
     // 167409079868000
 
-    val results = parents.map { countData(nodes, acceptedNode, it, validXmas) }
+    val asd = countDataDown(nodes, entryNode, validXmas)
 
-    return combine(results).allowed()
+//    val results = parents.map { countData(nodes, childNode, it, validXmas) }
+
+//    return combine(results).allowed()
+
+    return asd
+  }
+
+  private fun countDataDown(
+    nodes: MutableMap<String, WorkflowNode>,
+    parentNode: WorkflowNode,
+    validXmas: ValidXmas,
+  ): Long {
+    val parentName = parentNode.workflow.name
+
+    return if (parentName == "A") {
+      validXmas.allowed()
+    } else if (parentName == "R") {
+      0L
+    } else {
+      val children = parentNode.workflow.rules.map { rule ->
+        val child = when (rule) {
+          is GreaterThan -> nodes[rule.ifTrue]!!
+          is LessThan    -> nodes[rule.ifTrue]!!
+          is Static      -> nodes[rule.result]!!
+        }
+
+        val newValidXmas = when (rule) {
+          is GreaterThan -> validXmas.adjustGreaterThan(rule.variableName, rule.value)
+          is LessThan    -> validXmas.adjustLessThan(rule.variableName, rule.value)
+          is Static      -> validXmas.copy()
+        }
+
+        child to newValidXmas
+      }
+
+      val results = children.map { (child, valid) ->
+        Triple(child, valid, countDataDown(nodes, child, valid))
+      }.filter { it.third > 0 }
+
+      if (results.size == 0) {
+        0L
+      } else if (results.size == 1) {
+        results[0].third
+      } else {
+//        val asd = results.indices.flatMap { a ->
+//          (a + 1 .. results.lastIndex).map { b ->
+//            val q = results[a]
+//            val r = results[b]
+//
+//            val xOverlaps = (q.second.xMin + 1 until q.second.xMax).count { (r.second.xMin + 1 until r.second.xMax).contains(it) }
+//            val mOverlaps = (q.second.mMin + 1 until q.second.mMax).count { (r.second.mMin + 1 until r.second.mMax).contains(it) }
+//            val aOverlaps = (q.second.aMin + 1 until q.second.aMax).count { (r.second.aMin + 1 until r.second.aMax).contains(it) }
+//            val sOverlaps = (q.second.sMin + 1 until q.second.sMax).count { (r.second.sMin + 1 until r.second.sMax).contains(it) }
+//
+//            val overlapCount = xOverlaps.toLong() * mOverlaps * aOverlaps * sOverlaps
+//
+//            q.third + r.third - overlapCount
+//          }
+//        }
+
+        results.sumOf { it.third }
+      }
+
+//      -1
+      /*
+      0 = {Triple@3229} (WorkflowNode(workflow=Workflow(name=A, rules=[])), 
+          ValidXmas(xMin=0, xMax=4001, mMin=1548, mMax=4001, aMin=0, aMax=4001, sMin=2770, sMax=4001), 48255360000000)
+      1 = {Triple@3233} (WorkflowNode(workflow=Workflow(name=A, rules=[])), 
+          ValidXmas(xMin=0, xMax=4001, mMin=0,    mMax=4001, aMin=0, aMax=4001, sMin=2770, sMax=4001), 78720000000000)
+       */
+//      -1L
+
+//      val myChildren = nodes.filter { (_, possibleChild) ->
+//        possibleChild.getParents().any { it.name == parentName }
+//      }
+//
+//      myChildren.maxOf { (_, child) ->
+//        val myValidData = parentNode.workflow.rules.firstOrNull { rule ->
+//          when (rule) {
+//            is GreaterThan -> rule.ifTrue == child.workflow.name
+//            is LessThan    -> rule.ifTrue == child.workflow.name
+//            is Static      -> rule.result == child.workflow.name
+//          }
+//        }?.let { rule ->
+//          when (rule) {
+//            is GreaterThan -> validXmas.adjustGreaterThan(rule.variableName, rule.value)
+//            is LessThan    -> validXmas.adjustLessThan(rule.variableName, rule.value)
+//            is Static      -> validXmas.copy()
+//          }
+//        } ?: validXmas
+//
+//        countDataDown(nodes, child, myValidData)
+//      }
+    }
   }
 
   private fun countData(
