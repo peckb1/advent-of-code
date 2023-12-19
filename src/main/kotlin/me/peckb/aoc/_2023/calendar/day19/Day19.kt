@@ -33,7 +33,7 @@ class Day19 @Inject constructor(
 
   private fun Map<String, Workflow>.accept(xmas: XMAS): Boolean {
     var nextWorkflow = "in"
-    
+
     while (nextWorkflow != "A" && nextWorkflow != "R") {
       nextWorkflow = get(nextWorkflow)?.rules?.firstNotNullOf { it.apply(xmas) } ?: "R"
     }
@@ -50,26 +50,26 @@ class Day19 @Inject constructor(
       "A" -> validXmas.allowed()
       "R" -> 0
       else -> {
-        var usableXmasSpace = validXmas
+        var remainingXmas = validXmas
 
         return workflow.rules.sumOf { rule ->
           when (rule) {
             is GreaterThan -> {
-              val trueValid = usableXmasSpace.adjustGreaterThan(rule.variableName, rule.value + 1)
-              usableXmasSpace = usableXmasSpace.adjustLessThan(rule.variableName, rule.value)
+              val limitedXmas = remainingXmas.adjustGreaterThan(rule.variableName, rule.value + 1)
+              remainingXmas = remainingXmas.adjustLessThan(rule.variableName, rule.value)
 
-              countAccepted(workflows, workflows[rule.ifTrue]!!, trueValid)
+              countAccepted(workflows, workflows[rule.ifTrue]!!, limitedXmas)
             }
 
             is LessThan -> {
-              val trueValid = usableXmasSpace.adjustLessThan(rule.variableName, rule.value - 1)
-              usableXmasSpace = usableXmasSpace.adjustGreaterThan(rule.variableName, rule.value)
+              val limitedXmas = remainingXmas.adjustLessThan(rule.variableName, rule.value - 1)
+              remainingXmas = remainingXmas.adjustGreaterThan(rule.variableName, rule.value)
 
-              countAccepted(workflows, workflows[rule.ifTrue]!!, trueValid)
+              countAccepted(workflows, workflows[rule.ifTrue]!!, limitedXmas)
             }
 
             is Static -> {
-              countAccepted(workflows, workflows[rule.result]!!, usableXmasSpace)
+              countAccepted(workflows, workflows[rule.result]!!, remainingXmas)
             }
           }
         }
