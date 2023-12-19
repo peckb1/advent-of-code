@@ -9,12 +9,15 @@ class Day19 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val (partData, workflowData) = input.toList().partition { it.startsWith('{') }
+    val (xmasData, workflowData) = input.toList().partition { it.startsWith('{') }
 
-    val workflows = workflowData.dropLast(1).map(::workflow).associateBy { it.name }
-    val parts = partData.map(::xmas)
+    val workflows = workflowData.dropLast(1)
+      .map(::workflow)
+      .associateBy { it.name }
 
-    parts.filter { workflows.accept(it) }.sumOf { it.value }
+    xmasData.map(::xmas)
+      .filter { workflows.accept(it) }
+      .sumOf { it.value }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
@@ -26,6 +29,16 @@ class Day19 @Inject constructor(
       .associateBy { it.name }
 
     countAccepted(workflows, workflows["in"]!!)
+  }
+
+  private fun Map<String, Workflow>.accept(xmas: XMAS): Boolean {
+    var nextWorkflow = "in"
+    
+    while (nextWorkflow != "A" && nextWorkflow != "R") {
+      nextWorkflow = get(nextWorkflow)?.rules?.firstNotNullOf { it.apply(xmas) } ?: "R"
+    }
+
+    return nextWorkflow == "A"
   }
 
   private fun countAccepted(
