@@ -7,7 +7,6 @@ import me.peckb.aoc._2023.calendar.day20.Day20.Pulse.LOW
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import org.apache.commons.math3.util.ArithmeticUtils
 import org.apache.commons.math3.util.ArithmeticUtils.lcm
 import java.util.LinkedList
 import java.util.Queue
@@ -16,18 +15,17 @@ class Day20 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::module) { input ->
-    val modules = input.associateBy { it.id }
-    modules.values.filterIsInstance(Module.Conjunction::class.java).map { conjunction ->
-      conjunction.addSenderData(
-        modules.values.filter { it.destinationIds.contains(conjunction.id) }
-      )
+    val modules = input.associateBy { it.id }.apply {
+      values.filterIsInstance(Module.Conjunction::class.java).map { conjunction ->
+        conjunction.addSenderData(values.filter { it.destinationIds.contains(conjunction.id) })
+      }
     }
 
     var totalLow: Long = 0
     var totalHigh: Long = 0
 
     repeat(1000) {
-      val (high, low) = pushButton(it + 1L, modules)
+      val (high, low) = pushButton(modules)
       totalLow += low
       totalHigh += high
     }
@@ -36,49 +34,41 @@ class Day20 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::module) { input ->
-    val modules = input.associateBy { it.id }
+    val modules = input.associateBy { it.id }.apply {
+      values.filterIsInstance(Module.Conjunction::class.java).map { conjunction ->
+        conjunction.addSenderData(values.filter { it.destinationIds.contains(conjunction.id) })
+      }
+    }
 
+    val groups = modules["broadcaster"]!!.destinationIds
 
-    listOf(
-      "111110100111",
-      "111101100111",
-      "111101101011",
-      "111110110011",
-    ).map { it.toLong(2) }.fold(1L) { a, b -> lcm(a, b) }
-//    val modules = input.associateBy { it.id }
-//    modules.values.filterIsInstance(Module.Conjunction::class.java).map { conjunction ->
-//      conjunction.addSenderData(
-//        modules.values.filter { it.destinationIds.contains(conjunction.id) }
-//      )
-//    }
-//
-//    var totalLow: Long = 0
-//    var totalHigh: Long = 0
-//
-////    var counter = 0L
-//    repeat(10) {
-//      val (high, low) = pushButton(it + 1L, modules)
-////      totalLow += low
-////      totalHigh += high
-////      counter++
-//
-//      listOf("qm", "kb", "hv", "rn", "ml", "gk", "qv", "ks", "xk", "nv", "vq", "qj", "kd", "ts")
-//        .forEach { print(modules[it]!!.state()) }
-//      println()
-//      listOf("ct", "mj", "xg", "vs", "pg", "lz", "tk", "vk", "jg", "fr", "fl", "tp", "mh", "qs")
-//        .forEach { print(modules[it]!!.state()) }
-//      println()
-//      listOf("ft", "qn", "sk", "qd", "jp", "pc", "xl", "gb", "rp", "bk", "bd", "lg", "cm", "dt")
-//        .forEach { print(modules[it]!!.state()) }
-//      println()
-//      listOf("hr", "zq", "th", "bh", "lj", "cx", "jk", "fs", "lh", "pz", "mf", "mp", "zz", "js")
-//        .forEach { print(modules[it]!!.state()) }
-//      println()
-//      println()
-//    }
+    val paths = groups.map { start ->
+      val path = mutableListOf<String>().apply { add(start) }
+      var nextId = start
+      while (modules[nextId]!! is FlipFlop) {
+        val nextModule = modules[nextId]!!
+        nextId = nextModule.destinationIds.firstOrNull { modules[it]!! is FlipFlop }
+          ?: nextModule.destinationIds.first()
+        path.add(nextId)
+      }
+      path
+    }
+
+    val binaryValues = paths.map { path ->
+      val combinationNode = modules[path.last()]!! as Module.Conjunction
+
+      val binary = "0".repeat(path.size - 1).toCharArray()
+      combinationNode.senderHistory.map { (sender, _) -> binary[path.indexOf(sender)] = '1' }
+
+      binary.reversed().joinToString("")
+    }
+
+    binaryValues
+      .map { it.toLong(2) }
+      .fold(1L) { a, b -> lcm(a, b) }
   }
 
-  private fun pushButton(timePressed: Long, modules: Map<String, Module>): Pair<Long, Long> {
+  private fun pushButton(modules: Map<String, Module>): Pair<Long, Long> {
     val modulesToHandleMessage: Queue<Module> = LinkedList<Module>().apply {
       modules["broadcaster"]?.receivePulse("button", LOW)
       add(modules["broadcaster"]!!)
@@ -87,19 +77,15 @@ class Day20 @Inject constructor(
     var lowPulses: Long = 1
     var highPulses: Long = 0
 
-    while(modulesToHandleMessage.isNotEmpty()) {
+    while (modulesToHandleMessage.isNotEmpty()) {
       val nextModule = modulesToHandleMessage.remove()
       val messages = nextModule.handleStoredPulses(modules)
 
       messages.forEach { (destination, pulse) ->
-        modules[destination]?.let {
-//          if (destination == "cl" && pulse == HIGH) println("cl received $pulse from ${nextModule.id} on press $timePressed")
-//          if (it.id == "rx") throw RuntimeException(timePressed.toString())
-          modulesToHandleMessage.add(it)
-        }
+        modules[destination]?.let { modulesToHandleMessage.add(it) }
         when (pulse) {
           HIGH -> highPulses++
-          LOW  -> lowPulses++
+          LOW -> lowPulses++
         }
       }
     }
@@ -124,7 +110,6 @@ class Day20 @Inject constructor(
     protected val messages: Queue<Pair<String, Pulse>> = LinkedList()
 
     fun receivePulse(senderId: String, pulse: Pulse) {
-//      println("$senderId -$pulse-> $id")
       messages.add(senderId to pulse)
     }
 
@@ -160,34 +145,18 @@ class Day20 @Inject constructor(
       }
 
       override fun state(): String {
-        return "$id ${if(on) 1 else 0} "
+        return "$id ${if (on) 1 else 0} "
       }
     }
 
-    // TODO this needs to know about all senders who can send us data, even if they have
-    // not sent anything yet
     class Conjunction(id: String, destinations: List<String>) : Module(id, destinations) {
-      private val senderHistory = mutableMapOf<String, Pulse>()
+      val senderHistory = mutableMapOf<String, Pulse>()
 
       override fun handleStoredPulses(modules: Map<String, Module>): List<Pair<String, Pulse>> {
         val destinationsWithNewMessage = mutableListOf<Pair<String, Pulse>>()
 
         while (messages.isNotEmpty()) {
           val (sender, pulse) = messages.remove()
-
-          if (id == "ts") {
-            if (senderHistory.count { it.value == HIGH } > 1) {
-              -1
-            }
-//            if (pulse == HIGH) {
-////              println("cl received HIGH")
-//            } else {
-//              if (senderHistory[sender] == HIGH) {
-//                println("cl changed a HIGH with a LOW for $sender")
-//              }
-//            }
-          }
-
           senderHistory[sender] = pulse
         }
 
@@ -238,7 +207,7 @@ class Day20 @Inject constructor(
     }
   }
 
-  enum class Pulse(val symbol: String) {
+  enum class Pulse(private val symbol: String) {
     HIGH("H"),
     LOW("L");
 
@@ -247,27 +216,3 @@ class Day20 @Inject constructor(
     }
   }
 }
-
-
-/*
-
-qm kb hv rn ml gk qv ks xk nv vq qj     {ks, gk, vq, xk, kb, qm, hv, nv, qj} C ts {kd=H}
-1  1  1  0  0  1  0  1  1  1  1  1
-
-111110100111
-
-ct mj xg vs pg lz tk vk jg fr fl tp     {mj, fr, tp, fl, tk, jg, xg, lz, ct} C qs {mh=H}
-1  1  1  0  0  1  1  0  1  1  1  1
-
-111101100111
-
-ft qn sk qd jp pc xl gb rp bk bd lg      C cm {bd, lg, qd, rp, pc, xl, qn, bk, ft}C dt {cm}
-1  1  0  1  0  1  1  0  1  1  1  1
-
-111101101011
-
-hr zq th bh lj cx jk fs lh pz mf mp      C zz {lj, lh, mp, pz, zq, hr, cx, mf, fs}C js {zz}
-1  1  0  0  1  1  0  1  1  1  1  1
-
-111110110011
- */
