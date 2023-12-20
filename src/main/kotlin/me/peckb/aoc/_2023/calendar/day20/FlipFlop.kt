@@ -13,16 +13,12 @@ class FlipFlop(id: String, destinations: List<String>) : Module(id, destinations
       val (_, pulse) = messages.remove()
       if (pulse == LOW) {
         on = !on
-        if (on) {
-          destinationIds.forEach {
-            destinationsWithNewMessage.add(it to HIGH)
-            modules[it]!!.receivePulse(id, HIGH)
-          }
-        } else {
-          destinationIds.forEach {
-            destinationsWithNewMessage.add(it to LOW)
-            modules[it]!!.receivePulse(id, LOW)
-          }
+
+        val pulseToSend = if (on) HIGH else LOW
+
+        destinationIds.forEach {
+          destinationsWithNewMessage.add(it to pulseToSend)
+          modules[it]!!.receivePulse(id, pulseToSend)
         }
       }
     }

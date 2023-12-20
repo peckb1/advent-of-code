@@ -15,6 +15,7 @@ class Conjunction(id: String, destinations: List<String>) : Module(id, destinati
     }
 
     val pulseToSend = if (senderHistory.values.all { it == HIGH }) LOW else HIGH
+
     destinationIds.forEach {
       destinationsWithNewMessage.add(it to pulseToSend)
       modules[it]?.receivePulse(id, pulseToSend)
