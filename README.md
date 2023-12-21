@@ -97,6 +97,8 @@ as the value which passed the given day/phase combination
   * This was my first "the AoC way to solve this is ..." where seeing that we had cycles and a forever brute force meant to try Least Common Multiple, which succeeded
 * Day 13
   * A good difficulty problem, with a fun programming challenge, but no tricks.
+* Day 20
+  * A good reverse engineering problem, where you need to examine the input to understand the problem; without the reverse engineering logic being too hard to spot 
 
 ### Interesting approaches:
 
