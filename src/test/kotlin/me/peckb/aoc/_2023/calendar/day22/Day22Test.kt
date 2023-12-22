@@ -24,7 +24,7 @@ internal class Day22Test {
 
   @Test
   fun testDay22PartTwo() {
-    assertEquals(-1, day22.partTwo(DAY_22))
+    assertEquals(61276, day22.partTwo(DAY_22))
   }
 
   companion object {

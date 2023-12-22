@@ -4,6 +4,8 @@ import me.peckb.aoc._2023.calendar.day22.Day22.Shape.*
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
+import java.util.LinkedList
+import java.util.Queue
 import kotlin.math.max
 import kotlin.math.min
 
@@ -11,8 +13,30 @@ class Day22 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::snapshot) { input ->
-    val bricks = input.sortedBy { minOf(it.start.z, it.end.z) }.toList()
+    bricksThatCanBeDeleted(input.sortedBy { minOf(it.start.z, it.end.z) }.toList()).size
+  }
 
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val brickInput = input.toList()
+
+    brickInput.withIndex().sumOf { (bIndex, b) ->
+      println(bIndex)
+      val bricks = brickInput.map(::snapshot).sortedBy { minOf(it.start.z, it.end.z) }
+      bricks.forEachIndexed { index, brick ->
+        brick.fall(index, bricks)
+      }
+
+      val brickToDisintegrate = bricks[bIndex]
+      val newBricks = bricks.minus(brickToDisintegrate).sortedBy { minOf(it.start.z, it.end.z) }
+      val bricksThatFell = newBricks.sortedBy { minOf(it.start.z, it.end.z) }.withIndex().filter { (index, brick) ->
+        brick.fall(index, newBricks)
+      }
+
+      bricksThatFell.size
+    }
+  }
+
+  private fun bricksThatCanBeDeleted(bricks: List<Brick>): Set<Brick> {
     bricks.forEachIndexed { index, brick ->
       brick.fall(index, bricks)
     }
@@ -39,13 +63,9 @@ class Day22 @Inject constructor(
       }
     }
 
-    brickToReliantMap.count { (me, bricksThatRelyOnMe) ->
+    return brickToReliantMap.filter { (me, bricksThatRelyOnMe) ->
       me.canBeDeleted(bricksThatRelyOnMe, brickToSupportsMap)
-    }
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::snapshot) { input ->
-    -1
+    }.keys
   }
 
   private fun snapshot(line: String): Brick {
@@ -54,26 +74,15 @@ class Day22 @Inject constructor(
       Position(x, y, z)
     }
 
-    val id = options[index]
-    index++
-    index = index % 26
-
-    return Brick(id, start, end)
-  }
-
-  companion object {
-    var index = 0
-    var options = "abcdefghijklmnopqrstubwxyz"
-
-
+    return Brick(start, end)
   }
 
   enum class Shape {
     VERTICAL, HORIZONTAL_X, HORIZONTAL_Y, CUBE
   }
 
-  data class Brick(val label: Char, val start: Position, val end: Position) {
-    fun fall(index: Int, bricks: List<Brick>) {
+  data class Brick(/*val label: Char, */val start: Position, val end: Position) {
+    fun fall(index: Int, bricks: List<Brick>) : Boolean {
       val me = bricks[index]
 
       val bricksThatHaveAlreadyFallen = if (index == 0) {
@@ -116,42 +125,33 @@ class Day22 @Inject constructor(
       }
 
       val zToDrop = currentMinZ - newZ
+
       start.drop(zToDrop)
       end.drop(zToDrop)
+
+      return zToDrop != 0
     }
 
-    val shape: Shape = when {
+    private val shape: Shape = when {
       start.z != end.z -> VERTICAL
       start.x != end.x -> HORIZONTAL_X
       start.y != end.y -> HORIZONTAL_Y
       else             -> CUBE
     }
 
-    override fun toString(): String {
-      return "$label: $start ~ $end"
-    }
-
     fun canBeDeleted(
       bricksThatRelyOnMe: List<Brick>,
       brickToSupportsMap: MutableMap<Brick, List<Brick>>
     ): Boolean {
-      if (bricksThatRelyOnMe.isEmpty()) {
-//        println("$label can be deleted")
-        return true
-      }
+      if (bricksThatRelyOnMe.isEmpty()) { return true }
 
       return bricksThatRelyOnMe.all { brick ->
-        val otherBricksSupportingBrickISupport = brickToSupportsMap[brick]?.filter { it != this } ?: emptyList()
-        otherBricksSupportingBrickISupport.isNotEmpty()
-      }//.also { if (it) println("$label can be deleted") }
+        (brickToSupportsMap[brick]?.filter { it != this } ?: emptyList()).isNotEmpty()
+      }
     }
   }
 
   data class Position(var x: Int, var y: Int, var z: Int) {
     fun drop(deltaZ: Int) { z -= deltaZ }
-
-    override fun toString(): String {
-      return "[$x, $y, $z]"
-    }
   }
 }
