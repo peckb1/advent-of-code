@@ -8,10 +8,35 @@ class Day22 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::brick) { input ->
-    val bricks = input.sortedBy { it.start.z }.toList()
+    val bricks = input.sortedBy { it.start.z }.toList().apply {
+      forEachIndexed { index, brick -> brick.fall(index, this) }
+    }
 
-    bricks.forEachIndexed { index, brick -> brick.fall(index, bricks) }
+    findDeletableBricks(bricks).size
+  }
 
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val brickInput = input.toList()
+    val ogBricks = brickInput.map(::brick)
+      .sortedBy { it.start.z } // sort the items for falling
+      .apply { forEachIndexed { index, brick -> brick.fall(index, this) } }
+      .sortedBy { it.start.z } // re-sort after falling for disintegration + falling
+
+    val deletableBricks = findDeletableBricks(ogBricks)
+
+    brickInput.indices.asSequence().filterNot { deletableBricks.containsKey(ogBricks[it]) }.sumOf { indexOfBrickToRemove ->
+      val bricksToMessWith = ogBricks.map { it.clone() }
+
+      val brickToDisintegrate = bricksToMessWith[indexOfBrickToRemove]
+      val bricksAfterDisintegration = bricksToMessWith.minus(brickToDisintegrate)
+
+      bricksAfterDisintegration.withIndex().count { (index, brick) ->
+        brick.fall(index, bricksAfterDisintegration)
+      }
+    }
+  }
+
+  private fun findDeletableBricks(bricks: List<Brick>): Map<Brick, List<Brick>> {
     val brickByZHeight = bricks.groupBy { it.start.z }.withDefault { emptyList() }
     val brickToSupportsMap: MutableMap<Brick, List<Brick>> = mutableMapOf()
     val brickToReliantMap: MutableMap<Brick, List<Brick>> = mutableMapOf()
@@ -34,27 +59,8 @@ class Day22 @Inject constructor(
       }
     }
 
-    brickToReliantMap.count { (me, bricksThatRelyOnMe) ->
+    return brickToReliantMap.filter { (me, bricksThatRelyOnMe) ->
       me.canBeDeleted(bricksThatRelyOnMe, brickToSupportsMap)
-    }
-  }
-
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val brickInput = input.toList()
-    val ogBricks = brickInput.map(::brick)
-      .sortedBy { it.start.z } // sort the items for falling
-      .apply { forEachIndexed { index, brick -> brick.fall(index, this) } }
-      .sortedBy { it.start.z } // re-sort after falling for disintegration + falling
-
-    brickInput.indices.sumOf { indexOfBrickToRemove ->
-      val bricksToMessWith = ogBricks.map { it.clone() }
-
-      val brickToDisintegrate = bricksToMessWith[indexOfBrickToRemove]
-      val bricksAfterDisintegration = bricksToMessWith.minus(brickToDisintegrate)
-
-      bricksAfterDisintegration.withIndex().count { (index, brick) ->
-        brick.fall(index, bricksAfterDisintegration)
-      }
     }
   }
 
