@@ -1,5 +1,6 @@
 package me.peckb.aoc._2023.calendar.day23
 
+import arrow.core.foldLeft
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -29,24 +30,26 @@ class Day23 @Inject constructor(
 
   private fun dfs(
     grid: List<List<Char>>,
-    current: Location,
+    location: Location,
     goal: Location,
     visited: MutableSet<Location> = mutableSetOf(),
     steps: Int = 0
   ): Int {
-    if (current == goal) { return steps }
+    if (location == goal) {
+      return steps
+    }
 
-    visited.add(current)
+    visited.add(location)
 
-    val theirSteps = getNeighbors(grid, current)
+    val distanceToEnd = getNeighbors(grid, location)
       .filter { it !in visited }
       .map { dfs(grid, it, goal, visited, steps + 1) }
       .maxOfOrNull { it }
-      ?: -1
+      ?: steps
 
-    visited.remove(current)
-    
-    return max(theirSteps, steps)
+    visited.remove(location)
+
+    return distanceToEnd
   }
 
   private fun makeAdjacencies(grid: List<List<Char>>): Map<Location, Map<Location, Int>> {
@@ -54,7 +57,7 @@ class Day23 @Inject constructor(
     val adjacencies = grid.indices.flatMap { rowIndex ->
       grid[rowIndex].indices.filter { grid[rowIndex][it] != '#' }.map { colIndex ->
         val neighbors = DIRECTIONS_WITH_SLOPE
-          .map { (deltas, _) -> rowIndex + deltas.first to colIndex + deltas.second }
+          .map { (dr, dc, _) -> rowIndex + dr to colIndex + dc }
           .filter { (row, col) -> row in grid.indices && col in grid[0].indices && grid[row][col] != '#' }
           .associateTo(mutableMapOf()) { (row, col) -> Location(row, col) to 1 }
 
@@ -83,44 +86,50 @@ class Day23 @Inject constructor(
 
   private fun dfsWithAdjacencies(
     adjacencyGraph: Map<Location, Map<Location, Int>>,
-    current: Location,
+    location: Location,
     goal: Location,
     visited: MutableMap<Location, Int> = mutableMapOf()
   ): Int {
-    if (current == goal) { return visited.values.sum() }
+    if (location == goal) { return visited.values.sum() }
 
-    var myBest = 0
+    return (adjacencyGraph[location] ?: emptyMap()).foldLeft(0) { best, adjacency ->
+      val (neighbor, steps) = adjacency
 
-    (adjacencyGraph[current] ?: emptyMap()).forEach { (neighbor, steps) ->
-      if (neighbor !in visited) {
-        visited[neighbor] = steps
-        val neighborsBest = dfsWithAdjacencies(adjacencyGraph, neighbor, goal, visited)
-        myBest = max(myBest, neighborsBest)
-
-        visited.remove(neighbor)
+      if (neighbor in visited) { best } else {
+        visited.whileVisiting(neighbor, steps) {
+          max(best, dfsWithAdjacencies(adjacencyGraph, neighbor, goal, visited))
+        }
       }
     }
-
-    return myBest
   }
 
-  private fun getNeighbors(grid: List<List<Char>>, current: Location): List<Location> {
-    val cur = grid[current.row][current.col]
+  private inline fun <K, V, R>  MutableMap<K, V>.whileVisiting(key: K, value: V, action: () -> R): R {
+    put(key, value)
+    return action().also { remove(key) }
+  }
+
+  private fun getNeighbors(grid: List<List<Char>>, location: Location): List<Location> {
+    val spot = grid[location.row][location.col]
     return DIRECTIONS_WITH_SLOPE
-      .map { (deltas, slope) -> (deltas.first + current.row to deltas.second + current.col) to slope }
-      .filter { (coords, slope) ->
-        val (row, col) = coords
-        row in grid.indices && col in grid[0].indices && grid[row][col] != '#' && (cur == '.' || cur == slope)
-      }.map { (coors, _) -> Location(coors.first, coors.second) }
+      .map { (dr, dc, slope) -> location.move(dr, dc) to slope }
+      .filter { (l, _) -> l.inGrid(grid) }
+      .filter { (l, slope) -> grid[l.row][l.col] != '#' && (spot == '.' || spot == slope) }
+      .map { (l, _) -> l }
   }
 
-  data class Location(val row: Int, val col: Int)
+  data class Location(val row: Int, val col: Int) {
+    fun move(dr: Int, dc: Int) = Location(row + dr, col + dc)
+
+    fun inGrid(grid: List<List<Char>>) = row in grid.indices && col in grid[0].indices
+  }
+
+  data class MovementWithSlope(val rowDelta: Int, val colDelta: Int, val slope: Char)
 
   companion object {
-    val NORTH = (-1 to  0) to '^'
-    val SOUTH = ( 1 to  0) to 'v'
-    val EAST  = ( 0 to  1) to '>'
-    val WEST  = ( 0 to -1) to '<'
+    val NORTH = MovementWithSlope(-1,  0, '^')
+    val SOUTH = MovementWithSlope( 1,  0, 'v')
+    val EAST  = MovementWithSlope( 0,  1, '>')
+    val WEST  = MovementWithSlope( 0, -1, '<')
 
     val DIRECTIONS_WITH_SLOPE = listOf(NORTH, SOUTH, EAST, WEST)
   }
