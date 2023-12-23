@@ -12,11 +12,19 @@ data class Brick(val start: Position, val end: Position) {
   fun fall(index: Int, bricks: List<Brick>) : Boolean {
     val myBrick = bricks[index]
 
-    val bricksThatHaveAlreadyFallen = if (index == 0) { emptyList() } else {
-      bricks.subList(0, index).sortedBy { it.end.z }
+    val bricksThatHaveAlreadyFallen = bricks.subList(0, index)
+      .groupBy { it.end.z }
+      .toSortedMap(reverseOrder())
+
+    var brickToLandOn: Brick? = null
+    bricksThatHaveAlreadyFallen.any { (_, bricksToSearch) ->
+      val brickFound = bricksToSearch
+        .firstOrNull { b -> myBrick.wouldLandOn(b) }
+        ?.also { b -> brickToLandOn = b }
+
+      brickFound != null
     }
 
-    val brickToLandOn = bricksThatHaveAlreadyFallen.asReversed().firstOrNull { myBrick.wouldLandOn(it) }
     val newZ = (brickToLandOn?.end?.z ?: 0) + 1
     val zToDrop = start.z - newZ
 

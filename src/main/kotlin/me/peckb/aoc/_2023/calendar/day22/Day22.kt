@@ -24,36 +24,15 @@ class Day22 @Inject constructor(
 
     val deletableBricks = findDeletableBricks(ogBricks)
 
-    val times1 = mutableListOf<Long>()
-    val times2 = mutableListOf<Long>()
-    val times3 = mutableListOf<Long>()
-
     brickInput.indices.asSequence().filterNot { deletableBricks.containsKey(ogBricks[it]) }.sumOf { indexOfBrickToRemove ->
-      val s1 = System.currentTimeMillis()
       val bricksToMessWith = ogBricks.map { it.clone() }
-      val e1 = System.currentTimeMillis()
 
-      val s2 = System.currentTimeMillis()
       val brickToDisintegrate = bricksToMessWith[indexOfBrickToRemove]
       val bricksAfterDisintegration = bricksToMessWith.minus(brickToDisintegrate)
-      val e2 = System.currentTimeMillis()
 
-      val s3 = System.currentTimeMillis()
       bricksAfterDisintegration.withIndex().count { (index, brick) ->
         brick.fall(index, bricksAfterDisintegration)
-      }.also {
-        val e3 = System.currentTimeMillis()
-        times1.add(e1 - s1)
-        times2.add(e2 - s2)
-        times3.add(e3 - s3)
       }
-    }.also {
-      println(times1.sum())
-      println(times1)
-      println(times2.sum())
-      println(times2)
-      println(times3.sum())
-      println(times3)
     }
   }
 
