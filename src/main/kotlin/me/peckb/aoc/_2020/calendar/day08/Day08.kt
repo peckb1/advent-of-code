@@ -85,7 +85,7 @@ class Day08 @Inject constructor(
 
     companion object {
       fun fromKeyword(keyword: String): Operation {
-        return Operation.values().first { it.keyword == keyword }
+        return entries.first { it.keyword == keyword }
       }
     }
   }

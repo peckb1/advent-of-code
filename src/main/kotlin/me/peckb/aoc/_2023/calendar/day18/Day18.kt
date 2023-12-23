@@ -81,8 +81,8 @@ class Day18 @Inject constructor(
     RIGHT('R', '0');
 
     companion object {
-      fun fromSymbol(s: Char) = values().first { it.symbol == s }
-      fun fromNumber(s: Char) = values().first { it.number == s }
+      fun fromSymbol(s: Char) = entries.first { it.symbol == s }
+      fun fromNumber(s: Char) = entries.first { it.number == s }
     }
   }
 }

@@ -28,13 +28,13 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   fun findCorruptedCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     input
-      .mapNotNull { findIncompleteData(it).swap().orNull() }
+      .mapNotNull { findIncompleteData(it).swap().getOrNull() }
       .sumOf { CORRUPTED_COSTS.getValue(it) }
   }
 
   fun findIncompleteCost(fileName: String) = generatorFactory.forFile(fileName).read { input ->
     val sortedCosts = input
-      .mapNotNull { findIncompleteData(it).orNull() }
+      .mapNotNull { findIncompleteData(it).getOrNull() }
       .map {
         it.fold(0L) { cost, symbol -> (cost * 5 + (INCOMPLETE_COSTS[PAIRINGS[symbol]] ?: 0)) }
       }

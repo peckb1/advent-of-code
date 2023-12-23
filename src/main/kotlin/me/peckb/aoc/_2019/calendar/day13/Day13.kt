@@ -107,7 +107,7 @@ class Day13 @Inject constructor(
     BALL(4, "*");
 
     companion object {
-      fun fromData(data: Long): Tile = values().first { it.tileId == data }
+      fun fromData(data: Long): Tile = entries.first { it.tileId == data }
     }
   }
 }

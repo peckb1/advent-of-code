@@ -69,7 +69,7 @@ class Day23 @Inject constructor(
 
     var currentCup = startCup
 
-    repeat(rounds) { round ->
+    repeat(rounds) {
       // pick up the next three cups
       val firstCupToPickup = currentCup.clockwiseCup
       val secondCupToPickup = firstCupToPickup.clockwiseCup

@@ -122,7 +122,7 @@ class IntcodeComputer {
     HALT_PROGRAM(99);
 
     companion object {
-      fun fromCode(codeString: String) = values().first { it.code == codeString.toInt() }
+      fun fromCode(codeString: String) = entries.first { it.code == codeString.toInt() }
     }
   }
 
@@ -132,7 +132,7 @@ class IntcodeComputer {
     RELATIVE_MODE(2);
 
     companion object {
-      fun fromCode(codeString: String) = values().first { it.code == codeString.toInt() }
+      fun fromCode(codeString: String) = entries.first { it.code == codeString.toInt() }
     }
   }
 

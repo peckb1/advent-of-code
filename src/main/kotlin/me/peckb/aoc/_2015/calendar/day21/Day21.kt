@@ -25,14 +25,14 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
   private fun findCost(boss: Player, expectedWinner: Player.Type, costComparator: (Int, Int) -> Int, worstCost: Int): Int {
     // must have one weapon
-    val weapons = Weapon.values()
+    val weapons = Weapon.entries.toTypedArray()
     // armours and rings are optional
-    val armours = Array<Armour?>(Armour.values().size + 1) { null }
-    val rings = Array<Ring?>(Ring.values().size + 1) { null }
+    val armours = Array<Armour?>(Armour.entries.size + 1) { null }
+    val rings = Array<Ring?>(Ring.entries.size + 1) { null }
 
-    Weapon.values().forEachIndexed { i, w -> weapons[i] = w }
-    Armour.values().forEachIndexed { i, a -> armours[i] = a }
-    Ring.values().forEachIndexed { i, r -> rings[i] = r }
+    Weapon.entries.forEachIndexed { i, w -> weapons[i] = w }
+    Armour.entries.forEachIndexed { i, a -> armours[i] = a }
+    Ring.entries.forEachIndexed { i, r -> rings[i] = r }
 
     var currentBestCost = worstCost
     weapons.forEach { weapon ->
@@ -63,10 +63,10 @@ class Day21 @Inject constructor(private val generatorFactory: InputGeneratorFact
   private fun loadBoss(input: Sequence<String>): Player {
     return input.toList().let { line ->
       val hp = line[0].substringAfter(": ").toInt()
-      val weapon = Weapon.values().find { w ->
+      val weapon = Weapon.entries.find { w ->
         w.damage == line[1].substringAfter(": ").toInt()
       }
-      val armour = Armour.values().find { a ->
+      val armour = Armour.entries.find { a ->
         a.armour == line[2].substringAfter(": ").toInt()
       }
       Player(hp, weapon!!, armour)

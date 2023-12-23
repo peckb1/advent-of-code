@@ -27,7 +27,7 @@ class Day07 @Inject constructor(private val generatorFactory: InputGeneratorFact
     input.forEach { program ->
       programMap[program.name] = program
       program.programsBalanced.indices.forEach { index ->
-        program.programsBalanced[index].tapLeft { name ->
+        program.programsBalanced[index].onLeft { name ->
           programMap[name]?.also { programToReplace ->
             programToReplace.parent = program
             program.programsBalanced[index] = Right(programToReplace)

@@ -18,14 +18,14 @@ class Day10 @Inject constructor(private val generatorFactory: InputGeneratorFact
     var output1Value: Int? = null
     var output2Value: Int? = null
     robots.values.forEach { robot ->
-      robot.low?.tapLeft { if (it == 0) output0Value = robot.lowValue }
-      robot.high?.tapLeft { if (it == 0) output0Value = robot.highValue }
+      robot.low?.onLeft { if (it == 0) output0Value = robot.lowValue }
+      robot.high?.onLeft { if (it == 0) output0Value = robot.highValue }
 
-      robot.low?.tapLeft { if (it == 1) output1Value = robot.lowValue }
-      robot.high?.tapLeft { if (it == 1) output1Value = robot.highValue }
+      robot.low?.onLeft { if (it == 1) output1Value = robot.lowValue }
+      robot.high?.onLeft { if (it == 1) output1Value = robot.highValue }
 
-      robot.low?.tapLeft { if (it == 2) output2Value = robot.lowValue }
-      robot.high?.tapLeft { if (it == 2) output2Value = robot.highValue }
+      robot.low?.onLeft { if (it == 2) output2Value = robot.lowValue }
+      robot.high?.onLeft { if (it == 2) output2Value = robot.highValue }
     }
 
     output0Value!! * output1Value!! * output2Value!!

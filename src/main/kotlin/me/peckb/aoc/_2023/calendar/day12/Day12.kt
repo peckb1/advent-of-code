@@ -1,7 +1,6 @@
 package me.peckb.aoc._2023.calendar.day12
 
 import arrow.core.flatten
-import arrow.core.replicate
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -88,6 +87,9 @@ class Day12 @Inject constructor(
 
     return Spring(conditionData, groupings)
   }
+
+  private fun <A> Iterable<A>.replicate(n: Int): List<List<A>> =
+    toList().let { l -> List(n) { l } }
 
   data class Spring(val conditions: String, val groupings: List<Int>)
 }

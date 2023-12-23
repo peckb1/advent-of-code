@@ -157,7 +157,7 @@ class Day15 @Inject constructor(
     OXYGEN_SYSTEM(2);
 
     companion object {
-      fun fromCode(code: Long) = values().first { it.code == code }
+      fun fromCode(code: Long) = entries.first { it.code == code }
     }
   }
 
