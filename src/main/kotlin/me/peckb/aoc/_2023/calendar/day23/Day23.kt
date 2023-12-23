@@ -1,6 +1,6 @@
 package me.peckb.aoc._2023.calendar.day23
 
-import arrow.core.foldLeft
+import arrow.core.fold
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -92,7 +92,7 @@ class Day23 @Inject constructor(
   ): Int {
     if (location == goal) { return visited.values.sum() }
 
-    return (adjacencyGraph[location] ?: emptyMap()).foldLeft(0) { best, adjacency ->
+    return (adjacencyGraph[location] ?: emptyMap()).fold(0) { best, adjacency ->
       val (neighbor, steps) = adjacency
 
       if (neighbor in visited) { best } else {
