@@ -1,39 +1,26 @@
 package me.peckb.aoc._2023.calendar.day22
 
 import me.peckb.aoc._2023.calendar.day22.Shape.*
-import kotlin.math.max
-import kotlin.math.min
 
 data class Brick(val start: Position, val end: Position) {
+  private val xRange = start.x .. end.x
+
+  private val yRange = start.y .. end.y
+
+  fun clone() = Brick(start.copy(), end.copy())
+
   fun fall(index: Int, bricks: List<Brick>) : Boolean {
-    val me = bricks[index]
+    val myBrick = bricks[index]
 
     val bricksThatHaveAlreadyFallen = if (index == 0) { emptyList() } else {
-      bricks.subList(0, index).sortedBy { maxOf(it.start.z, it.end.z) }
+      bricks.subList(0, index).sortedBy { it.end.z }
     }
 
-    val currentMinZ = min(start.z, end.z)
+    val brickToLandOn = bricksThatHaveAlreadyFallen.asReversed().firstOrNull { myBrick.wouldLandOn(it) }
+    val newZ = (brickToLandOn?.end?.z ?: 0) + 1
+    val zToDrop = start.z - newZ
 
-    val myNewBottom = bricksThatHaveAlreadyFallen.asReversed().firstOrNull { b ->
-      val xPointOverlap    by lazy { (b.start.x..b.end.x).contains(me.start.x) }
-      val yPointOverlap    by lazy { (b.start.y..b.end.y).contains(me.start.y) }
-      val xIntervalOverlap by lazy { (b.start.x <= me.end.x && b.end.x >= me.start.x) }
-      val yIntervalOverlap by lazy { (b.start.y <= me.end.y && b.end.y >= me.start.y) }
-
-      val (xOverlap, yOverlap) = when (me.shape) {
-        VERTICAL, CUBE -> xPointOverlap to yPointOverlap
-        HORIZONTAL_X   -> yPointOverlap to xIntervalOverlap
-        HORIZONTAL_Y   -> xPointOverlap to yIntervalOverlap
-      }
-
-      xOverlap && yOverlap
-    }
-
-    val newZ = (myNewBottom?.let { max(it.start.z, it.end.z) } ?: 0) + 1
-    val zToDrop = currentMinZ - newZ
-
-    start.drop(zToDrop)
-    end.drop(zToDrop)
+    drop(zToDrop)
 
     return zToDrop != 0
   }
@@ -47,6 +34,24 @@ data class Brick(val start: Position, val end: Position) {
     return bricksThatRelyOnMe.all { brick ->
       (brickToSupportsMap[brick]?.filter { it != this } ?: emptyList()).isNotEmpty()
     }
+  }
+
+  private fun wouldLandOn(b: Brick): Boolean {
+    val xPointOverlap    by lazy { (b.xRange).contains(start.x) }
+    val yPointOverlap    by lazy { (b.yRange).contains(start.y) }
+    val xIntervalOverlap by lazy { (b.start.x <= end.x && b.end.x >= start.x) }
+    val yIntervalOverlap by lazy { (b.start.y <= end.y && b.end.y >= start.y) }
+
+    return when (shape) {
+      VERTICAL, CUBE -> xPointOverlap && yPointOverlap
+      HORIZONTAL_X   -> yPointOverlap && xIntervalOverlap
+      HORIZONTAL_Y   -> xPointOverlap && yIntervalOverlap
+    }
+  }
+
+  private fun drop(deltaZ: Int) {
+    start.drop(deltaZ)
+    end.drop(deltaZ)
   }
 
   private val shape: Shape = when {
