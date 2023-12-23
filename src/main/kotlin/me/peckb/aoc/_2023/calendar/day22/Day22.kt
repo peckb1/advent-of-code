@@ -3,43 +3,22 @@ package me.peckb.aoc._2023.calendar.day22
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import kotlin.math.max
-import kotlin.math.min
 
 class Day22 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::brick) { input ->
-    bricksThatCanBeDeleted(input.sortedBy { minOf(it.start.z, it.end.z) }.toList())
-  }
+    val bricks = input.sortedBy { it.start.z }.toList()
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val brickInput = input.toList()
-
-    brickInput.indices.sumOf { indexOfBrickToRemove ->
-      val bricks = brickInput.map(::brick).sortedBy { minOf(it.start.z, it.end.z) }
-      bricks.forEachIndexed { index, brick -> brick.fall(index, bricks) }
-
-      val brickToDisintegrate = bricks[indexOfBrickToRemove]
-      val newBricks = bricks.minus(brickToDisintegrate).sortedBy { minOf(it.start.z, it.end.z) }
-      val bricksThatFell = newBricks.withIndex().filter { (index, brick) ->
-        brick.fall(index, newBricks)
-      }
-
-      bricksThatFell.size
-    }
-  }
-
-  private fun bricksThatCanBeDeleted(bricks: List<Brick>): Int {
     bricks.forEachIndexed { index, brick -> brick.fall(index, bricks) }
 
-    val brickByZHeight = bricks.groupBy { min(it.start.z, it.end.z) }.withDefault { emptyList() }
+    val brickByZHeight = bricks.groupBy { it.start.z }.withDefault { emptyList() }
     val brickToSupportsMap: MutableMap<Brick, List<Brick>> = mutableMapOf()
     val brickToReliantMap: MutableMap<Brick, List<Brick>> = mutableMapOf()
 
     brickByZHeight.forEach { (_, bricksToCheck) ->
       bricksToCheck.forEach { me ->
-        val possibleReliantBricks = brickByZHeight.getValue(max(me.start.z, me.end.z) + 1)
+        val possibleReliantBricks = brickByZHeight.getValue(me.end.z + 1)
 
         val bricksThatRelyOnMe = possibleReliantBricks.filter { b ->
           val xOverlap = (b.start.x <= me.end.x && b.end.x >= me.start.x)
@@ -55,8 +34,27 @@ class Day22 @Inject constructor(
       }
     }
 
-    return brickToReliantMap.count { (me, bricksThatRelyOnMe) ->
+    brickToReliantMap.count { (me, bricksThatRelyOnMe) ->
       me.canBeDeleted(bricksThatRelyOnMe, brickToSupportsMap)
+    }
+  }
+
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    val brickInput = input.toList()
+    val ogBricks = brickInput.map(::brick)
+      .sortedBy { it.start.z } // sort the items for falling
+      .apply { forEachIndexed { index, brick -> brick.fall(index, this) } }
+      .sortedBy { it.start.z } // re-sort after falling for disintegration + falling
+
+    brickInput.indices.sumOf { indexOfBrickToRemove ->
+      val bricksToMessWith = ogBricks.map { it.clone() }
+
+      val brickToDisintegrate = bricksToMessWith[indexOfBrickToRemove]
+      val bricksAfterDisintegration = bricksToMessWith.minus(brickToDisintegrate)
+
+      bricksAfterDisintegration.withIndex().count { (index, brick) ->
+        brick.fall(index, bricksAfterDisintegration)
+      }
     }
   }
 
