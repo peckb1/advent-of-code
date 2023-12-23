@@ -1,6 +1,6 @@
 package me.peckb.aoc._2016.calendar.day22
 
-import arrow.core.foldLeft
+import arrow.core.fold
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -20,11 +20,11 @@ class Day22 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    val viablePairs = nodesBySpaceUsed.foldLeft(0L) { usedAcc, (used, usedList) ->
+    val viablePairs = nodesBySpaceUsed.fold(0L) { usedAcc, (used, usedList) ->
       if (used == 0) {
         usedAcc
       } else {
-        usedAcc + usedList.size * nodesByAvailability.foldLeft(0L) { availableAcc, (available, availableNodes) ->
+        usedAcc + usedList.size * nodesByAvailability.fold(0L) { availableAcc, (available, availableNodes) ->
           availableAcc + if (used <= available) {
             availableNodes.size.toLong()
           } else {

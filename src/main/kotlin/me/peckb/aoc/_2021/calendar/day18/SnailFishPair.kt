@@ -17,7 +17,7 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
       }
       true
     } else {
-      (left.map { it.explode() }.orNull() ?: false) || (right.map { it.explode() }.orNull()?: false)
+      (left.map { it.explode() }.getOrNull() ?: false) || (right.map { it.explode() }.getOrNull() ?: false)
     }
   }
 
@@ -31,10 +31,10 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
     }
 
     when {
-      needsLeftSplit                           -> { left = split(left) }
-      left.map { it.split() }.orNull() == true -> return true
-      needsRightSplit                          -> { right = split(right) }
-      else                                     -> return (right.map { it.split() }.orNull() ?: false)
+      needsLeftSplit                              -> { left = split(left) }
+      left.map { it.split() }.getOrNull() == true -> return true
+      needsRightSplit                             -> { right = split(right) }
+      else                                        -> return (right.map { it.split() }.getOrNull() ?: false)
     }
 
     return true
@@ -43,27 +43,27 @@ data class SnailFishPair(var parent: SnailFishPair?, var left: FishPair, var rig
   private fun addLeft(pair: SnailFishPair, n: Int): SnailFishPair = this.also { _ ->
     when {
       // our right child told us to add to its left
-      pair === right.orNull() -> left = left.bimap({ it + n }, { it.addRight(this, n) })
+      pair === right.getOrNull() -> left = left.mapLeft { it + n }.map { it.addRight(this, n) }
       // our left child told us to add to its left
-      pair === left.orNull()  -> parent?.addLeft(this, n)
+      pair === left.getOrNull()  -> parent?.addLeft(this, n)
       // our parent told us to add to the left
-      else                    -> left = left.bimap({ it + n }, { it.addLeft(this, n) })
+      else                       -> left = left.mapLeft { it + n }.map { it.addLeft(this, n) }
     }
   }
 
   private fun addRight(pair: SnailFishPair, n: Int): SnailFishPair = this.also { _ ->
     when {
       // our left child just told us to add to its right
-      pair === left.orNull()  -> right = right.bimap({ it + n }, { it.addLeft(this, n) })
+      pair === left.getOrNull()  -> right = right.mapLeft { it + n }.map { it.addLeft(this, n) }
       // our right child told us to add to its right
-      pair === right.orNull() -> parent?.addRight(this, n)
+      pair === right.getOrNull() -> parent?.addRight(this, n)
       // our parent told us to add to the right
-      else                    -> right = right.bimap({ it + n }, { it.addRight(this, n) })
+      else                       -> right = right.mapLeft { it + n }.map { it.addRight(this, n) }
     }
   }
 
   private fun setZero(child: SnailFishPair) {
-    if (child === left.orNull()) {
+    if (child === left.getOrNull()) {
       left = 0.toEither()
     } else {
       right = 0.toEither()

@@ -1,5 +1,6 @@
 package me.peckb.aoc._2020.calendar.day14
 
+import arrow.core.fold
 import arrow.core.foldLeft
 import javax.inject.Inject
 
@@ -33,7 +34,7 @@ class Day14 @Inject constructor(
       }
     }
 
-    registers.foldLeft(0L) { acc, (_, binaryString) ->
+    registers.fold(0L) { acc, (_, binaryString) ->
       acc + binaryString.joinToString("").toLong(2)
     }
   }
@@ -81,7 +82,7 @@ class Day14 @Inject constructor(
       }
     }
 
-    registers.foldLeft(0L) { acc, (_, value) ->
+    registers.fold(0L) { acc, (_, value) ->
       acc + value
     }
   }

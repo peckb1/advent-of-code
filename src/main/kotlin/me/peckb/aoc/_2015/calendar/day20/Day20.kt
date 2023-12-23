@@ -1,6 +1,6 @@
 package me.peckb.aoc._2015.calendar.day20
 
-import arrow.core.foldLeft
+import arrow.core.fold
 import javax.inject.Inject
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
@@ -29,7 +29,7 @@ class Day20 @Inject constructor(private val generatorFactory: InputGeneratorFact
   }
 
   private fun sumOfFactors(num: Int): Int {
-    return primeFactors(num).groupBy { it }.foldLeft(1.0) { acc, next ->
+    return primeFactors(num).groupBy { it }.fold(1.0) { acc, next ->
       acc * ((next.key.toDouble().pow(next.value.size.toDouble() + 1.0) - 1) / (next.key - 1))
     }.toInt()
   }

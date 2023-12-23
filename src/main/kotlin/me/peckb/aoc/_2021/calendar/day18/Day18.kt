@@ -42,7 +42,7 @@ class Day18 @Inject constructor(private val generatorFactory: InputGeneratorFact
     }
 
   private fun snailFishPair(line: String): SnailFishPair {
-    return getPair(line, AtomicInteger(0), 0).orNull()!!
+    return getPair(line, AtomicInteger(0), 0).getOrNull()!!
   }
 
   private fun getPair(line: String, index: AtomicInteger, depth: Int): FishPair {

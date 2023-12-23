@@ -5,19 +5,19 @@ apply(plugin = "kotlin")
 apply(plugin = "kotlin-kapt")
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 plugins {
-    kotlin("jvm") version "1.6.10"
-    kotlin("kapt") version "1.6.10"
+    kotlin("jvm") version "1.9.22"
+    kotlin("kapt") version "1.9.22"
     application
     jacoco
 }
 
 group = "me.peckb"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 repositories {
     mavenCentral()
@@ -25,25 +25,25 @@ repositories {
 
 dependencies {
     // main dependencies
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")
-    implementation("io.arrow-kt:arrow-core:1.1.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.0")
+    implementation("io.arrow-kt:arrow-core:1.2.1")
     implementation("org.apache.commons:commons-text:1.10.0")
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
     // used for generating skeletons
-    implementation("com.squareup:kotlinpoet:1.12.0")
+    implementation("com.squareup:kotlinpoet:1.15.3")
 
     // dependency injection library and annotation procressing
-    implementation("com.google.dagger:dagger:2.44.2")
-    kapt("com.google.dagger:dagger-compiler:2.44.2")
-    kaptTest("com.google.dagger:dagger-compiler:2.44.2")
+    implementation("com.google.dagger:dagger:2.50")
+    kapt("com.google.dagger:dagger-compiler:2.50")
+    kaptTest("com.google.dagger:dagger-compiler:2.50")
 
     // test libraries
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
 }
 
 tasks.test {
@@ -69,11 +69,11 @@ tasks.jacocoTestReport {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.11"
 }
 
 sourceSets {

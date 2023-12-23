@@ -1,6 +1,6 @@
 package me.peckb.aoc._2019.calendar.day18
 
-import arrow.core.filterMap
+import arrow.core.mapNotNull
 import me.peckb.aoc._2019.calendar.day18.Day18.Section.*
 import me.peckb.aoc._2019.calendar.day18.Day18.Section.Source.*
 import javax.inject.Inject
@@ -64,9 +64,7 @@ class Day18 @Inject constructor(
   }
 
   private fun createPaths(caves: Map<Area, Section>): Map<Source, Map<Key, Route>> {
-    val sourceLocations = caves.filterMap { section ->
-      if (section is Source) section else null
-    }
+    val sourceLocations = caves.mapNotNull { (_, a) -> if (a is Source) a else null }
 
     val paths = mutableMapOf<Source, Map<Key, Route>>()
 
@@ -106,7 +104,7 @@ class Day18 @Inject constructor(
       data class Key(val id: Char) : Source()
     }
     data class Door(val id: Char) : Section() { val key: Key = Key(id.lowercaseChar()) }
-    object Empty : Section()
-    object Wall : Section()
+    data object Empty : Section()
+    data object Wall : Section()
   }
  }

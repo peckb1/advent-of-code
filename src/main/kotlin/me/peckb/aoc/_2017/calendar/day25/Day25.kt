@@ -1,5 +1,6 @@
 package me.peckb.aoc._2017.calendar.day25
 
+import arrow.core.fold
 import arrow.core.foldLeft
 import me.peckb.aoc._2017.calendar.day25.Day25.Direction.LEFT
 import me.peckb.aoc._2017.calendar.day25.Day25.Direction.RIGHT
@@ -50,7 +51,7 @@ class Day25 @Inject constructor(private val generatorFactory: InputGeneratorFact
       }
     }
 
-    tape.foldLeft(0L) { i, entry -> i + entry.value }
+    tape.fold(0L) { i, entry -> i + entry.value }
   }
 
   enum class Direction { RIGHT, LEFT }
