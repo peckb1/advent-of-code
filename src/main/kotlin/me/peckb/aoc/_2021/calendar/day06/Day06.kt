@@ -32,7 +32,7 @@ class Day06 @Inject constructor(private val generatorFactory: InputGeneratorFact
   /** COUNT THE BIRTH DAYS! */
   fun spawnAllTheFish(fileName: String) = generatorFactory.forFile(fileName).readOne { data ->
     val birthDays = mutableMapOf<DayOfWeek, BirthWindow>().apply {
-      DayOfWeek.values().forEach { this[it] = BirthWindow() }
+      DayOfWeek.entries.forEach { this[it] = BirthWindow() }
     }
 
     val initialPopulation = data.split(",").map { Fish(it.toInt()) }.apply {

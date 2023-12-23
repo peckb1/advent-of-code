@@ -48,7 +48,7 @@ enum class SnafuDigit(val c: Char) {
   abstract infix operator fun plus(other: SnafuDigit) : AddResult
 
   companion object {
-    fun fromChar(c: Char): SnafuDigit = values().first { c == it.c }
+    fun fromChar(c: Char): SnafuDigit = entries.first { c == it.c }
 
     fun add(sd1: SnafuDigit, sd2: SnafuDigit, sd3: SnafuDigit): AddResult {
       return (sd1 + sd2).let { firstResult ->

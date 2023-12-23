@@ -372,7 +372,7 @@ class Day10 @Inject constructor(
     override fun toString(): String = symbol.toString()
 
     companion object {
-      fun fromSymbol(symbol: Char): LandType = values().first { it.symbol == symbol }
+      fun fromSymbol(symbol: Char): LandType = entries.first { it.symbol == symbol }
     }
   }
 }

@@ -5,6 +5,6 @@ enum class State(val char: Char) {
   INACTIVE('.');
 
   companion object {
-    fun fromChar(char: Char) = State.values().first { it.char == char }
+    fun fromChar(char: Char) = entries.first { it.char == char }
   }
 }

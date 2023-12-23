@@ -53,7 +53,7 @@ class Day19 @Inject constructor(
 
         when (bs.robotToMake) {
           ORE -> if (currentOre >= bp.oreRobotOreCost) {
-            return Robot.values().maxOf { robot ->
+            return entries.maxOf { robot ->
               makeRobot(
                 bs.advanceState(
                   minutesPassed,
@@ -66,7 +66,7 @@ class Day19 @Inject constructor(
           }
 
           CLAY -> if (currentOre >= bp.clayRobotOreCost) {
-            return Robot.values().maxOf { robot ->
+            return entries.maxOf { robot ->
               makeRobot(
                 bs.advanceState(
                   minutesPassed,
@@ -79,7 +79,7 @@ class Day19 @Inject constructor(
           }
 
           OBSIDIAN -> if (currentOre >= bp.obsidianRobotOreCost && currentClay >= bp.obsidianRobotClayCost) {
-            return Robot.values().maxOf { robot ->
+            return entries.maxOf { robot ->
               makeRobot(
                 bs.advanceState(
                   minutesPassed,
@@ -93,7 +93,7 @@ class Day19 @Inject constructor(
           }
 
           GEODE -> if (currentOre >= bp.geodeRobotOreCost && currentObsidian >= bp.geodeRobotObsidianCost) {
-            return Robot.values().maxOf { robot ->
+            return entries.maxOf { robot ->
               makeRobot(
                 bs.advanceState(
                   minutesPassed,
@@ -111,7 +111,7 @@ class Day19 @Inject constructor(
       return bs.geodes + (minutesPassed * bs.geodeRobots)
     }
 
-    return Robot.values().maxOf { robot ->
+    return entries.maxOf { robot ->
       makeRobot(BeachState(minutes, robot, 1, 0, 0, 0, 0, 0, 0, 0))
     }
   }

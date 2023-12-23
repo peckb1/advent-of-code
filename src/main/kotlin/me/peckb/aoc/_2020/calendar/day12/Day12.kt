@@ -22,7 +22,7 @@ class Day12 @Inject constructor(
     FORWARD("F");
 
     companion object {
-      fun fromKey(key: String) = Action.values().first { it.key == key }
+      fun fromKey(key: String) = entries.first { it.key == key }
     }
   }
 
