@@ -65,11 +65,17 @@ object DayClass {
     file.writeTo(File(SRC_DIRECTORY))
 
     // remove all the extraneous `public` modifiers
+    // and the extraneous (and incorrect) `Unit` return types
     // and the safety import of `kotlin.String`
+    // and the safety import of `kotlin.Unit`
     val path = Paths.get("$SRC_DIRECTORY/me/peckb/aoc/_$year/calendar/day$day/Day$day.kt")
     val content = String(Files.readAllBytes(path))
       .replace("public ".toRegex(), "")
-      .replace("import kotlin.String".toRegex(), "")
+      .replace(": Unit".toRegex(), "")
+      .split("\n")
+      .filterNot { it == "import kotlin.String" }
+      .filterNot { it == "import kotlin.Unit" }
+      .joinToString("\n")
     Files.write(path, content.toByteArray())
   }
 }

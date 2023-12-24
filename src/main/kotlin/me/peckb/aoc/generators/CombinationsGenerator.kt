@@ -28,7 +28,7 @@ internal object CombinationsGenerator {
     }
   }
 
-  fun <T> findCombinations(A: Array<T>, k: Int): Set<List<T>?> {
+  fun <T> findCombinations(A: Array<T>, k: Int): Set<List<T>> {
     val subarrays: MutableSet<List<T>> = HashSet()
     findCombinations(A, 0, k, subarrays, ArrayList())
     return subarrays
