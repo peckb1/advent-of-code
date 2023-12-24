@@ -31,11 +31,11 @@ class Day24 @Inject constructor(
     val ctx = Context()
     val solver = ctx.mkSolver()
 
-    val bv_type = ctx.mkBitVecSort(64);
+    val longType = ctx.mkBitVecSort(64)
 
-    fun variableOf(name: String) = ctx.mkConst(name, bv_type)
+    fun variableOf(name: String) = ctx.mkConst(name, longType)
 
-    fun valueOf(value: Long) = ctx.mkNumeral(value, bv_type)
+    fun valueOf(value: Long) = ctx.mkNumeral(value, longType)
 
     operator fun Expr<BitVecSort>.times(t: Expr<BitVecSort>) = ctx.mkBVMul(this, t)
 
