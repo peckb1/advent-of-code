@@ -32,57 +32,54 @@ class Day24 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::hailstone) { input ->
-    val ctx = Context()
-    val solver = ctx.mkSolver()
+    Context().use { ctx ->
+      val solver = ctx.mkSolver()
 
-    val longType = ctx.mkBitVecSort(64)
+      val longType = ctx.mkBitVecSort(64)
 
-    fun variableOf(name: String) = ctx.mkConst(name, longType)
+      fun variableOf(name: String) = ctx.mkConst(name, longType)
 
-    fun valueOf(value: Long) = ctx.mkNumeral(value, longType) as BitVecNum
+      fun valueOf(value: Long) = ctx.mkNumeral(value, longType) as BitVecNum
 
-    ctx.apply {
-      operator fun Expr<BitVecSort>.times(t: Expr<BitVecSort>) = mkBVMul(this, t)
+      operator fun Expr<BitVecSort>.times(t: Expr<BitVecSort>) = ctx.mkBVMul(this, t)
+
+      operator fun Expr<BitVecSort>.plus(t: Expr<BitVecSort>) = ctx.mkBVAdd(this, t)
+
+      infix fun Expr<BitVecSort>.equalTo(t: Expr<BitVecSort>) = ctx.mkEq(this, t)
+
+      infix fun Expr<BitVecSort>.greaterThan(t: Expr<BitVecSort>) = ctx.mkBVSGT(this, t)
+
+      val zero = valueOf(0)
+
+      val x = variableOf("x")
+      val y = variableOf("y")
+      val z = variableOf("z")
+      val dx = variableOf("dx")
+      val dy = variableOf("dy")
+      val dz = variableOf("dz")
+
+      input.take(3).forEachIndexed { index, hail ->
+        val t = variableOf("t_$index")
+
+        val (posX, posY, posZ) = hail.position.toZ3Numerals(::valueOf)
+        val (velX, velY, velZ) = hail.velocity.toZ3Numerals(::valueOf)
+
+        solver.add(t greaterThan zero)
+        solver.add(x + dx * t equalTo posX + velX * t)
+        solver.add(y + dy * t equalTo posY + velY * t)
+        solver.add(z + dz * t equalTo posZ + velZ * t)
+      }
+
+      solver.check()
+
+      val model = solver.model
+
+      val xEval = model.evaluate(x, true) as BitVecNum
+      val yEval = model.evaluate(y, true) as BitVecNum
+      val zEval = model.evaluate(z, true) as BitVecNum
+
+      xEval.long + yEval.long + zEval.long
     }
-
-    operator fun Expr<BitVecSort>.times(t: Expr<BitVecSort>) = ctx.mkBVMul(this, t)
-
-    operator fun Expr<BitVecSort>.plus(t: Expr<BitVecSort>) = ctx.mkBVAdd(this, t)
-
-    infix fun Expr<BitVecSort>.equalTo(t: Expr<BitVecSort>) = ctx.mkEq(this, t)
-
-    infix fun Expr<BitVecSort>.greaterThan(t: Expr<BitVecSort>) = ctx.mkBVSGT(this, t)
-
-    val zero = valueOf(0)
-
-    val x  = variableOf("x")
-    val y  = variableOf("y")
-    val z  = variableOf("z")
-    val dx = variableOf("dx")
-    val dy = variableOf("dy")
-    val dz = variableOf("dz")
-
-    input.take(3).forEachIndexed { index, hail ->
-      val t = variableOf("t_$index")
-
-      val (posX, posY, posZ) = hail.position.toZ3Numerals(::valueOf)
-      val (velX, velY, velZ) = hail.velocity.toZ3Numerals(::valueOf)
-
-      solver.add(t greaterThan zero)
-      solver.add(x + dx * t equalTo posX + velX * t)
-      solver.add(y + dy * t equalTo posY + velY * t)
-      solver.add(z + dz * t equalTo posZ + velZ * t)
-    }
-
-    solver.check()
-
-    val model = solver.model
-
-    val xEval = model.evaluate(x, true) as BitVecNum
-    val yEval = model.evaluate(y, true) as BitVecNum
-    val zEval = model.evaluate(z, true) as BitVecNum
-
-    xEval.long + yEval.long + zEval.long
   }
 
   private fun hailstone(line: String) : Hailstone {
