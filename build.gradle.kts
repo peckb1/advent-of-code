@@ -33,6 +33,7 @@ dependencies {
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("tools.aqua:z3-turnkey:4.12.2.1")
+    implementation("org.jgrapht:jgrapht-core:1.5.2")
 
     // used for generating skeletons
     implementation("com.squareup:kotlinpoet:1.15.3")
