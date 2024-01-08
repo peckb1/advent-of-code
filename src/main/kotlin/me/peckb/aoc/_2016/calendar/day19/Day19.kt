@@ -24,7 +24,7 @@ class Day19 @Inject constructor(private val generatorFactory: InputGeneratorFact
 
     var currentIndex = elfs.size / 2
     var remaining = elfs.size
-    var counter = 0
+    var counter = elfs.size % 2
 
     while (remaining > 1) {
       if (elfs[currentIndex].active) {
