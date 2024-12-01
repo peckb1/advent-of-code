@@ -1,5 +1,4 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 apply(plugin = "kotlin")
 apply(plugin = "kotlin-kapt")
@@ -7,6 +6,10 @@ apply(plugin = "kotlin-kapt")
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 plugins {
@@ -25,27 +28,27 @@ repositories {
 
 dependencies {
     // main dependencies
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.0")
-    implementation("io.arrow-kt:arrow-core:1.2.1")
-    implementation("org.apache.commons:commons-text:1.10.0")
-    implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.1")
+    implementation("io.arrow-kt:arrow-core:1.2.4")
+    implementation("org.apache.commons:commons-text:1.11.0")
+    implementation("org.apache.commons:commons-math3:3.6")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("tools.aqua:z3-turnkey:4.12.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("tools.aqua:z3-turnkey:4.13.0")
     implementation("org.jgrapht:jgrapht-core:1.5.2")
 
     // used for generating skeletons
-    implementation("com.squareup:kotlinpoet:1.15.3")
+    implementation("com.squareup:kotlinpoet:1.18.1")
 
     // dependency injection library and annotation procressing
-    implementation("com.google.dagger:dagger:2.50")
-    kapt("com.google.dagger:dagger-compiler:2.50")
-    kaptTest("com.google.dagger:dagger-compiler:2.50")
+    implementation("com.google.dagger:dagger:2.51")
+    kapt("com.google.dagger:dagger-compiler:2.51")
+    kaptTest("com.google.dagger:dagger-compiler:2.51")
 
     // test libraries
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
 }
 
 tasks.test {
@@ -68,10 +71,6 @@ tasks.jacocoTestReport {
             exclude("**/skeleton/**", "**/Application*")
         }
     }))
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
 }
 
 jacoco {

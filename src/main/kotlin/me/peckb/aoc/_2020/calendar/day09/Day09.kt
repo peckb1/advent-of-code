@@ -53,7 +53,7 @@ class Day09 @Inject constructor(
       val items = window.take(preambleLength)
       val options = findCombinations(items.toTypedArray(), 2)
 
-      options.none { it!!.sum() == number }
+      options.none { it.sum() == number }
     }
 
     return window.last()
