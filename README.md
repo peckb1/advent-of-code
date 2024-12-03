@@ -100,6 +100,10 @@ as the value which passed the given day/phase combination
 * Day 20
   * A good reverse engineering problem, where you need to examine the input to understand the problem; without the reverse engineering logic being too hard to spot 
 
+#### 2024
+* Day 03
+  * Regex shining today! Sorting by the match location made the single list of all matches easy to scan through.
+
 ### Interesting approaches:
 
 #### 2015
