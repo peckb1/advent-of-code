@@ -18,15 +18,11 @@ class Day03 @Inject constructor(
     var enabled = true
 
     lines.sumOf { line ->
-      val mulMatches = "mul\\((?<d1>\\d+),(?<d2>\\d+)\\)".toRegex().findAll(line)
-      val doMatches = "do\\(\\)".toRegex().findAll(line)
-      val dontMatches = "don\'t\\(\\)".toRegex().findAll(line)
-
-      val sortedMatches = (mulMatches + doMatches + dontMatches).sortedBy { it.range.first }
+      val matches = "mul\\((?<d1>\\d+),(?<d2>\\d+)\\)|do\\(\\)|don\'t\\(\\)".toRegex().findAll(line)
 
       var count = 0L
 
-      sortedMatches.forEach { match ->
+      matches.forEach { match ->
         when (match.value.take(3)) {
           "do(" -> enabled = true
           "don" -> enabled = false
