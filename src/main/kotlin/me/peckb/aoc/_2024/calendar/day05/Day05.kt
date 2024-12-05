@@ -20,8 +20,8 @@ class Day05 @Inject constructor(
     sumMiddlePages(invalidUpdates.map { it.reSort(rules) })
   }
 
-  private fun Sequence<String>.parseInput(): Pair<Map<Rule, Unit>, List<Update>> {
-    val rules = mutableMapOf<Rule, Unit>()
+  private fun Sequence<String>.parseInput(): Pair<Set<Rule>, List<Update>> {
+    val rules = mutableSetOf<Rule>()
     val updates = mutableListOf<Update>()
 
     var readingRules = true
@@ -29,7 +29,7 @@ class Day05 @Inject constructor(
       if (line.isBlank()) { readingRules = false }
       else {
         if (readingRules) {
-          rules[line.split("|").map { it.toInt() }.let{ (b, a) -> Rule(b, a) }] = Unit
+          rules.add(line.split("|").map { it.toInt() }.let{ (b, a) -> Rule(b, a) })
         } else {
           updates.add(Update(line.split(",").map { it.toInt() }))
         }
@@ -39,10 +39,10 @@ class Day05 @Inject constructor(
     return rules to updates
   }
 
-  private fun validate(rules: Map<Rule, Unit>, updates: List<Update>): Pair<List<Update>, List<Update>> {
+  private fun validate(rules: Set<Rule>, updates: List<Update>): Pair<List<Update>, List<Update>> {
     return updates.partition { update ->
       update.pages.windowed(2).all { (before, after) ->
-        rules.containsKey(Rule(before, after))
+        rules.contains(Rule(before, after))
       }
     }
   }
@@ -53,7 +53,7 @@ class Day05 @Inject constructor(
 data class Rule(val before: Int, val after: Int)
 
 data class Update(val pages: List<Int>) {
-  fun reSort(rules: Map<Rule, Unit>) = pages.sortedWith { before, after ->
-    if (rules.containsKey(Rule(before, after))) -1 else 1
+  fun reSort(rules: Set<Rule>) = pages.sortedWith { before, after ->
+    if (rules.contains(Rule(before, after))) -1 else 1
   }.let(::Update)
 }
