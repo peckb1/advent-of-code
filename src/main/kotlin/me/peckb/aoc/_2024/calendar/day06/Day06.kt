@@ -79,6 +79,7 @@ class Day06 @Inject constructor(
 
     while (stepCount < MAX_STEPS && area.containsLocation(guard.location.y, guard.location.x)) {
       val (nextY, nextX) = guard.direction.step(guard.location.y, guard.location.x)
+
       step(guard.location.copy())
 
       if (area.containsLocation(nextY, nextX) && area[nextY][nextX] == Space.BLOCKED) {
