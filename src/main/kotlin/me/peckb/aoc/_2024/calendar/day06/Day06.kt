@@ -7,44 +7,40 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 class Day06 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
+  companion object {
+    const val MAX_STEPS = 8000 // minor optimization - 10k worked well, but this saved time
+  }
+
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { lines ->
     val (area, guard) = setup(lines)
 
-    stepsWalkedByGuard(area, guard).size
+    val steps = mutableSetOf<Location>()
+    walk(area, guard, step = steps::add)
+
+    steps.size
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { lines ->
     val (area, guardStart) = setup(lines)
 
-    var guard = guardStart.copy()
+    var guard = Guard(guardStart.direction, guardStart.location.copy())
+    val steps = mutableSetOf<Location>()
 
-    val steps = stepsWalkedByGuard(area, guard)
+    walk(area, guard, step = steps::add)
 
     steps.count { (y, x) ->
-      var stepCount = 0
       if (guardStart.location.y == y && guardStart.location.x == x) {
         false
       } else {
-        val original = area[y][x]
+        var stepCount = 0
         area[y][x] = Space.BLOCKED
 
-        while (stepCount < 10000 && area.containsLocation(guard.location.y, guard.location.x)) {
-          val nextStep = guard.direction.step(guard.location.y, guard.location.x)
-          if (area.containsLocation(nextStep.first, nextStep.second)) {
-            when (area[nextStep.first][nextStep.second]) {
-              Space.EMPTY -> guard = Guard(guard.direction, Location(nextStep.first, nextStep.second))
-              Space.BLOCKED -> guard = Guard(guard.direction.turnRight(), guard.location)
-            }
-          } else {
-            guard = Guard(guard.direction, Location(nextStep.first, nextStep.second))
-          }
-          stepCount++
-        }
+        walk(area, guard, totalStepHandler = { stepCount = it})
 
-        guard = guardStart.copy()
-        area[y][x] = original
+        guard = Guard(guardStart.direction, guardStart.location.copy())
+        area[y][x] = Space.EMPTY
 
-        stepCount == 10000
+        stepCount == MAX_STEPS
       }
     }
   }
@@ -71,25 +67,29 @@ class Day06 @Inject constructor(
     return area to guard
   }
 
-  private fun stepsWalkedByGuard(area: List<List<Space>>, guardStart: Guard) : Set<Location> {
-    var guard = guardStart
+  private fun walk(
+    area: List<List<Space>>,
+    guardStart: Guard,
+    step: (Location) -> Unit = { },
+    totalStepHandler: (Int) -> Unit = { }) {
+    val guard = Guard(guardStart.direction, guardStart.location.copy())
 
-    val spacesWalkedOn = mutableSetOf<Location>()
+    var stepCount = 0
 
-    while(area.containsLocation(guard.location.y, guard.location.x)) {
-      spacesWalkedOn.add(guard.location)
-      val nextStep = guard.direction.step(guard.location.y, guard.location.x)
-      if (area.containsLocation(nextStep.first, nextStep.second)) {
-        when (area[nextStep.first][nextStep.second]) {
-          Space.EMPTY   -> guard = Guard(guard.direction, Location(nextStep.first, nextStep.second))
-          Space.BLOCKED -> guard = Guard(guard.direction.turnRight(), guard.location)
-        }
+    while (stepCount < MAX_STEPS && area.containsLocation(guard.location.y, guard.location.x)) {
+      val (nextY, nextX) = guard.direction.step(guard.location.y, guard.location.x)
+      step(guard.location.copy())
+
+      if (area.containsLocation(nextY, nextX) && area[nextY][nextX] == Space.BLOCKED) {
+        guard.turnRight()
       } else {
-        guard = Guard(guard.direction, Location(nextStep.first, nextStep.second))
+        guard.stepForward()
       }
+
+      stepCount++
     }
 
-    return spacesWalkedOn
+    totalStepHandler(stepCount)
   }
 }
 
@@ -98,7 +98,11 @@ private fun List<List<*>>.containsLocation(y: Int, x: Int): Boolean {
   return y in indices && x in this[y].indices
 }
 
-data class Guard(val direction: Direction, val location: Location)
+data class Guard(var direction: Direction, val location: Location) {
+  fun stepForward() { location.step(direction) }
+
+  fun turnRight() { direction = direction.turnRight() }
+}
 
 enum class Direction {
   NORTH { override fun turnRight(): Direction { return EAST } },
@@ -118,6 +122,13 @@ enum class Direction {
   }
 }
 
-data class Location(val y: Int, val x: Int)
+data class Location(var y: Int, var x: Int) {
+  fun step(direction: Direction) {
+    direction.step(y, x).also { (newY, newX) ->
+      y = newY
+      x = newX
+    }
+  }
+}
 
 enum class Space { EMPTY, BLOCKED }
