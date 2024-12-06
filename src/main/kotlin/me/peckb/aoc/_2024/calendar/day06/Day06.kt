@@ -71,7 +71,8 @@ class Day06 @Inject constructor(
     area: List<List<Space>>,
     guardStart: Guard,
     step: (Location) -> Unit = { },
-    totalStepHandler: (Int) -> Unit = { }) {
+    totalStepHandler: (Int) -> Unit = { }
+  ) {
     val guard = Guard(guardStart.direction, guardStart.location.copy())
 
     var stepCount = 0
