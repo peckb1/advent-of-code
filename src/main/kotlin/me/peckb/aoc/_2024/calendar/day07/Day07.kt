@@ -17,8 +17,7 @@ class Day07 @Inject constructor(
   fun check(calibration: Calibration, operands: List<Operand>): Boolean {
     val (n, m) = calibration.numbers.take(2)
     val otherNumbers = calibration.numbers.drop(2)
-    return operands.any { op ->
-      check(calibration.value, listOf(op.invoke(n, m)).plus(otherNumbers), operands)
+    return operands.any { op -> check(calibration.value, listOf(op.invoke(n, m)).plus(otherNumbers), operands)
     }
   }
 
