@@ -64,22 +64,24 @@ class Day09 @Inject constructor(
         emptySpace.length = (availableSpace - fileSize)
         memory.add(spaceIndex, Space.Full(fileSize, lastFile.file))
         spaceIndex++
-        memory.removeAt(lastFileIndex + 1)
+        memory[lastFileIndex + 1] = Space.Empty(fileSize)
 
       } else if (fileSize == availableSpace) {
         emptySpace.length = 0
         memory.add(spaceIndex, Space.Full(availableSpace, lastFile.file))
-        memory.removeAt(lastFileIndex-- + 1)
-        memory.removeAt(spaceIndex + 1)
+        spaceIndex++
+        memory[lastFileIndex + 1] = Space.Empty(fileSize)
 
       } else { // fileSize > availableSpace
         if (splitFiles) {
           emptySpace.length = 0
           memory.add(spaceIndex, Space.Full(availableSpace, lastFile.file))
-          memory.removeAt(spaceIndex + 1)
 
           lastFile.length -= availableSpace
+          lastFileIndex++
 
+          spaceIndex++
+          spaceIndex += 2
         } else {
           var tempSpaceIndex = spaceIndex + 1
           var nextEmptySpace = (spaceIndex until lastFileIndex).firstOrNull { i ->
@@ -115,19 +117,12 @@ class Day09 @Inject constructor(
 
   private fun checksum(memory: MutableList<Space>): Long {
     var index = 0L
-    return memory.asSequence()
-      .filter { space ->
-        when (space) {
-          is Space.Empty -> space.length > 0
-          is Space.Full -> space.length > 0
-        }
-      }
-      .sumOf { space ->
-        when (space) {
-          is Space.Empty -> { index += space.length; 0 }
-          is Space.Full -> (1..space.length).sumOf { (index * space.file.id).also { index ++ } }
-        }
-      }
+    return memory.sumOf { space ->
+      when (space) {
+        is Space.Empty -> 0
+        is Space.Full -> (0 until space.length).sumOf { ((index + it) * space.file.id) }
+      }.also { index += space.length() }
+    }
   }
 
 }
@@ -135,6 +130,8 @@ class Day09 @Inject constructor(
 data class File(val id: Int)
 
 sealed class Space {
-  data class Empty(var length: Int) : Space()
-  data class Full(var length: Int, val file: File) : Space()
+  abstract fun length(): Int
+
+  data class Empty(var length: Int) : Space() { override fun length() = length }
+  data class Full(var length: Int, val file: File) : Space() { override fun length() = length }
 }
