@@ -64,24 +64,22 @@ class Day09 @Inject constructor(
         emptySpace.length = (availableSpace - fileSize)
         memory.add(spaceIndex, Space.Full(fileSize, lastFile.file))
         spaceIndex++
-        memory[lastFileIndex + 1] = Space.Empty(fileSize)
+        memory.removeAt(lastFileIndex + 1)
 
       } else if (fileSize == availableSpace) {
         emptySpace.length = 0
         memory.add(spaceIndex, Space.Full(availableSpace, lastFile.file))
-        spaceIndex++
-        memory[lastFileIndex + 1] = Space.Empty(fileSize)
+        memory.removeAt(lastFileIndex-- + 1)
+        memory.removeAt(spaceIndex + 1)
 
       } else { // fileSize > availableSpace
         if (splitFiles) {
           emptySpace.length = 0
           memory.add(spaceIndex, Space.Full(availableSpace, lastFile.file))
+          memory.removeAt(spaceIndex + 1)
 
           lastFile.length -= availableSpace
-          lastFileIndex++
 
-          spaceIndex++
-          spaceIndex += 2
         } else {
           var tempSpaceIndex = spaceIndex + 1
           var nextEmptySpace = (spaceIndex until lastFileIndex).firstOrNull { i ->
