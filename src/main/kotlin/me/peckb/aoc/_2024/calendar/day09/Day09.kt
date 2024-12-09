@@ -6,172 +6,120 @@ import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 class Day09 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
-  fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { line ->
-    val memory = mutableListOf<Space>()
+  fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { data ->
+    val memory = fillMemory(data)
+    val lastFileIndex = (memory.lastIndex downTo 0).first { memory[it] is Space.Full }
 
-    var lastFileIndex = 0
-    var file = true
-    var id = 0
-    line.forEach { char ->
-      val length = char.digitToInt()
-      if (file) {
-        memory.add(Space.Full(length, File(id)))
+    defrag(memory, lastFileIndex, splitFiles = true)
 
-        lastFileIndex = memory.size - 1
-        id++
-        file = false
-      } else {
-        memory.add(Space.Empty(length))
-
-        file = true
-      }
-    }
-
-    var spaceIndex = 1
-    while(spaceIndex < memory.size && (spaceIndex < lastFileIndex)) {
-      val lastFile = memory[lastFileIndex] as Space.Full
-      val emptySpace = memory[spaceIndex] as Space.Empty
-
-      val amountWeCanTake = emptySpace.length
-      val amountNeededToTake = lastFile.length
-
-      if (amountNeededToTake < amountWeCanTake) {
-        emptySpace.length = (amountWeCanTake - amountNeededToTake)
-        memory.add(spaceIndex, Space.Full(amountNeededToTake, lastFile.file))
-        spaceIndex++
-        memory[++lastFileIndex] = Space.Empty(amountNeededToTake)
-        lastFileIndex -= 2
-
-        -1
-      } else if (amountNeededToTake == amountWeCanTake) {
-        emptySpace.length = 0
-        memory.add(spaceIndex, Space.Full(amountWeCanTake, lastFile.file))
-        spaceIndex++
-        memory[++lastFileIndex] = Space.Empty(amountNeededToTake)
-        lastFileIndex -= 2
-
-        -1
-      } else { // amountNeededToTake > amountWeCanTake
-        emptySpace.length = 0
-        memory.add(spaceIndex, Space.Full(amountWeCanTake, lastFile.file))
-
-        lastFile.length -= amountWeCanTake
-        spaceIndex++
-        spaceIndex += 2
-        lastFileIndex += 1
-
-        -1
-      }
-    }
-
-    // 00...111...2...333.44.5555.6666.777.888899
-
-    // 0099811188827773336446555566
-
-    var index = 0L
-    memory.asSequence()
-      .filterIsInstance<Space.Full>()
-      .filter { it.length > 0 }
-      .sumOf { (length, file) ->
-        (1..length).sumOf {
-          (index * file.id).also { index ++ }
-        }
-      }
+    checksum(memory)
   }
 
-  fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { line ->
+  fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { data ->
+    val memory = fillMemory(data)
+    val lastFileIndex = (memory.lastIndex downTo 0).first { memory[it] is Space.Full }
+
+    defrag(memory, lastFileIndex, splitFiles = false)
+
+    checksum(memory)
+  }
+
+  private fun fillMemory(line: String): MutableList<Space> {
     val memory = mutableListOf<Space>()
 
-    var lastFileIndex = 0
     var file = true
     var id = 0
+
     line.forEach { char ->
       val length = char.digitToInt()
       if (file) {
-        memory.add(Space.Full(length, File(id)))
-
-        lastFileIndex = memory.size - 1
-        id++
+        memory.add(Space.Full(length, File(id++)))
         file = false
       } else {
         memory.add(Space.Empty(length))
-
         file = true
       }
     }
 
+    return memory
+  }
+
+  private fun defrag(memory: MutableList<Space>, fileIndex: Int, splitFiles: Boolean) {
+    var lastFileIndex = fileIndex
     var spaceIndex = 1
+
     while(spaceIndex < memory.size && (spaceIndex < lastFileIndex)) {
-      val lastFile = (lastFileIndex downTo spaceIndex).first { i ->
-        memory[i] is Space.Full
-      }.let { lastFileIndex = it; memory[it] as Space.Full }
-      val emptySpace = (spaceIndex until lastFileIndex).first { i ->
-        memory[i] is Space.Empty
-      }.let { spaceIndex = it; memory[it] as Space.Empty }
+      val lastFile = (lastFileIndex downTo spaceIndex)
+        .first { i -> memory[i] is Space.Full }
+        .also { lastFileIndex = it }
+        .let { memory[it] as Space.Full }
 
-//      val lastFile = memory[lastFileIndex] as Space.Full
-//      val emptySpace = memory[spaceIndex] as Space.Empty
-//
-      val amountWeCanTake = emptySpace.length
-      val amountNeededToTake = lastFile.length
+      val emptySpace = (spaceIndex until lastFileIndex)
+        .first { i -> memory[i] is Space.Empty }
+        .also { spaceIndex = it }
+        .let { memory[it] as Space.Empty }
 
-      if (amountNeededToTake < amountWeCanTake) {
-        emptySpace.length = (amountWeCanTake - amountNeededToTake)
-        memory.add(spaceIndex, Space.Full(amountNeededToTake, lastFile.file))
+      val availableSpace = emptySpace.length
+      val fileSize = lastFile.length
+
+      if (fileSize < availableSpace) {
+        emptySpace.length = (availableSpace - fileSize)
+        memory.add(spaceIndex, Space.Full(fileSize, lastFile.file))
         spaceIndex++
-        memory[lastFileIndex + 1] = Space.Empty(amountNeededToTake)
+        memory[lastFileIndex + 1] = Space.Empty(fileSize)
 
-      } else if (amountNeededToTake == amountWeCanTake) {
+      } else if (fileSize == availableSpace) {
         emptySpace.length = 0
-        memory.add(spaceIndex, Space.Full(amountWeCanTake, lastFile.file))
+        memory.add(spaceIndex, Space.Full(availableSpace, lastFile.file))
         spaceIndex++
-        memory[lastFileIndex + 1] = Space.Empty(amountNeededToTake)
+        memory[lastFileIndex + 1] = Space.Empty(fileSize)
 
-      } else { // amountNeededToTake > amountWeCanTake
-        var tempSpaceIndex = spaceIndex
-        var nextEmptySpace = (spaceIndex until lastFileIndex).firstOrNull { i ->
-          memory[i] is Space.Empty
-        }?.let { tempSpaceIndex = it; memory[it] as Space.Empty }
+      } else { // fileSize > availableSpace
+        if (splitFiles) {
+          emptySpace.length = 0
+          memory.add(spaceIndex, Space.Full(availableSpace, lastFile.file))
 
-        while (nextEmptySpace != null && tempSpaceIndex < lastFileIndex) {
-          if (amountNeededToTake <= nextEmptySpace.length) {
-            if (amountNeededToTake < nextEmptySpace.length) {
-              nextEmptySpace.length = (nextEmptySpace.length - amountNeededToTake)
-              memory.add(tempSpaceIndex, Space.Full(amountNeededToTake, lastFile.file))
-              memory[++lastFileIndex] = Space.Empty(amountNeededToTake)
+          lastFile.length -= availableSpace
+          lastFileIndex++
 
-            } else { // amountNeededToTake = nextEmptySpace.length
-              nextEmptySpace.length = 0
-              memory.add(tempSpaceIndex, Space.Full(amountNeededToTake, lastFile.file))
-              memory[++lastFileIndex] = Space.Empty(amountNeededToTake)
+          spaceIndex++
+          spaceIndex += 2
+        } else {
+          var tempSpaceIndex = spaceIndex + 1
+          var nextEmptySpace = (spaceIndex until lastFileIndex).firstOrNull { i ->
+            memory[i] is Space.Empty
+          }?.let { tempSpaceIndex = it; memory[it] as Space.Empty }
+
+          while (nextEmptySpace != null && tempSpaceIndex < lastFileIndex) {
+            if (fileSize <= nextEmptySpace.length) {
+              if (fileSize < nextEmptySpace.length) {
+                nextEmptySpace.length = (nextEmptySpace.length - fileSize)
+                memory.add(tempSpaceIndex, Space.Full(fileSize, lastFile.file))
+                memory[++lastFileIndex] = Space.Empty(fileSize)
+
+              } else { // amountNeededToTake = nextEmptySpace.length
+                nextEmptySpace.length = 0
+                memory.add(tempSpaceIndex, Space.Full(fileSize, lastFile.file))
+                memory[++lastFileIndex] = Space.Empty(fileSize)
+              }
+
+              nextEmptySpace = null
+            } else {
+              nextEmptySpace = (tempSpaceIndex + 1 until lastFileIndex).firstOrNull { i ->
+                memory[i] is Space.Empty
+              }?.let { tempSpaceIndex = it; memory[it] as Space.Empty }
             }
-
-            nextEmptySpace = null
-          } else {
-            nextEmptySpace = (tempSpaceIndex + 1 until lastFileIndex).firstOrNull { i ->
-              memory[i] is Space.Empty
-            }?.let { tempSpaceIndex = it; memory[it] as Space.Empty }
           }
+
+          lastFileIndex--
         }
-
-        lastFileIndex--
-
-
-//        emptySpace.length = 0
-//        memory.add(spaceIndex, Space.Full(amountWeCanTake, lastFile.file))
-//
-//        lastFile.length -= amountWeCanTake
-//        spaceIndex++
-//        spaceIndex += 2
-//        lastFileIndex += 1
-
-        -1
       }
     }
+  }
 
+  private fun checksum(memory: MutableList<Space>): Long {
     var index = 0L
-    memory.asSequence()
-//      .filterIsInstance<Space.Full>()
+    return memory.asSequence()
       .filter { space ->
         when (space) {
           is Space.Empty -> space.length > 0
@@ -185,6 +133,7 @@ class Day09 @Inject constructor(
         }
       }
   }
+
 }
 
 data class File(val id: Int)
