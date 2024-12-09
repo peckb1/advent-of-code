@@ -30,13 +30,11 @@ class Day09 @Inject constructor(
 
     line.forEach { char ->
       val length = char.digitToInt()
-      if (file) {
-        memory.add(Space.Full(length, File(id++)))
-        file = false
-      } else {
-        memory.add(Space.Empty(length))
-        file = true
-      }
+
+      if (file) { memory.add(Space.Full(length, File(id++))) }
+      else      { memory.add(Space.Empty(length)) }
+
+      file = !file
     }
 
     return memory
