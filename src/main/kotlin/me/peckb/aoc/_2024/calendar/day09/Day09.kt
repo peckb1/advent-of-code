@@ -8,18 +8,16 @@ class Day09 @Inject constructor(
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readOne { data ->
     val memory = fillMemory(data)
-    val lastFileIndex = (memory.lastIndex downTo 0).first { memory[it] is Space.Full }
 
-    defrag(memory, lastFileIndex, splitFiles = true)
+    defrag(memory, splitFiles = true)
 
     checksum(memory)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readOne { data ->
     val memory = fillMemory(data)
-    val lastFileIndex = (memory.lastIndex downTo 0).first { memory[it] is Space.Full }
 
-    defrag(memory, lastFileIndex, splitFiles = false)
+    defrag(memory, splitFiles = false)
 
     checksum(memory)
   }
@@ -44,8 +42,8 @@ class Day09 @Inject constructor(
     return memory
   }
 
-  private fun defrag(memory: MutableList<Space>, fileIndex: Int, splitFiles: Boolean) {
-    var lastFileIndex = fileIndex
+  private fun defrag(memory: MutableList<Space>, splitFiles: Boolean) {
+    var lastFileIndex = (memory.lastIndex downTo 0).first { memory[it] is Space.Full }
     var spaceIndex = 1
 
     while(spaceIndex < memory.size && (spaceIndex < lastFileIndex)) {
