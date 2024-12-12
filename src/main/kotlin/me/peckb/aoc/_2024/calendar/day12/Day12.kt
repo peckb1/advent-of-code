@@ -38,83 +38,23 @@ class Day12 @Inject constructor(
         }
       }
 
-      // left to right sweep first
-      val fieldType = field.crops.first().type
-      repeat(largeArea.size) { y ->
-        var topEdge = false
-        var bottomEdge = false
-        repeat(largeArea[y].size) { x ->
-          val item = largeArea[y][x]
-          if (item == '+') {
-            val top =  largeArea[y-1][x]
-            val bottom = largeArea[y+1][x]
-            if (top == fieldType) {
-              if (!topEdge) {
-                topEdge = true
-              }
-            } else {
-              if (topEdge) {
-                topEdge = false; field.sides++
-              }
-            }
+      // sweep for the sides going left to right
+      field.doSweep(
+        firstLoopSize = largeArea.size,
+        secondLoopSize = largeArea[0].size,
+        item = { y: Int, x: Int -> largeArea[y][x] },
+        n1 = { y: Int, x: Int -> largeArea[y - 1][x] },
+        n2 = { y: Int, x: Int -> largeArea[y + 1][x] },
+      )
 
-            if (bottom == fieldType) {
-              if (!bottomEdge) {
-                bottomEdge = true
-              }
-            } else {
-              if (bottomEdge) {
-                bottomEdge = false; field.sides++
-              }
-            }
-          } else {
-            if (topEdge)    { topEdge = false;    field.sides ++ }
-            if (bottomEdge) { bottomEdge = false; field.sides ++ }
-          }
-        }
-      }
-      // top to bottom sweep next
-      repeat(largeArea[0].size) { x ->
-        var leftEdgeFound = false
-        var rightEdgeFound = false
-        repeat(largeArea.size) { y ->
-          val item = largeArea[y][x]
-          if (item == '+') {
-            val left =  largeArea[y][x - 1]
-            val right = largeArea[y][x + 1]
-            if (left == fieldType) {
-              if (!leftEdgeFound) {
-                leftEdgeFound = true
-              }
-            } else {
-              if (leftEdgeFound) {
-                leftEdgeFound = false
-                field.sides ++
-              }
-            }
-            if (right == fieldType) {
-              if (!rightEdgeFound) {
-                rightEdgeFound = true
-              }
-            } else {
-              if (rightEdgeFound) {
-                rightEdgeFound = false
-                field.sides ++
-              }
-            }
-
-          } else {
-            if (rightEdgeFound) {
-              rightEdgeFound = false
-              field.sides ++
-            }
-            if (leftEdgeFound) {
-              leftEdgeFound = false
-              field.sides ++
-            }
-          }
-        }
-      }
+      // sweep for the sides going top to bottom
+      field.doSweep(
+        firstLoopSize = largeArea[0].size,
+        secondLoopSize = largeArea.size,
+        item = { x: Int, y: Int -> largeArea[y][x] },
+        n1 = { x: Int, y: Int -> largeArea[y][x - 1] },
+        n2 = { x: Int, y: Int -> largeArea[y][x + 1] },
+      )
 
       // reset the map
       repeat(largeArea.size) { y -> repeat(largeArea[y].size) { x -> largeArea[y][x] = '.' } }
@@ -140,7 +80,7 @@ class Day12 @Inject constructor(
     }
 
     while (unKnownCrops.isNotEmpty()) {
-      val nextAreaNodes: Queue<Crop> = LinkedList<Crop>()
+      val nextAreaNodes: Queue<Crop> = LinkedList()
       nextAreaNodes.add(unKnownCrops.first())
 
       val field = Field()
@@ -175,6 +115,63 @@ class Day12 @Inject constructor(
     }
 
     return area to knownFields
+  }
+
+  private fun Field.doSweep(
+    firstLoopSize: Int,
+    secondLoopSize: Int,
+    item: (Int, Int) -> Char,
+    n1: (Int, Int) -> Char,
+    n2: (Int, Int) -> Char,
+  ) {
+    val fieldType = crops.first().type
+
+    // loop starting in one direction
+    repeat(firstLoopSize) { f ->
+      var n1SideFound = false
+      var n2SideFound = false
+      // for that direction, iterate through the other
+      repeat(secondLoopSize) { s ->
+        // if we found an "edge"
+        if (item(f, s) == '+') {
+          // check the first neighbor (ignoring the direction of travel)
+          val n1Char = n1(f, s)
+          if (n1Char == fieldType) {
+            // if the neighbor matches our type, this is a side, track it if we weren't
+            if (!n1SideFound) {
+              n1SideFound = true
+            }
+          } else if (n1SideFound) {
+            // if the neighbor wasn't our type; but we were tracking, we found the full side
+            n1SideFound = false
+            sides++
+          }
+          // check the second neighbor (ignoring the direction of travel)
+          val n2Char = n2(f, s)
+          if (n2Char == fieldType) {
+            // if the neighbor matches our type, this is a side, track it if we weren't
+            if (!n2SideFound) {
+              n2SideFound = true
+            }
+          } else if (n2SideFound) {
+            // if the neighbor wasn't our type; but we were tracking, we found the full side
+            n2SideFound = false
+            sides++
+          }
+        } else {
+          if (n1SideFound) {
+            // if the item wasn't a wall, and we were tracking, we found the full side
+            n1SideFound = false
+            sides++
+          }
+          if (n2SideFound) {
+            // if the item wasn't a wall, and we were tracking, we found the full side
+            n2SideFound = false
+            sides++
+          }
+        }
+      }
+    }
   }
 }
 
