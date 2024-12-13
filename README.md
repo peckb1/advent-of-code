@@ -103,6 +103,8 @@ as the value which passed the given day/phase combination
 #### 2024
 * Day 03
   * Regex shining today! Sorting by the match location made the single list of all matches easy to scan through.
+* Day 12
+  * Not a day where I had the best solution; but a solution nonetheless. Slow scan of each field's border; ain't much, but it's honest work. 
 
 ### Interesting approaches:
 
@@ -153,7 +155,11 @@ as the value which passed the given day/phase combination
 #### 2023
 * Day 05 The fact that the numbers are "small" meant just starting at 0 and iterating over every location until we found one that matches a seed helps avoid the "forever" brute force solutions
 * Day 14 Rather than trying to make sure you found the right indices for tilting rocks east, west, or south just rotate the mirror and keep tilting north
-* Day 18 Learning about the Minkowski Sum for thick edge convex hull areas 
+* Day 18 Learning about the Minkowski Sum for thick edge convex hull areas
+
+#### 2024
+* Day 11 The fact that the order of stones didn't actually matter helped to allow us to just keep a list of how many we had.
+* Day 13 Being able to solve the basic with shortest path while needing math for part two is always fun re-learning linear algebra.
 
 ## Takeaways
 
