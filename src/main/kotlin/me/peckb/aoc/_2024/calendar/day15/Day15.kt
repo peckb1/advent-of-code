@@ -22,11 +22,11 @@ class Day15 @Inject constructor(
         val row = mutableListOf<Room>()
         line.forEachIndexed { xIndex, c ->
           when (c) {
-            '#' -> row.add(Room.WALL())
-            '.' -> row.add(Room.EMPTY())
-            'O' -> row.add(Room.BOX())
+            '#' -> row.add(Room.WALL)
+            '.' -> row.add(Room.EMPTY)
+            'O' -> row.add(Room.BOX)
             else -> {
-              row.add(Room.GUARD())
+              row.add(Room.GUARD)
               gx = xIndex
               gy = yIndex
             }
@@ -55,27 +55,27 @@ class Day15 @Inject constructor(
 
       var boxes = 1
       var boxEnd = area[gy + (yDelta * boxes)][gx + (xDelta * boxes)]
-      while (boxEnd is Room.BOX) {
+      while (boxEnd == Room.BOX) {
         boxes++
         boxEnd = area[gy + (yDelta * boxes)][gx + (xDelta * boxes)]
       }
       boxes--
-      if (boxEnd is Room.EMPTY) {
+      if (boxEnd == Room.EMPTY) {
         while (boxes > 0) {
-          area[gy + (yDelta * (boxes + 1))][gx + (xDelta * (boxes + 1))] = Room.BOX()
+          area[gy + (yDelta * (boxes + 1))][gx + (xDelta * (boxes + 1))] = Room.BOX
           boxes--
         }
-        area[gy][gx] = Room.EMPTY()
+        area[gy][gx] = Room.EMPTY
         gx += xDelta
         gy += yDelta
-        area[gy][gx] = Room.GUARD()
+        area[gy][gx] = Room.GUARD
       }
     }
 
     area.withIndex().sumOf { (y, row) ->
       row.withIndex().sumOf { (x, room) ->
         when (room) {
-          is Room.BOX -> (100 * y) + x
+          Room.BOX -> (100 * y) + x
           else -> 0
         }
       }
@@ -83,35 +83,149 @@ class Day15 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    var guard: WideRoom = WideRoom.Guard(-1, -1)
+    val area = mutableListOf<MutableList<WideRoom>>()
+    val directions = mutableListOf<Direction>()
 
-  }
-
-  private fun MutableList<MutableList<Room>>.print() {
-    forEach { row ->
-      println(row.joinToString(""))
+    var setupArea = true
+    input.forEachIndexed setup@ { y, line ->
+      if (line.isEmpty()) {
+        setupArea = false
+        return@setup
+      }
+      if (setupArea) {
+        val row = mutableListOf<WideRoom>()
+        line.forEachIndexed { x, c ->
+          val x1 = x*2
+          val x2 = x*2 + 1
+          when (c) {
+            '#' -> {
+              row.add(WideRoom.Wall(y, x1))
+              row.add(WideRoom.Wall(y, x2))
+            }
+            '.' -> {
+              row.add(WideRoom.Empty(y, x1))
+              row.add(WideRoom.Empty(y, x2))
+            }
+            'O' -> {
+              row.add(WideRoom.LeftBox(y, x1))
+              row.add(WideRoom.RightBox(y, x2))
+            }
+            else -> {
+              row.add(WideRoom.Guard(y, x1).also { guard = it })
+              row.add(WideRoom.Empty(y, x2))
+            }
+          }
+        }
+        area.add(row)
+      } else {
+        line.forEach { c ->
+          when (c) {
+            '<' -> directions.add(Direction.W)
+            '^' -> directions.add(Direction.N)
+            '>' -> directions.add(Direction.E)
+            else -> directions.add(Direction.S)
+          }
+        }
+      }
     }
-    println()
+
+    directions.forEach { direction ->
+      if (direction == Direction.W || direction == Direction.E) {
+        val xDelta = when (direction) {
+          Direction.E -> 1
+          Direction.W -> -1
+          else -> throw IllegalStateException("can't move N/S in an E/W block")
+        }
+
+        var boxes = 1
+        var boxEnd = area[guard.y][guard.x + (xDelta * boxes)]
+        while (boxEnd is WideRoom.RightBox || boxEnd is WideRoom.LeftBox) {
+          boxes++
+          boxEnd = area[guard.y][guard.x + (xDelta * boxes)]
+        }
+        boxes--
+        if (boxEnd is WideRoom.Empty) {
+          while (boxes > 0) {
+            val x = guard.x + (xDelta * (boxes + 1))
+            area[guard.y][x] = area[guard.y][guard.x + (xDelta * boxes)].also { it.x = x }
+            boxes--
+          }
+          area[guard.y][guard.x] = WideRoom.Empty(guard.y, guard.x)
+          guard.x += xDelta
+          area[guard.y][guard.x] = guard
+        }
+      } else { // N/S Block!
+        val yDelta = when (direction) {
+          Direction.N -> -1
+          Direction.S -> 1
+          else -> throw IllegalStateException("can't move N/S in an E/W block")
+        }
+
+        // start with north!
+        var allCanMove = true
+        var doneSearching = false
+        val areasToMove = mutableMapOf<Int, Set<WideRoom>>()
+        areasToMove[guard.y] = setOf(area[guard.y][guard.x])
+        var currentY = guard.y
+        while(allCanMove && !doneSearching) {
+          areasToMove[currentY]?.forEach { room ->
+            val nextArea = area[room.y + yDelta][room.x]
+            if (nextArea is WideRoom.Wall) {
+              allCanMove = false
+            } else if (nextArea is WideRoom.LeftBox) {
+              areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
+              areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x + 1])) { a, b -> a + b }
+            } else if (nextArea is WideRoom.RightBox) {
+              areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
+              areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x - 1])) { a, b -> a + b }
+            }
+          } ?: run { doneSearching = true }
+          currentY += yDelta
+        }
+
+        if (allCanMove) {
+          val sortedEntries = areasToMove.entries.sortedBy { it.key }
+            .let { if (direction == Direction.S) { it.reversed() } else { it } }
+
+          sortedEntries.forEach { (y, wideRooms) ->
+            wideRooms.forEach { room ->
+              if (areasToMove[y - yDelta]?.contains(area[room.y - yDelta][room.x]) != true) {
+                area[room.y][room.x] = WideRoom.Empty(room.y - yDelta, room.x)
+              }
+              room.y += yDelta
+              area[room.y][room.x] = room
+            }
+          }
+        }
+      }
+    }
+
+    area.withIndex().sumOf { (y, row) ->
+      row.withIndex().sumOf { (x, room) ->
+        when (room) {
+          is WideRoom.LeftBox -> (100 * y) + x
+          else -> 0
+        }
+      }
+    }
   }
 }
 
-sealed class Room(val c: Char) {
-  class EMPTY : Room('.')
-  class WALL : Room('#')
-  class BOX : Room('O')
-  class BOX_L : Room('[')
-  class BOX_R : Room(']')
-  class GUARD : Room('@')
+enum class Room(val c: Char) {
+  EMPTY('.'), WALL('#'), BOX('O'), GUARD('@');
 
-  var n: Room? = null
-  var s: Room? = null
-  var e: Room? = null
-  var w: Room? = null
-
-  override fun toString(): String {
-    return c.toString()
-  }
+  override fun toString(): String { return c.toString() }
 }
 
-enum class Direction {
-  N,E,S,W
+sealed class WideRoom(val c: Char, var y: Int, var x: Int) {
+  class Empty(y: Int, x: Int)    : WideRoom('.', y, x)
+  class Guard(y: Int, x: Int)    : WideRoom('@', y, x)
+  class Wall(y: Int, x: Int)     : WideRoom('#', y, x)
+  class LeftBox(y: Int, x: Int)  : WideRoom('[', y, x)
+  class RightBox(y: Int, x: Int) : WideRoom(']', y, x)
+
+  override fun toString(): String { return c.toString() }
 }
+
+enum class Direction { N,E,S,W }
