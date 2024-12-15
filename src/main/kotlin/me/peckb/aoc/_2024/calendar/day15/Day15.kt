@@ -9,40 +9,15 @@ class Day15 @Inject constructor(
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
     var gx = -1
     var gy = -1
-    val area = mutableListOf<MutableList<Room>>()
-    val directions = mutableListOf<Direction>()
-
-    var setupArea = true
-    input.forEachIndexed setup@ { yIndex, line ->
-      if (line.isEmpty()) {
-        setupArea = false
-        return@setup
-      }
-      if (setupArea) {
-        val row = mutableListOf<Room>()
-        line.forEachIndexed { xIndex, c ->
-          when (c) {
-            '#' -> row.add(Room.WALL)
-            '.' -> row.add(Room.EMPTY)
-            'O' -> row.add(Room.BOX)
-            '@' -> {
-              row.add(Room.GUARD)
-              gx = xIndex
-              gy = yIndex
-            }
-          }
+    val (area, directions) = setupArea(input) { c, y, x ->
+      listOf(
+        when (c) {
+          '#'  -> Room.WALL
+          '.'  -> Room.EMPTY
+          'O'  -> Room.BOX
+          else -> Room.GUARD.also { gx = x; gy = y }
         }
-        area.add(row)
-      } else {
-        line.forEach { c ->
-          when (c) {
-            '<' -> directions.add(Direction.W)
-            '^' -> directions.add(Direction.N)
-            '>' -> directions.add(Direction.E)
-            else -> directions.add(Direction.S)
-          }
-        }
-      }
+      )
     }
 
     directions.forEach { direction ->
@@ -77,49 +52,14 @@ class Day15 @Inject constructor(
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     var guard: WideRoom = WideRoom.Guard(-1, -1)
-    val area = mutableListOf<MutableList<WideRoom>>()
-    val directions = mutableListOf<Direction>()
-
-    var setupArea = true
-    input.forEachIndexed setup@ { y, line ->
-      if (line.isEmpty()) {
-        setupArea = false
-        return@setup
-      }
-      if (setupArea) {
-        val row = mutableListOf<WideRoom>()
-        line.forEachIndexed { x, c ->
-          val x1 = x*2
-          val x2 = x*2 + 1
-          when (c) {
-            '#' -> {
-              row.add(WideRoom.Wall(y, x1))
-              row.add(WideRoom.Wall(y, x2))
-            }
-            '.' -> {
-              row.add(WideRoom.Empty(y, x1))
-              row.add(WideRoom.Empty(y, x2))
-            }
-            'O' -> {
-              row.add(WideRoom.LeftBox(y, x1))
-              row.add(WideRoom.RightBox(y, x2))
-            }
-            '@' -> {
-              row.add(WideRoom.Guard(y, x1).also { guard = it })
-              row.add(WideRoom.Empty(y, x2))
-            }
-          }
-        }
-        area.add(row)
-      } else {
-        line.forEach { c ->
-          when (c) {
-            '<' -> directions.add(Direction.W)
-            '^' -> directions.add(Direction.N)
-            '>' -> directions.add(Direction.E)
-            else -> directions.add(Direction.S)
-          }
-        }
+    val (area, directions) = setupArea(input) { c, y, x ->
+      val x1 = x*2
+      val x2 = x*2 + 1
+      when (c) {
+        '#'  -> listOf(WideRoom.Wall(y, x1),                      WideRoom.Wall(y, x1))
+        '.'  -> listOf(WideRoom.Empty(y, x1),                     WideRoom.Empty(y, x1))
+        'O'  -> listOf(WideRoom.LeftBox(y, x1),                   WideRoom.RightBox(y, x2))
+        else -> listOf(WideRoom.Guard(y, x1).also { guard = it }, WideRoom.Empty(y, x2))
       }
     }
 
@@ -205,6 +145,38 @@ class Day15 @Inject constructor(
         if (roomCheck(room)) { (100 * y) + x } else { 0 }
       }
     }
+  }
+
+  private fun <RoomType> setupArea(
+    input: Sequence<String>,
+    roomCreator: (Char, Int, Int) -> List<RoomType>
+  ): Pair<MutableList<MutableList<RoomType>>, MutableList<Direction>> {
+    val area = mutableListOf<MutableList<RoomType>>()
+    val directions = mutableListOf<Direction>()
+
+    var setupArea = true
+    input.forEachIndexed setup@ { y, line ->
+      if (line.isEmpty()) {
+        setupArea = false
+        return@setup
+      }
+      if (setupArea) {
+        val row = mutableListOf<RoomType>()
+        line.forEachIndexed { x, c -> roomCreator(c, y, x).forEach(row::add) }
+        area.add(row)
+      } else {
+        line.forEach { c ->
+          when (c) {
+            '<' -> directions.add(Direction.W)
+            '^' -> directions.add(Direction.N)
+            '>' -> directions.add(Direction.E)
+            else -> directions.add(Direction.S)
+          }
+        }
+      }
+    }
+
+    return area to directions
   }
 }
 
