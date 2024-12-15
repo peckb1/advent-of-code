@@ -22,19 +22,20 @@ class Day15 @Inject constructor(
 
     directions.forEach { direction ->
       val (yDelta, xDelta) = when (direction) {
-        Direction.N -> -1 to 0
-        Direction.E -> 0 to 1
-        Direction.S -> 1 to 0
-        Direction.W -> 0 to -1
+        Direction.N -> -1 to  0
+        Direction.E ->  0 to  1
+        Direction.S ->  1 to  0
+        Direction.W ->  0 to -1
       }
 
-      var boxes = 1
-      var boxEnd = area[gy + (yDelta * boxes)][gx + (xDelta * boxes)]
-      while (boxEnd == Room.BOX) {
+      var boxEnd: Room
+      var boxes = 0
+      do {
         boxes++
         boxEnd = area[gy + (yDelta * boxes)][gx + (xDelta * boxes)]
-      }
+      } while (boxEnd == Room.BOX)
       boxes--
+
       if (boxEnd == Room.EMPTY) {
         while (boxes > 0) {
           area[gy + (yDelta * (boxes + 1))][gx + (xDelta * (boxes + 1))] = Room.BOX
@@ -51,15 +52,15 @@ class Day15 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    var guard: WideRoom = WideRoom.Guard(-1, -1)
+    lateinit var guard: WideRoom
     val (area, directions) = setupArea(input) { c, y, x ->
       val x1 = x*2
-      val x2 = x*2 + 1
+      val x2 = x1 + 1
       when (c) {
-        '#'  -> listOf(WideRoom.Wall(y, x1),                      WideRoom.Wall(y, x1))
-        '.'  -> listOf(WideRoom.Empty(y, x1),                     WideRoom.Empty(y, x1))
-        'O'  -> listOf(WideRoom.LeftBox(y, x1),                   WideRoom.RightBox(y, x2))
-        else -> listOf(WideRoom.Guard(y, x1).also { guard = it }, WideRoom.Empty(y, x2))
+        '#'  -> listOf(WideRoom.Wall   (y, x1), WideRoom.Wall    (y, x2))
+        '.'  -> listOf(WideRoom.Empty  (y, x1), WideRoom.Empty   (y, x2))
+        'O'  -> listOf(WideRoom.LeftBox(y, x1), WideRoom.RightBox(y, x2))
+        else -> listOf(WideRoom.Guard  (y, x1), WideRoom.Empty   (y, x2)).also { guard = it.first() }
       }
     }
 
@@ -71,22 +72,24 @@ class Day15 @Inject constructor(
           else -> throw IllegalStateException("can't move N/S in an E/W block")
         }
 
-        var boxes = 1
-        var boxEnd = area[guard.y][guard.x + (xDelta * boxes)]
-        while (boxEnd is WideRoom.RightBox || boxEnd is WideRoom.LeftBox) {
+        val guardRow = area[guard.y]
+        var boxEnd: WideRoom
+        var boxes = 0
+        do {
           boxes++
-          boxEnd = area[guard.y][guard.x + (xDelta * boxes)]
-        }
+          boxEnd = guardRow[guard.x + (xDelta * boxes)]
+        } while (boxEnd is WideRoom.RightBox || boxEnd is WideRoom.LeftBox)
         boxes--
+
         if (boxEnd is WideRoom.Empty) {
           while (boxes > 0) {
             val x = guard.x + (xDelta * (boxes + 1))
-            area[guard.y][x] = area[guard.y][guard.x + (xDelta * boxes)].also { it.x = x }
+            guardRow[x] = guardRow[guard.x + (xDelta * boxes)].also { it.x = x }
             boxes--
           }
-          area[guard.y][guard.x] = WideRoom.Empty(guard.y, guard.x)
+          guardRow[guard.x] = WideRoom.Empty(guard.y, guard.x)
           guard.x += xDelta
-          area[guard.y][guard.x] = guard
+          guardRow[guard.x] = guard
         }
       } else { // N/S Block!
         val yDelta = when (direction) {
@@ -97,20 +100,23 @@ class Day15 @Inject constructor(
 
         var allCanMove = true
         var doneSearching = false
-        val areasToMove = mutableMapOf<Int, Set<WideRoom>>()
-        areasToMove[guard.y] = setOf(area[guard.y][guard.x])
+        val areasToMove = mutableMapOf<Int, Set<WideRoom>>().apply {
+          put(guard.y, setOf(area[guard.y][guard.x]))
+        }
+
         var currentY = guard.y
         while(allCanMove && !doneSearching) {
           areasToMove[currentY]?.forEach { room ->
-            when (val nextArea = area[room.y + yDelta][room.x]) {
+            val searchY = currentY + yDelta
+            when (val nextArea = area[searchY][room.x]) {
               is WideRoom.Wall -> allCanMove = false
               is WideRoom.LeftBox -> {
-                areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
-                areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x + 1])) { a, b -> a + b }
+                areasToMove.merge(searchY, setOf(nextArea)) { a, b -> a + b }
+                areasToMove.merge(searchY, setOf(area[searchY][room.x + 1])) { a, b -> a + b }
               }
               is WideRoom.RightBox -> {
-                areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
-                areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x - 1])) { a, b -> a + b }
+                areasToMove.merge(searchY, setOf(nextArea)) { a, b -> a + b }
+                areasToMove.merge(searchY, setOf(area[searchY][room.x - 1])) { a, b -> a + b }
               }
               else -> { /* ignore empty rooms */ }
             }
@@ -124,8 +130,9 @@ class Day15 @Inject constructor(
 
           sortedEntries.forEach { (y, wideRooms) ->
             wideRooms.forEach { room ->
-              if (areasToMove[y - yDelta]?.contains(area[room.y - yDelta][room.x]) != true) {
-                area[room.y][room.x] = WideRoom.Empty(room.y - yDelta, room.x)
+              val nextY = room.y - yDelta
+              if (areasToMove[y - yDelta]?.contains(area[nextY][room.x]) != true) {
+                area[room.y][room.x] = WideRoom.Empty(nextY, room.x)
               }
               room.y += yDelta
               area[room.y][room.x] = room
@@ -134,7 +141,6 @@ class Day15 @Inject constructor(
         }
       }
     }
-
 
     area.sumBoxes { it is WideRoom.LeftBox }
   }
@@ -170,7 +176,7 @@ class Day15 @Inject constructor(
             '<' -> directions.add(Direction.W)
             '^' -> directions.add(Direction.N)
             '>' -> directions.add(Direction.E)
-            else -> directions.add(Direction.S)
+            'v' -> directions.add(Direction.S)
           }
         }
       }
