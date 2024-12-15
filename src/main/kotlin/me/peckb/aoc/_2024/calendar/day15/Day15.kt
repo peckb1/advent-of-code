@@ -25,7 +25,7 @@ class Day15 @Inject constructor(
             '#' -> row.add(Room.WALL)
             '.' -> row.add(Room.EMPTY)
             'O' -> row.add(Room.BOX)
-            else -> {
+            '@' -> {
               row.add(Room.GUARD)
               gx = xIndex
               gy = yIndex
@@ -72,14 +72,7 @@ class Day15 @Inject constructor(
       }
     }
 
-    area.withIndex().sumOf { (y, row) ->
-      row.withIndex().sumOf { (x, room) ->
-        when (room) {
-          Room.BOX -> (100 * y) + x
-          else -> 0
-        }
-      }
-    }
+    area.sumBoxes { it == Room.BOX }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
@@ -111,7 +104,7 @@ class Day15 @Inject constructor(
               row.add(WideRoom.LeftBox(y, x1))
               row.add(WideRoom.RightBox(y, x2))
             }
-            else -> {
+            '@' -> {
               row.add(WideRoom.Guard(y, x1).also { guard = it })
               row.add(WideRoom.Empty(y, x2))
             }
@@ -202,12 +195,14 @@ class Day15 @Inject constructor(
       }
     }
 
-    area.withIndex().sumOf { (y, row) ->
+
+    area.sumBoxes { it is WideRoom.LeftBox }
+  }
+
+  private fun <T> MutableList<MutableList<T>>.sumBoxes(roomCheck: (T) -> Boolean): Int {
+    return withIndex().sumOf { (y, row) ->
       row.withIndex().sumOf { (x, room) ->
-        when (room) {
-          is WideRoom.LeftBox -> (100 * y) + x
-          else -> 0
-        }
+        if (roomCheck(room)) { (100 * y) + x } else { 0 }
       }
     }
   }
