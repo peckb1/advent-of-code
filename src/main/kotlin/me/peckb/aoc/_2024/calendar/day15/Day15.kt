@@ -162,7 +162,6 @@ class Day15 @Inject constructor(
           else -> throw IllegalStateException("can't move N/S in an E/W block")
         }
 
-        // start with north!
         var allCanMove = true
         var doneSearching = false
         val areasToMove = mutableMapOf<Int, Set<WideRoom>>()
@@ -170,15 +169,17 @@ class Day15 @Inject constructor(
         var currentY = guard.y
         while(allCanMove && !doneSearching) {
           areasToMove[currentY]?.forEach { room ->
-            val nextArea = area[room.y + yDelta][room.x]
-            if (nextArea is WideRoom.Wall) {
-              allCanMove = false
-            } else if (nextArea is WideRoom.LeftBox) {
-              areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
-              areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x + 1])) { a, b -> a + b }
-            } else if (nextArea is WideRoom.RightBox) {
-              areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
-              areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x - 1])) { a, b -> a + b }
+            when (val nextArea = area[room.y + yDelta][room.x]) {
+              is WideRoom.Wall -> allCanMove = false
+              is WideRoom.LeftBox -> {
+                areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
+                areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x + 1])) { a, b -> a + b }
+              }
+              is WideRoom.RightBox -> {
+                areasToMove.merge(currentY + yDelta, setOf(nextArea)) { a, b -> a + b }
+                areasToMove.merge(currentY + yDelta, setOf(area[room.y + yDelta][room.x - 1])) { a, b -> a + b }
+              }
+              else -> { /* ignore empty rooms */ }
             }
           } ?: run { doneSearching = true }
           currentY += yDelta
