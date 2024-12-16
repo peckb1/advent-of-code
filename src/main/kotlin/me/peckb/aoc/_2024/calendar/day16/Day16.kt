@@ -8,8 +8,7 @@ import javax.inject.Inject
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.pathing.Dijkstra
 import me.peckb.aoc.pathing.DijkstraNodeWithCost
-import java.util.*
-import kotlin.math.abs
+import java.util.PriorityQueue
 
 class Day16 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -115,15 +114,6 @@ class Day16 @Inject constructor(
     val cost: Long = findCost(path)
   ) : Comparable<SpaceWithPath> {
     override fun compareTo(other: SpaceWithPath): Int = cost.compareTo(other.cost)
-//      return when (val comparison = cost.compareTo(other.cost)) {
-//        0 -> {
-//          val myDistance = abs(loc.first - end.first) + (loc.second - end.second)
-//          val otherDistance = abs(other.loc.first - end.first) + (other.loc.second - end.second)
-//          myDistance.compareTo(otherDistance)
-//        }
-//        else -> comparison
-//      }
-//    }
 
     companion object {
       fun findDirection(path: List<Pair<Int, Int>>): Direction {
@@ -197,19 +187,6 @@ data class RoomWithCost(val room: Room, val cost: Long) : DijkstraNodeWithCost<R
   override fun node(): Room = room
 
   override fun cost(): Long = cost
-
-//  private fun Direction?.turns(direction: Direction): Long {
-//    if (this == null) return 0
-//    if (this == direction) return 0
-//
-//    if (this == Direction.N && direction == Direction.S ||
-//        this == Direction.S && direction == Direction.N ||
-//        this == E && direction == Direction.W ||
-//        this == Direction.W && direction == E
-//    ) return 2000
-//
-//    return 1000
-//  }
 
   companion object {
     private const val TURN_COST = 1000
