@@ -160,6 +160,7 @@ as the value which passed the given day/phase combination
 #### 2024
 * Day 11 The fact that the order of stones didn't actually matter helped to allow us to just keep a list of how many we had.
 * Day 13 Being able to solve the basic with shortest path while needing math for part two is always fun re-learning linear algebra. And refactoring always speeds things up.
+* Day 17 Another good example of how powerful Z3 can really be.
 
 ## Takeaways
 
