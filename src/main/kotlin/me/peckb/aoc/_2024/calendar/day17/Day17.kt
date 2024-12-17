@@ -1,5 +1,11 @@
 package me.peckb.aoc._2024.calendar.day17
 
+import com.microsoft.z3.BitVecExpr
+import com.microsoft.z3.BitVecNum
+import com.microsoft.z3.BitVecSort
+import com.microsoft.z3.Context
+import com.microsoft.z3.Expr
+import com.microsoft.z3.Status
 import javax.inject.Inject
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import kotlin.math.pow
@@ -16,7 +22,64 @@ class Day17 @Inject constructor(
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
     val computer = Computer.fromInput(input)
 
-    findProgram(computer, computer.operations.map{ it.toLong() })
+    val recursive = findProgram(computer, computer.operations.map{ it.toLong() })
+    val maths = uzeZ3(computer.operations)
+
+    if (recursive != maths) throw IllegalStateException("Uh oh!")
+
+    maths
+  }
+
+  private fun uzeZ3(operations: List<Int>): Long {
+    var result: Long = -1
+
+    Context().use { ctx ->
+      val bits = 64 // the answer will fit inside a long
+
+      fun valueOf(value: Int) = ctx.mkBV(value, bits)
+
+      fun variableOf(name: String) = ctx.mkBVConst(name, bits)
+
+      operator fun Expr<BitVecSort>.rem(t: Expr<BitVecSort>) = ctx.mkBVSMod(this, t)
+
+      infix fun Expr<BitVecSort>.xor(t: Expr<BitVecSort>) = ctx.mkBVXOR(this, t)
+
+      infix fun Expr<BitVecSort>.equalTo(t: Expr<BitVecSort>) = ctx.mkEq(this, t)
+
+      infix fun Expr<BitVecSort>.shr(t: Expr<BitVecSort>) = ctx.mkBVLSHR(this, t)
+
+      val eight = valueOf(8)
+      val five  = valueOf(5)
+      val six   = valueOf(6)
+      val three = valueOf(3)
+      val zero  = valueOf(0)
+
+      val a = variableOf("a")
+
+      var aReg = a
+      var bReg: BitVecExpr
+      var cReg: BitVecExpr
+
+      with(ctx.mkOptimize()) {
+        operations.forEach { op ->
+          bReg = aReg % eight
+          bReg = bReg xor five
+          cReg = aReg shr bReg
+          bReg = bReg xor six
+          bReg = bReg xor cReg
+          Add(bReg % eight equalTo valueOf(op))
+          aReg = aReg shr three
+        }
+        Add(aReg equalTo zero)
+        MkMinimize(a)
+
+        if (Check() == Status.SATISFIABLE) {
+          result = (model.evaluate(a, true) as BitVecNum).long
+        }
+      }
+    }
+
+    return result
   }
 
   private fun findProgram(computer: Computer, target: List<Long>): Long {
