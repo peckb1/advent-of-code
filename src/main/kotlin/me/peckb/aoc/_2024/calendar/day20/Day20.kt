@@ -17,7 +17,6 @@ class Day20 @Inject constructor(
   }
 
   private fun findCheats(input: Sequence<String>, maxCheatTime: Int): Int {
-    lateinit var start: Location
     lateinit var end: Location
 
     val maze = mutableListOf<MutableList<Space>>()
@@ -27,7 +26,7 @@ class Day20 @Inject constructor(
         when (c) {
           '#' -> row.add(Space.FULL)
           '.' -> row.add(Space.EMPTY)
-          'S' -> row.add(Space.EMPTY.also { start = Location(y, x) } )
+          'S' -> row.add(Space.EMPTY)
           'E' -> row.add(Space.EMPTY.also { end = Location(y, x) } )
         }
       }
@@ -36,9 +35,20 @@ class Day20 @Inject constructor(
 
     val solver = object : GenericIntDijkstra<Location>() {}
 
-    val costs = solver.solve(start.withArea(maze))
-    val noCheatCost = costs[end]!!
-    val cheats = mutableMapOf<Int, Int>()
+    val costs = solver.solve(end.withArea(maze))
+    var cheats = 0
+
+    val explorationRange = (-maxCheatTime .. maxCheatTime)
+    val explorationDeltas = explorationRange.flatMapIndexed { y, yStep ->
+      explorationRange.mapIndexedNotNull { x, xStep ->
+        val stepCount = abs(yStep) + abs(xStep)
+        if (stepCount <= maxCheatTime) {
+          yStep to xStep
+        } else {
+          null
+        }
+      }
+    }
 
     costs.entries.forEach { (cheatStart, _) ->
       val reachableEmptySpaces = mutableSetOf<Location>()
@@ -46,34 +56,26 @@ class Day20 @Inject constructor(
       val curY = cheatStart.y
       val curX = cheatStart.x
 
-      val explorationRange = (-maxCheatTime .. maxCheatTime)
-
-      explorationRange.forEach { yStep ->
+      explorationDeltas.forEach { (yStep, xStep) ->
         val y = curY + yStep
-        explorationRange.forEach { xStep ->
-          val x = curX + xStep
-          val stepCount = abs(yStep) + abs(xStep)
+        val x = curX + xStep
 
-          if (stepCount <= maxCheatTime && y in maze.indices && x in maze[y].indices && maze[y][x] == Space.EMPTY) {
-            val step = Location(y, x)
-            reachableEmptySpaces.add(step)
-          }
+        if (y in maze.indices && x in maze[y].indices && maze[y][x] == Space.EMPTY) {
+          reachableEmptySpaces.add(Location(y, x))
         }
       }
 
       reachableEmptySpaces.forEach { endSpace ->
-        val costAtCheatStart = noCheatCost - costs[cheatStart]!!
-        val costAtCheatEnd = noCheatCost - costs[endSpace]!!
+        val costAtCheatStart = costs[cheatStart]!!
+        val costAtCheatEnd = costs[endSpace]!!
         val distanceTravelled = cheatStart.distanceFrom(endSpace)
 
-        val timeSaved = (costAtCheatStart - costAtCheatEnd) - distanceTravelled
-        if (timeSaved >= 100) {
-          cheats.merge(timeSaved, 1, Int::plus)
-        }
+        val timeSaved = costAtCheatStart - costAtCheatEnd - distanceTravelled
+        if (timeSaved >= 100) { cheats++ }
       }
     }
 
-    return cheats.values.sum()
+    return cheats
   }
 }
 
