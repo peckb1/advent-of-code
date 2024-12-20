@@ -3,7 +3,10 @@ package me.peckb.aoc._2024.calendar.day20
 import javax.inject.Inject
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import me.peckb.aoc.pathing.GenericIntDijkstra
+import java.util.LinkedList
 import java.util.PriorityQueue
+import java.util.Queue
+import kotlin.math.abs
 
 class Day20 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -35,19 +38,19 @@ class Day20 @Inject constructor(
 
     val maxCheat = 2
 
-    data class CheatData(val location: Location, val wallsPhased: List<Location>, val cheatTimeUsed: Int)
+    data class CheatData(val location: Location, val cheatTimeUsed: Int)
 
     costs.entries.sumOf { (cheatStart, _) ->
       // map of location to a list of how much cheat cost you spent getting there.
-      val exploreSpots = mutableMapOf<Pair<Location, List<Location>>, List<Int>>()
+      val exploreSpots = mutableMapOf<Location, List<Int>>()
 
       val toVisit = PriorityQueue<CheatData> { p1, p2 -> p1.cheatTimeUsed.compareTo(p2.cheatTimeUsed) }
 
-      toVisit.add(CheatData(cheatStart, emptyList(), 0))
+      toVisit.add(CheatData(cheatStart, 0))
       while(toVisit.isNotEmpty()) {
-        val (loc, wallsPhased, cheatTimeUsed) = toVisit.poll()
+        val (loc, cheatTimeUsed) = toVisit.poll()
 
-        exploreSpots.merge(loc to wallsPhased, listOf(cheatTimeUsed)) { a, b -> a + b }
+        exploreSpots.merge(loc, listOf(cheatTimeUsed)) { a, b -> a + b }
 
         if (cheatTimeUsed < maxCheat) {
           Direction.entries.forEach {
@@ -55,23 +58,18 @@ class Day20 @Inject constructor(
             val (y, x) = step
 
             if (y in maze.indices && x in maze[y].indices) {
-              val newWalls = if (maze[y][x] == Space.FULL) {
-                wallsPhased + Location(y, x)
-              } else {
-                wallsPhased
-              }
-              toVisit.add(CheatData(step, newWalls, cheatTimeUsed + 1))
+              toVisit.add(CheatData(step, cheatTimeUsed + 1))
             }
           }
         }
       }
 
       val actualSpots = exploreSpots
-        .filter { costs[it.key.first] != null }
+        .filter { costs[it.key] != null }
 
-      val savings = actualSpots.entries.sumOf { (pair, cheatCosts) ->
+      val savings = actualSpots.entries.sumOf { (loc, cheatCosts) ->
         val costAtCheatStart = costs[cheatStart]!!
-        val costAtCheatEnd = noCheatCost - costs[pair.first]!!
+        val costAtCheatEnd = noCheatCost - costs[loc]!!
 
         cheatCosts.count { cheatCost ->
           val myCost = costAtCheatStart + cheatCost + costAtCheatEnd
@@ -84,11 +82,77 @@ class Day20 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
+    lateinit var start: Location
+    lateinit var end: Location
 
+    val walls = mutableListOf<Location>()
+
+    val maze = mutableListOf<MutableList<Space>>()
+    input.forEachIndexed { y, line ->
+      val row = mutableListOf<Space>()
+      line.forEachIndexed { x, c ->
+        when (c) {
+          '#' -> row.add(Space.FULL).also { walls.add(Location(y, x)) }
+          '.' -> row.add(Space.EMPTY)
+          'S' -> row.add(Space.EMPTY.also { start = Location(y, x) } )
+          'E' -> row.add(Space.EMPTY.also { end = Location(y, x) } )
+        }
+      }
+      maze.add(row)
+    }
+
+    val solver = object : GenericIntDijkstra<Location>() {}
+
+    val costs = solver.solve(start.withArea(maze))
+    val noCheatCost = costs[end]!!
+
+    val maxCheat = 20
+
+    data class CheatData(val location: Location, val cheatTimeUsed: Int)
+
+//    var cheatsThatWork = 0L
+    val cheats = mutableMapOf<Int, Int>()
+
+    costs.entries.forEach { (cheatStart, _) ->
+      val reachableEmptySpaces = mutableSetOf<Location>()
+
+      val curY = cheatStart.y
+      val curX = cheatStart.x
+
+      (-maxCheat .. maxCheat).forEach { yStep ->
+        val y = curY + yStep
+        (-maxCheat .. maxCheat).forEach { xStep ->
+          val x = curX + xStep
+          val stepCount = abs(yStep) + abs(xStep)
+
+          if (stepCount <= maxCheat && y in maze.indices && x in maze[y].indices && maze[y][x] == Space.EMPTY) {
+            val step = Location(y, x)
+            reachableEmptySpaces.add(step)
+          }
+        }
+      }
+
+      reachableEmptySpaces.forEach { endSpace ->
+        val costAtCheatStart = noCheatCost - costs[cheatStart]!!
+        val costAtCheatEnd = noCheatCost - costs[endSpace]!!
+        val distanceTravelled = cheatStart.distanceFrom(endSpace)
+
+        val timeSaved = (costAtCheatStart - costAtCheatEnd) - distanceTravelled
+        if (timeSaved >= 100) {
+          cheats.merge(timeSaved, 1, Int::plus)
+        }
+      }
+    }
+
+    cheats.values.sum()
   }
 }
 
 data class Location(val y: Int, val x: Int) : GenericIntDijkstra.DijkstraNode<Location> {
+  fun distanceFrom(other: Location): Int {
+    return abs(other.y - y) + abs(other.x - x)
+  }
+
   lateinit var area: MutableList<MutableList<Space>>
 
   fun withArea(area: MutableList<MutableList<Space>>)   = apply { this.area = area }
