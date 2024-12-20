@@ -158,7 +158,10 @@ data class Room(
 enum class Space { FULL, EMPTY }
 
 enum class Direction(val yDelta: Int, val xDelta: Int) {
-  N(-1, 0), E(0, 1), S(1, 0), W(0, -1)
+  N(-1, 0),
+  E(0, 1),
+  S(1, 0),
+  W(0, -1)
 }
 
 private fun Direction?.turnCost(direction: Direction): Long {
