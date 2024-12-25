@@ -104,7 +104,9 @@ as the value which passed the given day/phase combination
 * Day 03
   * Regex shining today! Sorting by the match location made the single list of all matches easy to scan through.
 * Day 12
-  * Not a day where I had the best solution; but a solution nonetheless. Slow scan of each field's border; ain't much, but it's honest work. 
+  * Not a day where I had the best solution; but a solution nonetheless. Slow scan of each field's border; ain't much, but it's honest work.
+* Day 24
+  * I had to pen + paper the finding of the wires; while renaming my output to be what they actually are (i.e. `x01 XOR y01 -> sum1`). But then coming up with the actual rules to mimic my manual process was fun. And in the process learned a lot about binary addition at the logic gate level. 
 
 ### Interesting approaches:
 
