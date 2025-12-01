@@ -31,7 +31,7 @@ class Day24 @Inject constructor(private val generatorFactory: InputGeneratorFact
       // the `div z 1` values are purely derivative from the previous (unused) `add y [value]` instruction
       //   we keep track of "unused" by using a stack of addY(s)
       if (instructions[4] == "div z 26") {
-        @Suppress("UnnecessaryVariable")
+        // @Suppress("UnnecessaryVariable")
         val addXIndex = mainResultIndex
         val addXValue = instructions[5].substringAfterLast(" ").toInt()
         val (addYIndex, addYValue) = addYStack.removeLast()
