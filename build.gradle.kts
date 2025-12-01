@@ -1,17 +1,17 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 plugins {
-    kotlin("jvm") version "1.9.22"
-    id("com.google.devtools.ksp") version "1.9.22-1.0.16"
+    kotlin("jvm") version "2.2.0"
+    id("com.google.devtools.ksp") version "2.2.20-2.0.4"
     application
     jacoco
 }
