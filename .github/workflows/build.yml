@@ -12,10 +12,10 @@ jobs:
 
         steps:
           - name: Checkout Main AoC code
-            uses: actions/checkout@v3
+            uses: actions/checkout@v6
 
           - name: Checkout the AoC Input files
-            uses: actions/checkout@v3
+            uses: actions/checkout@v6
             with:
               token: ${{ secrets.AOC_INPUT }}
               repository: peckb1/advent-of-code-input
@@ -23,12 +23,12 @@ jobs:
               ref: main
 
           - name: Bring in the gradle wrapper running the build
-            uses: gradle/wrapper-validation-action@v1
+            uses: gradle/wrapper-validation-action@v3
 
-          - name: Set up JDK 17
-            uses: actions/setup-java@v3
+          - name: Set up JDK 21
+            uses: actions/setup-java@v5
             with:
-              java-version: 17
+              java-version: 21
               distribution: 'temurin'
 
           - name: Grant execute permission for gradlew
@@ -45,7 +45,7 @@ jobs:
 
           - name: Add coverage to PR
             id: jacoco
-            uses: madrapps/jacoco-report@v1.3
+            uses: madrapps/jacoco-report@v1.7.2
             with:
               paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
               token: ${{ secrets.GITHUB_TOKEN }}
