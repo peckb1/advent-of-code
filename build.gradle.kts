@@ -1,8 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
-apply(plugin = "kotlin")
-apply(plugin = "kotlin-kapt")
-
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -14,7 +11,7 @@ kotlin {
 
 plugins {
     kotlin("jvm") version "1.9.22"
-    kotlin("kapt") version "1.9.22"
+    id("com.google.devtools.ksp") version "1.9.22-1.0.16"
     application
     jacoco
 }
@@ -41,10 +38,10 @@ dependencies {
     // used for generating skeletons
     implementation("com.squareup:kotlinpoet:1.18.1")
 
-    // dependency injection library and annotation procressing
+    // dependency injection library and annotation processing
     implementation("com.google.dagger:dagger:2.57.2")
-    kapt("com.google.dagger:dagger-compiler:2.57.2")
-    kaptTest("com.google.dagger:dagger-compiler:2.57.2")
+    ksp("com.google.dagger:dagger-compiler:2.57.2")
+    kspTest("com.google.dagger:dagger-compiler:2.57.2")
 
     // test libraries
     testImplementation(kotlin("test"))
@@ -80,7 +77,7 @@ jacoco {
 sourceSets {
     test {
         java {
-            setSrcDirs(listOf("build/generated/source/kapt/test"))
+            setSrcDirs(listOf("build/generated/ksp/test/kotlin"))
         }
     }
 }
