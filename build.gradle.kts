@@ -46,6 +46,7 @@ dependencies {
     // test libraries
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
+    testImplementation("org.junit.platform:junit-platform-launcher:1.10.3")
 }
 
 tasks.test {
