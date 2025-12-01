@@ -77,7 +77,7 @@ data class Layout(val hallway: List<Char>, private val rooms: List<List<Char>>) 
     return neighbors
   }
 
-  @Suppress("ReplaceRangeToWithUntil")
+  @Suppress("ReplaceRangeToWithRangeUntil")
   private fun List<Char>.pathClear(sourceIndex: Int, destinationIndex: Int): Boolean {
     val range = if (sourceIndex < destinationIndex) {
       (sourceIndex+1)..destinationIndex
