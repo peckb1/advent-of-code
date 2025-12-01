@@ -28,23 +28,23 @@ repositories {
 
 dependencies {
     // main dependencies
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.1")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.1")
     implementation("io.arrow-kt:arrow-core:1.2.4")
-    implementation("org.apache.commons:commons-text:1.11.0")
-    implementation("org.apache.commons:commons-math3:3.6")
+    implementation("org.apache.commons:commons-text:1.14.0")
+    implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.apache.commons:commons-geometry-core:1.0")
     implementation("org.apache.commons:commons-geometry-euclidean:1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-    implementation("tools.aqua:z3-turnkey:4.13.0")
+    implementation("tools.aqua:z3-turnkey:4.14.1")
     implementation("org.jgrapht:jgrapht-core:1.5.2")
 
     // used for generating skeletons
     implementation("com.squareup:kotlinpoet:1.18.1")
 
     // dependency injection library and annotation procressing
-    implementation("com.google.dagger:dagger:2.51")
-    kapt("com.google.dagger:dagger-compiler:2.51")
-    kaptTest("com.google.dagger:dagger-compiler:2.51")
+    implementation("com.google.dagger:dagger:2.57.2")
+    kapt("com.google.dagger:dagger-compiler:2.57.2")
+    kaptTest("com.google.dagger:dagger-compiler:2.57.2")
 
     // test libraries
     testImplementation(kotlin("test"))
@@ -74,7 +74,7 @@ tasks.jacocoTestReport {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = "0.8.14"
 }
 
 sourceSets {
