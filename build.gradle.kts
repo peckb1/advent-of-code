@@ -51,10 +51,18 @@ dependencies {
 }
 
 tasks.test {
+    filter {
+        val year: String? = project.findProperty("year") as? String
+        if (year != null) {
+            includeTestsMatching("me.peckb.aoc._${year}.*")
+        }
+    }
+    
     useJUnitPlatform()
     testLogging {
         events("SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
         exceptionFormat = FULL
+        showStandardStreams = true
     }
     finalizedBy(tasks.jacocoTestReport)
     maxParallelForks = ((Runtime.getRuntime().availableProcessors() / 3.0) * 2.0).toInt()
@@ -68,6 +76,10 @@ tasks.jacocoTestReport {
     classDirectories.setFrom(files(classDirectories.files.map {
         fileTree(it) {
             exclude("**/skeleton/**", "**/Application*")
+            val year: String? = project.findProperty("year") as? String
+            if (year != null) {
+              include("**/_${year}/**")
+            }
         }
     }))
 }
