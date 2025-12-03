@@ -17,13 +17,13 @@ class Day03 @Inject constructor(
   private fun maxJoltage(batteryArray: List<Long>, startIndex: Int = 0, numToEnable: Int) : Long {
     val indicesOfFlippableBatteries = startIndex .. ((batteryArray.size - 1) - (numToEnable - 1))
     val largestStartValue = indicesOfFlippableBatteries.maxOf { i -> batteryArray[i] }
+    val firstIndexOfValue = indicesOfFlippableBatteries.first { i -> batteryArray[i] == largestStartValue }
 
     // we can bottom out if our next recurse would enable zero batteries
     if (numToEnable == 1) { return largestStartValue }
 
-    // if we have more batteries to flip - find the indices for those batteries and send down the new arrays
-    val possibleStartIndices = indicesOfFlippableBatteries.filter { i -> batteryArray[i] == largestStartValue }
-    val maxSubJoltage = possibleStartIndices.maxOf { i -> maxJoltage(batteryArray, startIndex = i + 1, numToEnable = numToEnable - 1) }
+    // if we have more batteries to flip - recurse down!
+    val maxSubJoltage = maxJoltage(batteryArray, startIndex = firstIndexOfValue + 1, numToEnable = numToEnable - 1)
 
     // then add it to our value and return!
     return "$largestStartValue$maxSubJoltage".toLong()
