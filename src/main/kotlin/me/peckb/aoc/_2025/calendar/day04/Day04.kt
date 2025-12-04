@@ -10,26 +10,19 @@ class Day04 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val workshop = mutableListOf<MutableList<Char>>()
-
-    input.forEach { r ->
-      val row = mutableListOf<Char>()
-      r.forEach { c -> row.add(c) }
-      workshop.add(row)
-    }
+    val printingDepartment = mapPaper(input)
 
     var superCount = 0
-    workshop.indices.forEach { r ->
-      val row = workshop[r]
-
+    printingDepartment.indices.forEach { r ->
+      val row = printingDepartment[r]
 
       row.indices.forEach { c ->
         var count = 0
 
-        if (workshop[r][c] == '@') {
+        if (printingDepartment[r][c] == '@') {
           for (rIndex in (max(0, r - 1)..min(row.size - 1, r + 1))) {
-            for (cIndex in (max(0, c - 1)..min(workshop.size - 1, c + 1))) {
-              if (workshop[rIndex][cIndex] == '@' && !(rIndex == r && cIndex == c)) {
+            for (cIndex in (max(0, c - 1)..min(printingDepartment.size - 1, c + 1))) {
+              if (printingDepartment[rIndex][cIndex] == '@' && !(rIndex == r && cIndex == c)) {
                 count++
               }
             }
@@ -46,30 +39,24 @@ class Day04 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).read { input ->
-    val workshop = mutableListOf<MutableList<Char>>()
-
-    input.forEach { r ->
-      val row = mutableListOf<Char>()
-      r.forEach { c -> row.add(c) }
-      workshop.add(row)
-    }
+    val printingDepartment = mapPaper(input)
 
     var superDuperCount = 0
     var someWereRemoved = true
     while(someWereRemoved) {
       var superCount = 0
       val toRemove = mutableListOf<Pair<Int, Int>>()
-      workshop.indices.forEach { r ->
-        val row = workshop[r]
+      printingDepartment.indices.forEach { r ->
+        val row = printingDepartment[r]
 
 
         row.indices.forEach { c ->
           var count = 0
 
-          if (workshop[r][c] == '@') {
+          if (printingDepartment[r][c] == '@') {
             for (rIndex in (max(0, r - 1)..min(row.size - 1, r + 1))) {
-              for (cIndex in (max(0, c - 1)..min(workshop.size - 1, c + 1))) {
-                if (workshop[rIndex][cIndex] == '@' && !(rIndex == r && cIndex == c)) {
+              for (cIndex in (max(0, c - 1)..min(printingDepartment.size - 1, c + 1))) {
+                if (printingDepartment[rIndex][cIndex] == '@' && !(rIndex == r && cIndex == c)) {
                   count++
                 }
               }
@@ -83,7 +70,7 @@ class Day04 @Inject constructor(
         }
       }
 
-      toRemove.forEach { (r, c) -> workshop[r][c] = '.' }
+      toRemove.forEach { (r, c) -> printingDepartment[r][c] = '.' }
       someWereRemoved = superCount != 0
       superDuperCount += superCount
     }
@@ -91,5 +78,15 @@ class Day04 @Inject constructor(
     superDuperCount
   }
 
-  private fun day04(line: String) = 4
+  private fun mapPaper(input: Sequence<String>): MutableList<MutableList<Char>> {
+    val workshop = mutableListOf<MutableList<Char>>()
+
+    input.forEach { r ->
+      val row = mutableListOf<Char>()
+      r.forEach { c -> row.add(c) }
+      workshop.add(row)
+    }
+
+    return workshop
+  }
 }
