@@ -52,17 +52,18 @@ class Day07 @Inject constructor(
       val line = manifold[depth]
 
       beams.toList().also { beams.clear() }.forEach { (location, count) ->
-        if (location.depth != depth - 1) { throw IllegalStateException("We should only be tracking the last row.") }
+        if (location.depth != depth - 1) {
+          throw IllegalStateException("We should only be tracking the last row.")
+        }
 
-        if (line[location.index] == '^') {
-          val left = Location(depth, location.index - 1)
-          val right = Location(depth, location.index + 1)
+        // if we need to split then the indices of our location need to shift and split
+        // otherwise we just stay at the same index we're at
+        val indexDeltas = if (line[location.index] == '^') listOf(-1, 1) else listOf(0)
 
-          beams[left] = beams.getValue(left) + count
-          beams[right] = beams.getValue(right) + count
-        } else {
-          val below = Location(depth, location.index)
-          beams[below] = beams.getValue(below) + count
+        indexDeltas.forEach { delta ->
+          Location(depth, location.index + delta).let { loc ->
+            beams[loc] = beams.getValue(loc) + count
+          }
         }
       }
 
