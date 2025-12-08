@@ -11,16 +11,8 @@ class Day08 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::day08) { input ->
-    val boxes = input.toList()
-
-    val distances = PriorityQueue<Distance>()
+    val (_, distances) = createConnections(input)
     val circuits = mutableMapOf<String, Circuit>()
-
-    boxes.forEachIndexed { index, box1 ->
-      ((index + 1)until boxes.size).forEach { box2Index ->
-        distances.add(Distance(box1, boxes[box2Index]))
-      }
-    }
 
     var connectionsMade = 0
     while(distances.isNotEmpty() && connectionsMade < 1000) {
@@ -65,21 +57,11 @@ class Day08 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day08) { input ->
-    val boxes = input.toList()
-
-    val distances = PriorityQueue<Distance>()
+    val (boxes, distances) = createConnections(input)
     val circuits = mutableMapOf<String, Circuit>()
-
-    boxes.forEachIndexed { index, box1 ->
-      ((index + 1)until boxes.size).forEach { box2Index ->
-        distances.add(Distance(box1, boxes[box2Index]))
-      }
-    }
-
     val lastTwoBoxes = mutableListOf<Box>()
 
     var connectionsMade = 0
-    var secondCircuitFound = false
     while(distances.isNotEmpty()) {
       val distance = distances.poll()
       val b1 = distance.b1
@@ -117,8 +99,7 @@ class Day08 @Inject constructor(
         }
       }
 
-      secondCircuitFound = secondCircuitFound || circuits.size > 1
-      if (secondCircuitFound && circuits.size == 1 && circuits[b1.circuitId]!!.boxes.size == boxes.size) {
+      if (circuits[b1.circuitId]!!.boxes.size == boxes.size) {
         distances.clear()
         lastTwoBoxes.add(b1)
         lastTwoBoxes.add(b2)
@@ -131,6 +112,20 @@ class Day08 @Inject constructor(
   private fun day08(line: String) = line.split(",")
     .map { it.toLong() }
     .let { (x, y, z) -> Box(x, y, z) }
+
+  private fun createConnections(input: Sequence<Box>): Pair<List<Box>, PriorityQueue<Distance>> {
+    val boxes = input.toList()
+
+    val distances = PriorityQueue<Distance>()
+
+    boxes.forEachIndexed { index, box1 ->
+      ((index + 1)until boxes.size).forEach { box2Index ->
+        distances.add(Distance(box1, boxes[box2Index]))
+      }
+    }
+
+    return boxes to distances
+  }
 }
 
 data class Box(val x: Long, val y: Long, val z: Long, var circuitId: String? = null) {
