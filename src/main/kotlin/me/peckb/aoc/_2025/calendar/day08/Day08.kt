@@ -4,6 +4,7 @@ import javax.inject.Inject
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
 import java.util.PriorityQueue
 import java.util.UUID
+import kotlin.collections.get
 import kotlin.math.sqrt
 import kotlin.math.pow
 
@@ -12,101 +13,22 @@ class Day08 @Inject constructor(
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::day08) { input ->
     val (_, distances) = createConnections(input)
-    val circuits = mutableMapOf<String, Circuit>()
-
-    var connectionsMade = 0
-    while(distances.isNotEmpty() && connectionsMade < 1000) {
-      val distance = distances.poll()
-      val b1 = distance.b1
-      val b2 = distance.b2
-
-      if (b1.circuitId != null && b2.circuitId == b1.circuitId) {
-        connectionsMade++
-        // if the two are already in the same circuit
-        // do nothing!
-      } else if (b1.circuitId == null && b2.circuitId == null) {
-        connectionsMade++
-        // if neither are in a circuit, make a new circuit that contains them
-        val circuit = Circuit(UUID.randomUUID().toString())
-        b1.circuitId = circuit.id
-        b2.circuitId = circuit.id
-        circuit.add(b1)
-        circuit.add(b2)
-        circuits[circuit.id] = circuit
-      } else if (b1.circuitId == null) {
-        connectionsMade++
-        circuits[b2.circuitId]!!.add(b1)
-        b1.circuitId = b2.circuitId
-      } else if (b2.circuitId == null) {
-        connectionsMade++
-        circuits[b1.circuitId]!!.add(b2)
-        b2.circuitId = b1.circuitId
-      } else {
-        connectionsMade++
-        val firstCircuit = circuits[b1.circuitId]!!
-        val secondCircuit = circuits[b2.circuitId]!!
-        circuits.remove(b2.circuitId)
-        secondCircuit.boxes.forEach { box ->
-          box.circuitId = firstCircuit.id
-          firstCircuit.add(box)
-        }
-      }
-    }
+    val circuits = connectBoxes(distances) { connections, _ ->
+      // short circuit after we have made 1000 connections
+      connections >= 1000
+    }.first
 
     circuits.map { it.value.boxes.size }.sortedByDescending { it }.take(3).fold(1) { acc, n -> acc * n }
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day08) { input ->
     val (boxes, distances) = createConnections(input)
-    val circuits = mutableMapOf<String, Circuit>()
-    val lastTwoBoxes = mutableListOf<Box>()
+    val lastConnection = connectBoxes(distances) { _, circuits ->
+      // short circuit after we have a circuit that contains every box
+      circuits[boxes.first().circuitId]?.boxes?.size == boxes.size
+    }.second
 
-    var connectionsMade = 0
-    while(distances.isNotEmpty()) {
-      val distance = distances.poll()
-      val b1 = distance.b1
-      val b2 = distance.b2
-
-      if (b1.circuitId != null && b2.circuitId == b1.circuitId) {
-        connectionsMade++
-        // if the two are already in the same circuit
-        // do nothing!
-      } else if (b1.circuitId == null && b2.circuitId == null) {
-        connectionsMade++
-        // if neither are in a circuit, make a new circuit that contains them
-        val circuit = Circuit(UUID.randomUUID().toString())
-        b1.circuitId = circuit.id
-        b2.circuitId = circuit.id
-        circuit.add(b1)
-        circuit.add(b2)
-        circuits[circuit.id] = circuit
-      } else if (b1.circuitId == null) {
-        connectionsMade++
-        circuits[b2.circuitId]!!.add(b1)
-        b1.circuitId = b2.circuitId
-      } else if (b2.circuitId == null) {
-        connectionsMade++
-        circuits[b1.circuitId]!!.add(b2)
-        b2.circuitId = b1.circuitId
-      } else {
-        connectionsMade++
-        val firstCircuit = circuits[b1.circuitId]!!
-        val secondCircuit = circuits[b2.circuitId]!!
-        circuits.remove(b2.circuitId)
-        secondCircuit.boxes.forEach { box ->
-          box.circuitId = firstCircuit.id
-          firstCircuit.add(box)
-        }
-      }
-
-      if (circuits[b1.circuitId]!!.boxes.size == boxes.size) {
-        distances.clear()
-        lastTwoBoxes.add(b1)
-        lastTwoBoxes.add(b2)
-      }
-    }
-
-    lastTwoBoxes.fold(1L) { acc, n -> acc * n.x }
+    lastConnection.fold(1L) { acc, n -> acc * n.x }
   }
 
   private fun day08(line: String) = line.split(",")
@@ -125,6 +47,58 @@ class Day08 @Inject constructor(
     }
 
     return boxes to distances
+  }
+
+  private fun connectBoxes(distances: PriorityQueue<Distance>, shortCircuit: (Long, Map<String, Circuit>) -> Boolean) : Pair<MutableMap<String, Circuit>, MutableList<Box>> {
+    var connectionsMade = 0L
+    val circuits = mutableMapOf<String, Circuit>()
+    val lastConnection = mutableListOf<Box>()
+
+    while(distances.isNotEmpty()) {
+      connectionsMade++
+      val distance = distances.poll()
+      val b1 = distance.b1
+      val b2 = distance.b2
+
+      if (b1.circuitId != null && b2.circuitId == b1.circuitId) {
+        // if the two are already in the same circuit
+        // do nothing!
+      } else if (b1.circuitId == null && b2.circuitId == null) {
+        // if neither are in a circuit, make a new circuit that contains them
+        val circuit = Circuit(UUID.randomUUID().toString())
+        b1.circuitId = circuit.id
+        b2.circuitId = circuit.id
+        circuit.add(b1)
+        circuit.add(b2)
+        circuits[circuit.id] = circuit
+      } else if (b1.circuitId == null) {
+        // b1 gets to join b2's circuit
+        circuits[b2.circuitId]!!.add(b1)
+        b1.circuitId = b2.circuitId
+      } else if (b2.circuitId == null) {
+        // b2 gets to join b1's circuit
+        circuits[b1.circuitId]!!.add(b2)
+        b2.circuitId = b1.circuitId
+      } else {
+        // we need to collapse the circuits!
+        val firstCircuit = circuits[b1.circuitId]!!
+        val secondCircuit = circuits[b2.circuitId]!!
+        // we pick b2 to "lose" and join b1 - theoretically you would want to have the smaller circuit join the larger
+        circuits.remove(b2.circuitId)
+        secondCircuit.boxes.forEach { box ->
+          box.circuitId = firstCircuit.id
+          firstCircuit.add(box)
+        }
+      }
+
+      if (shortCircuit(connectionsMade, circuits)) {
+        lastConnection.add(b1)
+        lastConnection.add(b2)
+        distances.clear()
+      }
+    }
+
+    return circuits to lastConnection
   }
 }
 
