@@ -164,6 +164,9 @@ as the value which passed the given day/phase combination
 * Day 13 Being able to solve the basic with shortest path while needing math for part two is always fun re-learning linear algebra. And refactoring always speeds things up.
 * Day 17 Another good example of how powerful Z3 can really be.
 
+#### 2025
+* Day 05 My solution is O(n^3), but due to the size of the input runs ~20ms faster than the better solution of using sorted ranges (the sorting takes the time) 
+
 ## Takeaways
 
 * Setting up a Kotlin project with Dagger should have more examples than the multitude of Android examples out there
