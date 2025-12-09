@@ -37,7 +37,8 @@ class Day09 @Inject constructor(
     val polygonSet = PolygonsSet(1e-3, *vertices.toTypedArray())
     val hullGenerator: ConvexHullGenerator2D = MonotoneChain()
 
-    var largestSize = 0.0
+    val areas = mutableListOf<Pair<Long, List<Vector2D>>>()
+
     vertices.indices.forEach { ti1 ->
       ((ti1 + 1) until vertices.size).forEach { ti2 ->
         val t1 = vertices[ti1]
@@ -45,19 +46,17 @@ class Day09 @Inject constructor(
 
         if (t1.x == t2.x || t1.y == t2.y) { return@forEach }
 
+        val size = ((abs(t1.x - t2.x) + 1) * (abs(t1.y - t2.y) + 1)).toLong()
         val i1 = Vector2D(t1.x, t2.y)
         val i2 = Vector2D(t2.x, t1.y)
 
-        val areaToCheck = hullGenerator.generate(listOf(t1, i1, t2, i2)).createRegion()
-        val size = (abs(t1.x - t2.x) + 1) * (abs(t1.y - t2.y) + 1)
-
-        if (size > largestSize && polygonSet.contains(areaToCheck)) {
-          largestSize = max(largestSize, size)
-        }
+        areas.add(size to listOf(t1, i1, t2, i2))
       }
     }
 
-    largestSize.toLong()
+    areas.sortedByDescending { it.first }.first { (_, vertices) ->
+      polygonSet.contains(hullGenerator.generate(vertices).createRegion())
+    }.first
   }
 
   private fun day09(line: String) = line.split(",").map { it.toDouble() }.let { (x, y) -> Location(x, y) }
