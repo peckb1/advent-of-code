@@ -1,14 +1,13 @@
 package me.peckb.aoc._2025.calendar.day09
 
 import me.peckb.aoc.generators.InputGenerator.InputGeneratorFactory
-import org.apache.commons.math3.geometry.euclidean.twod.PolygonsSet
-import org.apache.commons.math3.geometry.euclidean.twod.Vector2D
-import org.apache.commons.math3.geometry.euclidean.twod.hull.ConvexHullGenerator2D
-import org.apache.commons.math3.geometry.euclidean.twod.hull.MonotoneChain
+import java.awt.Polygon
+import java.awt.geom.Area
+import java.awt.geom.Rectangle2D
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.math.max
-
+import kotlin.math.min
 
 class Day09 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
@@ -33,11 +32,20 @@ class Day09 @Inject constructor(
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::day09) { input ->
-    val vertices = input.map { Vector2D(it.x, it.y) }.toList()
-    val polygonSet = PolygonsSet(1e-3, *vertices.toTypedArray())
-    val hullGenerator: ConvexHullGenerator2D = MonotoneChain()
+    val vertices = input.toList()
 
-    val areas = mutableListOf<Pair<Long, List<Vector2D>>>()
+    val xPoints = mutableListOf<Int>()
+    val yPoints = mutableListOf<Int>()
+
+    vertices.forEach {
+      xPoints.add(it.x.toInt())
+      yPoints.add(it.y.toInt())
+    }
+
+    val polygon = Polygon(xPoints.toIntArray(), yPoints.toIntArray(), xPoints.size)
+    val area = Area(polygon)
+
+    val areas = mutableListOf<Pair<Long, Pair<Location, Location>>>()
 
     vertices.indices.forEach { ti1 ->
       ((ti1 + 1) until vertices.size).forEach { ti2 ->
@@ -47,15 +55,21 @@ class Day09 @Inject constructor(
         if (t1.x == t2.x || t1.y == t2.y) { return@forEach }
 
         val size = ((abs(t1.x - t2.x) + 1) * (abs(t1.y - t2.y) + 1)).toLong()
-        val i1 = Vector2D(t1.x, t2.y)
-        val i2 = Vector2D(t2.x, t1.y)
 
-        areas.add(size to listOf(t1, i1, t2, i2))
+        areas.add(size to (t1 to t2))
       }
     }
 
-    areas.sortedByDescending { it.first }.first { (_, vertices) ->
-      polygonSet.contains(hullGenerator.generate(vertices).createRegion())
+    areas.sortedByDescending { it.first }.first { (_, corners) ->
+      val t1 = corners.first
+      val t2 = corners.second
+
+      val minX = min(t1.x, t2.x)
+      val minY = min(t1.y, t2.y)
+      val width = abs(t1.x - t2.x)
+      val height = abs(t1.y - t2.y)
+
+      area.contains(Rectangle2D.Double(minX, minY, width, height))
     }.first
   }
 
