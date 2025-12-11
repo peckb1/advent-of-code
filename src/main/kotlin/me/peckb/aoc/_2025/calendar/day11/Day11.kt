@@ -7,13 +7,13 @@ class Day11 @Inject constructor(
   private val generatorFactory: InputGeneratorFactory,
 ) {
   fun partOne(filename: String) = generatorFactory.forFile(filename).readAs(::server) { input ->
-    val serverMap = input.plus(Server("out")).map { it.id to it }.toMap()
+    val serverMap = input.plus(Server("out")).associateBy { it.id }
 
     countAllPaths(serverMap, serverMap["you"]!!)
   }
 
   fun partTwo(filename: String) = generatorFactory.forFile(filename).readAs(::server) { input ->
-    val serverMap = input.plus(Server("out")).map { it.id to it }.toMap()
+    val serverMap = input.plus(Server("out")).associateBy { it.id }
 
     countAllPaths(
       serverMap = serverMap,
