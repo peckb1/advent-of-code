@@ -23,8 +23,6 @@ internal class Day11Test {
 
   @Test
   fun testDay11PartTwo() {
-    // too low 608335188505
-    //         333657640517376
     assertEquals(333657640517376, day11.partTwo(DAY_11))
   }
 
