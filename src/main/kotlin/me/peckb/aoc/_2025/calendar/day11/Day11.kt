@@ -60,9 +60,7 @@ class Day11 @Inject constructor(
           currentPath.add(current)
 
           // find out how many steps we have
-          val steps = serverMap[current.id]!!.nextServers
-            .map { serverMap[it]!! }
-            .sumOf { dfs(it, updatedStopsHit) }
+          val steps = serverMap[current.id]!!.nextServers.sumOf { dfs(serverMap[it]!!, updatedStopsHit) }
 
           // current path is mutable so don't forget to pop ourselves back off the stack!
           currentPath.remove(current)
